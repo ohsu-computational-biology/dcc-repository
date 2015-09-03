@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.icgc.dcc</groupId>
+    <artifactId>dcc-parent</artifactId>
+    <version>18</version>
+  </parent>
+
+  <artifactId>dcc-repository</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>${project.artifactId}</name>
+  <description>${project.name}</description>
+
+  <modules>
+    <module>dcc-repository-core</module>
+    <module>dcc-repository-client</module>
+    <module>dcc-repository-aws</module>
+    <module>dcc-repository-cghub</module>
+    <module>dcc-repository-pcawg</module>
+    <module>dcc-repository-tcga</module>
+  </modules>
+
+  <repositories>
+    <repository>
+      <id>dcc-releases</id>
+      <url>http://seqwaremaven.oicr.on.ca/artifactory/dcc-release</url>
+    </repository>
+  </repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- DCC -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-common-core</artifactId>
+        <version>${dcc-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-common-resources</artifactId>
+        <version>${dcc-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-etl-core</artifactId>
+        <version>${dcc-etl.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-repository-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+
+    <!-- Mongo -->
+    <dependency>
+      <groupId>org.jongo</groupId>
+      <artifactId>jongo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+    </dependency>
+
+    <!-- JSON -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <!-- Utilities -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang3.version}</version>
+    </dependency>
+
+    <!-- Testing - DCC -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-common-test</artifactId>
+      <version>${dcc-common.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <properties>
+    <!-- Versions - DCC -->
+    <dcc-common.version>3.8.13.0</dcc-common.version>
+    <dcc-etl.version>3.8.11.4</dcc-etl.version>
+
+    <!-- Versions - Utilities -->
+    <commons-lang3.version>3.3.2</commons-lang3.version>
+  </properties>
+
+</project>

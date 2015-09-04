@@ -17,38 +17,16 @@
  */
 package org.icgc.dcc.repository.core.reader;
 
-import static org.icgc.dcc.common.core.model.ReleaseCollection.FILE_COLLECTION;
-
-import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
-import org.jongo.MongoCollection;
+import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import com.mongodb.MongoClientURI;
 
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class RepositoryFileReader extends AbstractJongoComponent {
+public class RepositorySourceFileReader extends RepositoryFileReader {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  protected final MongoCollection fileCollection;
-
-  public RepositoryFileReader(@NonNull MongoClientURI mongoUri) {
-    this(mongoUri, FILE_COLLECTION.getId());
-  }
-
-  protected RepositoryFileReader(@NonNull MongoClientURI mongoUri, String fileCollectionName) {
-    super(mongoUri);
-    this.fileCollection = jongo.getCollection(fileCollectionName);
-  }
-
-  public Iterable<RepositoryFile> read() {
-    log.info("Reading files...");
-    return fileCollection.find().as(RepositoryFile.class);
+  public RepositorySourceFileReader(@NonNull MongoClientURI mongoUri, RepositorySource source) {
+    super(mongoUri, source.getId());
   }
 
 }

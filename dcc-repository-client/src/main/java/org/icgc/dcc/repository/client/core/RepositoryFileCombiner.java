@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,40 +15,43 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.reader;
+package org.icgc.dcc.repository.client.core;
 
-import static org.icgc.dcc.common.core.model.ReleaseCollection.FILE_COLLECTION;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
-import org.jongo.MongoCollection;
 
-import com.mongodb.MongoClientURI;
+public class RepositoryFileCombiner {
 
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+  public Iterable<RepositoryFile> combineFiles(Iterable<Set<RepositoryFile>> files) {
+    return new Iterable<RepositoryFile>() {
 
-@Slf4j
-public class RepositoryFileReader extends AbstractJongoComponent {
+      @Override
+      public Iterator<RepositoryFile> iterator() {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  protected final MongoCollection fileCollection;
+        Iterator<Set<RepositoryFile>> delegate = files.iterator();
 
-  public RepositoryFileReader(@NonNull MongoClientURI mongoUri) {
-    this(mongoUri, FILE_COLLECTION.getId());
+        return new Iterator<RepositoryFile>() {
+
+          @Override
+          public RepositoryFile next() {
+            return combineFiles(delegate.next());
+          }
+
+          @Override
+          public boolean hasNext() {
+            return delegate.hasNext();
+          }
+
+        };
+      }
+
+    };
   }
 
-  protected RepositoryFileReader(@NonNull MongoClientURI mongoUri, String fileCollectionName) {
-    super(mongoUri);
-    this.fileCollection = jongo.getCollection(fileCollectionName);
-  }
-
-  public Iterable<RepositoryFile> read() {
-    log.info("Reading files...");
-    return fileCollection.find().as(RepositoryFile.class);
+  private RepositoryFile combineFiles(Set<RepositoryFile> files) {
+    return null;
   }
 
 }

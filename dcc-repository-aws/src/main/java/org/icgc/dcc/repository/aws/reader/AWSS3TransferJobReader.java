@@ -38,15 +38,32 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor
 public class AWSS3TransferJobReader {
 
+  /**
+   * Constants.
+   */
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/s3-transfer-operations.git";
+  private static final String DEFAULT_GIT_REPO_URL =
+      "https://github.com/ICGC-TCGA-PanCancer/s3-transfer-operations.git";
+
+  /**
+   * Configuration.
+   */
+  @NonNull
+  private final String repoUrl;
+
+  public AWSS3TransferJobReader() {
+    this(DEFAULT_GIT_REPO_URL);
+  }
 
   @SneakyThrows
   public List<ObjectNode> read() {
@@ -91,16 +108,16 @@ public class AWSS3TransferJobReader {
 
   @SneakyThrows
   private ObjectNode readFile(File jsonFile) {
-    log.info("Reading {}...", jsonFile);
+    log.info("Reading '{}'...", jsonFile);
     return (ObjectNode) MAPPER.readTree(jsonFile);
   }
 
   private File cloneRepo() throws GitAPIException, InvalidRemoteException, TransportException {
     val repoDir = createTempDir();
-    log.info("Cloning {} to {}...", GIT_REPO_URL, repoDir);
+    log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
     Git
         .cloneRepository()
-        .setURI(GIT_REPO_URL)
+        .setURI(repoUrl)
         .setDirectory(repoDir)
         .call();
 

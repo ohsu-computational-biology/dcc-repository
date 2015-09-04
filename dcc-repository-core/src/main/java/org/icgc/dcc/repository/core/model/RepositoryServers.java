@@ -51,7 +51,7 @@ public final class RepositoryServers {
       server().source(PCAWG).type(GNOS)       .name("PCAWG - Heidelberg")    .code("pcawg-heidelberg")  .country("DE").baseUrl("https://gtrepo-dkfz.annailabs.com/").build(),
       server().source(PCAWG).type(GNOS)       .name("PCAWG - Chicago (ICGC)").code("pcawg-chicago-icgc").country("US").baseUrl("https://gtrepo-osdc-icgc.annailabs.com/").build(),
       server().source(PCAWG).type(GNOS)       .name("PCAWG - Chicago (TCGA)").code("pcawg-chicago-tcga").country("US").baseUrl("https://gtrepo-osdc-tcga.annailabs.com/").build(),
-      server().source(AWS)  .type(S3)         .name("ICGC - AWS S3")         .code("icgc-aws-s3")       .country("US").baseUrl(null).build()
+      server().source(AWS)  .type(S3)         .name("AWS - Virginia")        .code("aws-virginia")      .country("US").baseUrl(null).build()
       );
   // @formatter:on
 

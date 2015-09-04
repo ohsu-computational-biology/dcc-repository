@@ -32,20 +32,34 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.ImmutableList;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor
 public class AWSS3BucketReader {
 
   /**
    * Constants.
    */
   private static final String DEFAULT_BUCKET_NAME = "oicr.icgc";
+  private static final String DEFAULT_BUCKET_KEY_PREFIX = "data";
+
+  /**
+   * Configuration
+   */
+  @NonNull
+  private final String bucketName;
+  @NonNull
+  private final String prefix;
+
+  public AWSS3BucketReader() {
+    this(DEFAULT_BUCKET_NAME, DEFAULT_BUCKET_KEY_PREFIX);
+  }
 
   public List<RepositoryFile> read() {
-    val bucketName = DEFAULT_BUCKET_NAME;
-    val prefix = "data";
     val files = ImmutableList.<RepositoryFile> builder();
 
     readBucket(bucketName, prefix, (summary) -> {
@@ -61,19 +75,19 @@ public class AWSS3BucketReader {
 
   private RepositoryFile createFile(S3ObjectSummary summary) {
     val id = getFileName(summary);
-    log.info(
-        "Bucket entry: {}",
-        format("%-30s %-50s %10d %s",
-            id,
-            summary.getKey(),
-            summary.getSize(),
-            summary.getStorageClass()));
+
+    log.info("Bucket entry: {}", format("%-30s %-50s %10d %s",
+        id,
+        summary.getKey(),
+        summary.getSize(),
+        summary.getStorageClass()));
 
     val file = new RepositoryFile()
         .setId(id);
 
     file.getRepository()
         .setRepoOrg("ICGC")
+        .setLastModified(summary.getLastModified().toString())
         .setFileSize(summary.getSize());
 
     return file;

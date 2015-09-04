@@ -21,12 +21,10 @@ import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
 
 import java.util.Set;
 
-import org.icgc.dcc.repository.aws.reader.AWSS3TransferJobReader;
+import org.icgc.dcc.repository.aws.core.AWSIdResolver;
 import org.icgc.dcc.repository.aws.writer.AWSS3ObjectIdWriter;
 import org.icgc.dcc.repository.core.AbstractRepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
-
-import com.google.common.collect.ImmutableSet;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -52,18 +50,7 @@ public class AWSImporter extends AbstractRepositorySourceFileImporter {
   }
 
   private Set<String> readObjectIds() {
-    val reader = new AWSS3TransferJobReader();
-
-    val objectIds = ImmutableSet.<String> builder();
-    for (val job : reader.read()) {
-      for (val file : job.withArray("files")) {
-        val objectId = file.get("object_id").textValue();
-
-        objectIds.add(objectId);
-      }
-    }
-
-    return objectIds.build();
+    return new AWSIdResolver().resolveIds();
   }
 
   @SneakyThrows

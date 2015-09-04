@@ -27,6 +27,7 @@ import org.icgc.dcc.etl.core.id.CachingIdentifierClient;
 import org.icgc.dcc.etl.core.id.HashIdentifierClient;
 import org.icgc.dcc.etl.core.id.HttpIdentifierClient;
 import org.icgc.dcc.etl.core.id.IdentifierClient;
+import org.icgc.dcc.repository.core.reader.RepositoryProjectReader;
 
 import com.mongodb.MongoClientURI;
 

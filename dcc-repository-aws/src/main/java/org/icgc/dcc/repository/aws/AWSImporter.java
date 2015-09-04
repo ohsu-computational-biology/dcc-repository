@@ -27,9 +27,9 @@ import org.icgc.dcc.repository.aws.core.AWSCompletedIdResolver;
 import org.icgc.dcc.repository.aws.core.AWSFileProcessor;
 import org.icgc.dcc.repository.aws.reader.AWSS3BucketReader;
 import org.icgc.dcc.repository.aws.writer.AWSS3ObjectIdWriter;
-import org.icgc.dcc.repository.core.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 

@@ -15,12 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core;
+package org.icgc.dcc.repository.core.util;
 
-import java.util.Set;
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
+import org.icgc.dcc.repository.core.model.RepositorySource;
 
-public interface RepositoryIdResolver {
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-  Set<String> resolveIds();
+@RequiredArgsConstructor
+public abstract class AbstractRepositorySourceFileImporter implements RepositorySourceFileImporter {
+
+  /**
+   * Metadata.
+   */
+  @NonNull
+  @Getter
+  protected RepositorySource source;
+
+  /**
+   * Dependencies.
+   */
+  @NonNull
+  protected RepositoryFileContext context;
 
 }

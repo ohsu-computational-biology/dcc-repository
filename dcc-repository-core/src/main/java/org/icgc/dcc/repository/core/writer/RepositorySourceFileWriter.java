@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,55 +15,72 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core;
+package org.icgc.dcc.repository.core.writer;
 
-import static com.google.common.base.Stopwatch.createStarted;
-import static com.google.common.collect.Iterables.isEmpty;
+import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.FILE_COLLECTION;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
+import org.icgc.dcc.repository.core.util.AbstractJongoWriter;
 
-import lombok.Cleanup;
-import lombok.SneakyThrows;
+import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public abstract class GenericRepositorySourceFileImporter extends AbstractRepositorySourceFileImporter {
+import org.jongo.MongoCollection;
 
-  public GenericRepositorySourceFileImporter(RepositorySource source, RepositoryFileContext context) {
-    super(source, context);
+import com.mongodb.MongoClientURI;
+
+@Slf4j
+public class RepositorySourceFileWriter extends AbstractJongoWriter<Iterable<RepositoryFile>> {
+
+  /**
+   * Constants.
+   */
+  public static final String FILE_REPOSITORY_ORG_FIELD_NAME = "repository.repo_org";
+
+  /**
+   * Metadata.
+   */
+  @NonNull
+  protected final RepositorySource source;
+
+  /**
+   * Dependencies.
+   */
+  @NonNull
+  protected final MongoCollection fileCollection;
+
+  public RepositorySourceFileWriter(@NonNull MongoClientURI mongoUri, @NonNull RepositorySource source) {
+    super(mongoUri);
+    this.fileCollection = getCollection(FILE_COLLECTION);
+    this.source = source;
   }
 
   @Override
-  @SneakyThrows
-  public void execute() {
-    val watch = createStarted();
+  public void write(@NonNull Iterable<RepositoryFile> files) {
+    log.info("Clearing file documents...");
+    clearFiles();
 
-    log.info("Reading files...");
-    val files = readFiles();
-    log.info("Finished reading files");
-
-    if (isEmpty(files)) {
-      log.error("**** Files are empty! Reusing previous imported files");
-      return;
+    log.info("Writing file documents...");
+    for (val file : files) {
+      saveFile(file);
     }
-
-    log.info("Writing files...");
-    writeFiles(files);
-    log.info("Finished writing files");
-
-    log.info("Imported {} files in {}.", formatCount(files), watch);
   }
 
-  protected abstract Iterable<RepositoryFile> readFiles();
+  public void clearFiles() {
+    log.info("Clearing '{}' documents in collection '{}'", source.getId(), fileCollection.getName());
+    val result = fileCollection.remove("{ " + FILE_REPOSITORY_ORG_FIELD_NAME + ": # }", source.getId());
+    checkState(result.getLastError().ok(), "Error clearing mongo: %s", result);
 
-  @SneakyThrows
-  protected void writeFiles(Iterable<RepositoryFile> files) {
-    @Cleanup
-    val writer = new RepositorySourceFileWriter(context.getMongoUri(), source);
-    writer.write(files);
+    log.info("Finished clearing {} '{}' documents in collection '{}'",
+        formatCount(result.getN()), source.getId(), fileCollection.getName());
+  }
+
+  protected void saveFile(RepositoryFile file) {
+    fileCollection.save(file);
   }
 
 }

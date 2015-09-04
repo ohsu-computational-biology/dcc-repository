@@ -23,9 +23,9 @@ import static org.icgc.dcc.repository.pcawg.reader.PCAWGDonorArchiveReader.DEFAU
 
 import java.net.URL;
 
-import org.icgc.dcc.repository.core.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.pcawg.core.PCAWGDonorProcessor;
 import org.icgc.dcc.repository.pcawg.reader.PCAWGDonorArchiveReader;
 

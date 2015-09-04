@@ -15,28 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core;
+package org.icgc.dcc.repository.core.util;
 
+import static com.google.common.base.Stopwatch.createStarted;
+import static com.google.common.collect.Iterables.isEmpty;
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
+import org.icgc.dcc.repository.core.writer.RepositorySourceFileWriter;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
-public abstract class AbstractRepositorySourceFileImporter implements RepositorySourceFileImporter {
+@Slf4j
+public abstract class GenericRepositorySourceFileImporter extends AbstractRepositorySourceFileImporter {
 
-  /**
-   * Metadata.
-   */
-  @NonNull
-  @Getter
-  protected RepositorySource source;
+  public GenericRepositorySourceFileImporter(RepositorySource source, RepositoryFileContext context) {
+    super(source, context);
+  }
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  protected RepositoryFileContext context;
+  @Override
+  @SneakyThrows
+  public void execute() {
+    val watch = createStarted();
+
+    log.info("Reading files...");
+    val files = readFiles();
+    log.info("Finished reading files");
+
+    if (isEmpty(files)) {
+      log.error("**** Files are empty! Reusing previous imported files");
+      return;
+    }
+
+    log.info("Writing files...");
+    writeFiles(files);
+    log.info("Finished writing files");
+
+    log.info("Imported {} files in {}.", formatCount(files), watch);
+  }
+
+  protected abstract Iterable<RepositoryFile> readFiles();
+
+  @SneakyThrows
+  protected void writeFiles(Iterable<RepositoryFile> files) {
+    @Cleanup
+    val writer = new RepositorySourceFileWriter(context.getMongoUri(), source);
+    writer.write(files);
+  }
 
 }

@@ -21,9 +21,9 @@ import static org.icgc.dcc.repository.core.model.RepositorySource.CGHUB;
 
 import org.icgc.dcc.repository.cghub.core.CGHubAnalysisDetailProcessor;
 import org.icgc.dcc.repository.cghub.reader.CGHubAnalysisDetailReader;
-import org.icgc.dcc.repository.core.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

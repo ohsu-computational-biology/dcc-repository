@@ -19,9 +19,9 @@ package org.icgc.dcc.repository.tcga;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.TCGA;
 
-import org.icgc.dcc.repository.core.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.tcga.core.TCGAClinicalFileProcessor;
 
 import lombok.val;

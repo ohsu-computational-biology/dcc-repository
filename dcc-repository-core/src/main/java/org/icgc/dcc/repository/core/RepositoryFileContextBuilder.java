@@ -69,9 +69,6 @@ public final class RepositoryFileContextBuilder {
   @Setter
   @Accessors(chain = true, fluent = true)
   private RepositoryIdResolver pcawgIdResolver;
-  @Setter
-  @Accessors(chain = true, fluent = true)
-  private RepositoryIdResolver awsIdResolver;
 
   public static RepositoryFileContextBuilder builder() {
     return new RepositoryFileContextBuilder();
@@ -83,8 +80,7 @@ public final class RepositoryFileContextBuilder {
     val identifierClient = createIdentifierClient();
     val tcgaClient = createTCGAClient();
 
-    return new RepositoryFileContext(repoMongoUri, esUri, primarySites, identifierClient, tcgaClient, pcawgIdResolver,
-        awsIdResolver);
+    return new RepositoryFileContext(repoMongoUri, esUri, primarySites, identifierClient, tcgaClient, pcawgIdResolver);
   }
 
   private IdentifierClient createIdentifierClient() {

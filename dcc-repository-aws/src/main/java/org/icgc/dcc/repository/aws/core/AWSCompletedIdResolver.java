@@ -15,24 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.core;
+package org.icgc.dcc.repository.aws.core;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import java.util.Set;
 
-import java.io.IOException;
+import org.icgc.dcc.repository.aws.reader.AWSS3TransferJobReader;
+import org.icgc.dcc.repository.core.RepositoryIdResolver;
 
-import org.junit.Test;
+import com.google.common.collect.ImmutableSet;
 
 import lombok.val;
 
-//@Ignore("For development only")
-public class RepositoryImporterTest {
+public class AWSCompletedIdResolver implements RepositoryIdResolver {
 
-  @Test
-  public void testExecute() throws IOException {
-    val context = newLocalRepositoryFileContext();
-    val repositoryImporter = new RepositoryImporter(context);
-    repositoryImporter.execute();
+  @Override
+  public Set<String> resolveIds() {
+    val reader = new AWSS3TransferJobReader();
+
+    val objectIds = ImmutableSet.<String> builder();
+    for (val job : reader.read()) {
+      for (val file : job.withArray("files")) {
+        val objectId = file.get("object_id").textValue();
+        objectIds.add(objectId);
+      }
+    }
+
+    return objectIds.build();
   }
 
 }

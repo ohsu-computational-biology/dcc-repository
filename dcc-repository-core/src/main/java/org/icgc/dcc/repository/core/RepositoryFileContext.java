@@ -61,16 +61,12 @@ public class RepositoryFileContext {
   private final TCGAClient tcgaClient;
   @NonNull
   private final RepositoryIdResolver pcawgIdResolver;
-  @NonNull
-  private final RepositoryIdResolver awsIdResolver;
 
   /**
    * Data.
    */
   @Getter(lazy = true, value = PRIVATE)
   private final Set<String> pcawgSubmittedDonorIds = pcawgIdResolver.resolveIds();
-  @Getter(lazy = true, value = PRIVATE)
-  private final Set<String> awsS3ObjectIds = awsIdResolver.resolveIds();
 
   @NonNull
   public String getPrimarySite(String projectCode) {
@@ -80,10 +76,6 @@ public class RepositoryFileContext {
   @NonNull
   public boolean isPCAWGSubmittedDonorId(String projectCode, String submittedDonorId) {
     return getPcawgSubmittedDonorIds().contains(qualifyDonorId(projectCode, submittedDonorId));
-  }
-
-  public boolean isAWSS3ObjectId(String objectId) {
-    return getAwsS3ObjectIds().contains(objectId);
   }
 
   @NonNull

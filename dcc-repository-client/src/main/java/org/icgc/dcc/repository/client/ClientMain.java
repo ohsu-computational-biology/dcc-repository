@@ -29,7 +29,6 @@ import java.io.File;
 
 import org.icgc.dcc.etl.core.config.EtlConfig;
 import org.icgc.dcc.etl.core.config.EtlConfigFile;
-import org.icgc.dcc.repository.aws.core.AWSIdResolver;
 import org.icgc.dcc.repository.client.cli.Options;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
@@ -105,7 +104,6 @@ public class ClientMain {
         .repoMongoUri(repoMongoUri)
         .esUri(esUri)
         .realIds(true)
-        .awsIdResolver(new AWSIdResolver())
         .pcawgIdResolver(new PCAWGDonorIdResolver())
         .build();
 

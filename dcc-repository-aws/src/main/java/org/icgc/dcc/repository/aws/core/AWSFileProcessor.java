@@ -17,30 +17,65 @@
  */
 package org.icgc.dcc.repository.aws.core;
 
+import static java.lang.String.format;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+
+import java.io.File;
 import java.util.Set;
 
-import org.icgc.dcc.repository.aws.reader.AWSS3TransferJobReader;
-import org.icgc.dcc.repository.core.RepositoryIdResolver;
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
 
-import com.google.common.collect.ImmutableSet;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
+import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-public class AWSIdResolver implements RepositoryIdResolver {
+@Slf4j
+public class AWSFileProcessor extends RepositoryFileProcessor {
 
-  @Override
-  public Set<String> resolveIds() {
-    val reader = new AWSS3TransferJobReader();
+  public AWSFileProcessor(RepositoryFileContext context) {
+    super(context);
+  }
 
-    val objectIds = ImmutableSet.<String> builder();
-    for (val job : reader.read()) {
-      for (val file : job.withArray("files")) {
-        val objectId = file.get("object_id").textValue();
-        objectIds.add(objectId);
-      }
-    }
+  public Iterable<RepositoryFile> processObjects(@NonNull Iterable<S3ObjectSummary> objectSummaries,
+      @NonNull Set<String> objectIds) {
+    return stream(objectSummaries)
+        .filter(objectSummary -> objectIds.contains(getObjectId(objectSummary)))
+        .map(objectSummary -> processObject(objectSummary))
+        .collect(toImmutableList());
+  }
 
-    return objectIds.build();
+  private RepositoryFile processObject(S3ObjectSummary s3Object) {
+
+    return createFile(s3Object);
+  }
+
+  private RepositoryFile createFile(S3ObjectSummary summary) {
+    val id = getObjectId(summary);
+
+    log.info("Bucket entry: {}", format("%-30s %-50s %10d %s",
+        id,
+        summary.getKey(),
+        summary.getSize(),
+        summary.getStorageClass()));
+
+    val file = new RepositoryFile()
+        .setId(id);
+
+    file.getRepository()
+        .setRepoOrg("ICGC")
+        .setLastModified(summary.getLastModified().toString())
+        .setFileSize(summary.getSize());
+
+    return file;
+  }
+
+  private static String getObjectId(S3ObjectSummary objectSummary) {
+    return new File(objectSummary.getKey()).getName();
   }
 
 }

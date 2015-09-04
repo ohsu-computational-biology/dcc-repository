@@ -29,7 +29,6 @@ public class RepositoryFileContexts {
     return RepositoryFileContextBuilder
         .builder()
         .realIds(false)
-        .awsIdResolver(newEmptyIdResovler())
         .pcawgIdResolver(newEmptyIdResovler())
         .build();
   }

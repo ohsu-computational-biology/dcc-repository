@@ -17,13 +17,8 @@
  */
 package org.icgc.dcc.repository.aws.reader;
 
-import static java.lang.String.format;
-
-import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
-
-import org.icgc.dcc.repository.core.model.RepositoryFile;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -48,7 +43,7 @@ public class AWSS3BucketReader {
   private static final String DEFAULT_BUCKET_KEY_PREFIX = "data";
 
   /**
-   * Configuration
+   * Configuration.
    */
   @NonNull
   private final String bucketName;
@@ -59,61 +54,30 @@ public class AWSS3BucketReader {
     this(DEFAULT_BUCKET_NAME, DEFAULT_BUCKET_KEY_PREFIX);
   }
 
-  public List<RepositoryFile> read() {
-    val files = ImmutableList.<RepositoryFile> builder();
+  public List<S3ObjectSummary> readSummaries() {
+    val objectSummaries = ImmutableList.<S3ObjectSummary> builder();
 
-    readBucket(bucketName, prefix, (summary) -> {
-      String fileName = getFileName(summary);
-
-      if (isEntityId(fileName)) {
-        files.add(createFile(summary));
-      }
+    readBucket(bucketName, prefix, (objectSummary) -> {
+      objectSummaries.add(objectSummary);
     });
 
-    return files.build();
-  }
-
-  private RepositoryFile createFile(S3ObjectSummary summary) {
-    val id = getFileName(summary);
-
-    log.info("Bucket entry: {}", format("%-30s %-50s %10d %s",
-        id,
-        summary.getKey(),
-        summary.getSize(),
-        summary.getStorageClass()));
-
-    val file = new RepositoryFile()
-        .setId(id);
-
-    file.getRepository()
-        .setRepoOrg("ICGC")
-        .setLastModified(summary.getLastModified().toString())
-        .setFileSize(summary.getSize());
-
-    return file;
+    return objectSummaries.build();
   }
 
   private void readBucket(String bucketName, String prefix, Consumer<S3ObjectSummary> callback) {
     val s3 = createS3Client();
-
     val request = new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix);
+    log.info("Reading summaries from '{}'...");
+
     ObjectListing listing;
     do {
       listing = s3.listObjects(request);
-      for (val summary : listing.getObjectSummaries()) {
-        callback.accept(summary);
+      for (val objectSummary : listing.getObjectSummaries()) {
+        callback.accept(objectSummary);
       }
 
       request.setMarker(listing.getNextMarker());
     } while (listing.isTruncated());
-  }
-
-  private boolean isEntityId(String fileName) {
-    return fileName.matches("[0-9a-fA-F]{24}");
-  }
-
-  private String getFileName(S3ObjectSummary summary) {
-    return new File(summary.getKey()).getName();
   }
 
   private AmazonS3 createS3Client() {

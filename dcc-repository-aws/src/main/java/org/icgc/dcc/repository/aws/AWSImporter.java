@@ -17,14 +17,21 @@
  */
 package org.icgc.dcc.repository.aws;
 
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
 
+import java.util.List;
 import java.util.Set;
 
-import org.icgc.dcc.repository.aws.core.AWSIdResolver;
+import org.icgc.dcc.repository.aws.core.AWSCompletedIdResolver;
+import org.icgc.dcc.repository.aws.core.AWSFileProcessor;
+import org.icgc.dcc.repository.aws.reader.AWSS3BucketReader;
 import org.icgc.dcc.repository.aws.writer.AWSS3ObjectIdWriter;
-import org.icgc.dcc.repository.core.AbstractRepositorySourceFileImporter;
+import org.icgc.dcc.repository.core.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
+
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -33,24 +40,39 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AWSImporter extends AbstractRepositorySourceFileImporter {
+public class AWSImporter extends GenericRepositorySourceFileImporter {
 
   public AWSImporter(@NonNull RepositoryFileContext context) {
     super(AWS, context);
   }
 
   @Override
-  public void execute() {
+  protected Iterable<RepositoryFile> readFiles() {
     log.info("Reading object ids...");
     val objectIds = readObjectIds();
-    log.info("Read {} object ids", objectIds.size());
+    log.info("Read {} object ids", formatCount(objectIds));
 
-    log.info("Writing object ids...");
-    writeObjectIds(objectIds);
+    log.info("Reading object summaries...");
+    val objectSummaries = readObjectSummaries();
+    log.info("Read {} object summaries", formatCount(objectSummaries));
+
+    log.info("Processing files...");
+    val files = processFiles(objectSummaries, objectIds);
+    log.info("Processed {} files", formatCount(files));
+
+    return files;
   }
 
   private Set<String> readObjectIds() {
-    return new AWSIdResolver().resolveIds();
+    return new AWSCompletedIdResolver().resolveIds();
+  }
+
+  private Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries, Set<String> objectIds) {
+    return new AWSFileProcessor(context).processObjects(objectSummaries, objectIds);
+  }
+
+  private List<S3ObjectSummary> readObjectSummaries() {
+    return new AWSS3BucketReader().readSummaries();
   }
 
   @SneakyThrows

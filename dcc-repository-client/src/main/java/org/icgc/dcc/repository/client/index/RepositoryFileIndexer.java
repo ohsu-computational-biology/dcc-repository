@@ -22,7 +22,6 @@ import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.propagate;
 import static org.elasticsearch.client.Requests.indexRequest;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.FILE_COLLECTION;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
@@ -52,6 +51,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.collect.Maps;
 import org.elasticsearch.common.collect.Sets;
 import org.elasticsearch.common.unit.ByteSizeValue;
+import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -163,7 +163,7 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
   }
 
   private int indexFileDocuments(BulkProcessor processor) {
-    return eachDocument(FILE_COLLECTION.getId(), file -> {
+    return eachDocument(RepositoryFileCollection.FILE, file -> {
       String id = file.get("id").textValue();
 
       // Need to remove this as to not conflict with Elasticsearch
@@ -195,7 +195,7 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
     }
 
     // Collect
-    eachDocument(FILE_COLLECTION.getId(), file -> {
+    eachDocument(RepositoryFileCollection.FILE, file -> {
       JsonNode donor = file.path("donor");
       String donorId = donor.get("donor_id").textValue();
       donorIds.add(donorId);

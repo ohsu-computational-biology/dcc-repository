@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,48 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.reader;
+package org.icgc.dcc.repository.core.model;
 
-import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
-import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
-import org.jongo.MongoCollection;
+import static lombok.AccessLevel.PRIVATE;
 
-import com.mongodb.MongoClientURI;
+import org.icgc.dcc.common.core.model.Identifiable;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-@Slf4j
-public class RepositoryFileReader extends AbstractJongoComponent {
+@RequiredArgsConstructor(access = PRIVATE)
+public enum RepositoryFileCollection implements Identifiable {
 
-  /**
-   * Configuration.
-   */
+  FILE("File", null),
+  CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
+  TCGA_FILE("TCGAFile", RepositorySource.TCGA),
+  PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
+  AWS_FILE("AWSFile", RepositorySource.AWS);
+
   @Getter
   @NonNull
-  private final RepositoryFileCollection fileCollection;
+  private final String id;
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  protected final MongoCollection collection;
+  @Getter
+  private final RepositorySource source;
 
-  public RepositoryFileReader(@NonNull MongoClientURI mongoUri) {
-    this(mongoUri, RepositoryFileCollection.FILE);
-  }
+  public static RepositoryFileCollection forSource(@NonNull RepositorySource source) {
+    for (val value : values()) {
+      if (source == value.getSource()) {
+        return value;
+      }
+    }
 
-  protected RepositoryFileReader(@NonNull MongoClientURI mongoUri, RepositoryFileCollection fileCollection) {
-    super(mongoUri);
-    this.fileCollection = fileCollection;
-    this.collection = getCollection(fileCollection);
-  }
-
-  public Iterable<RepositoryFile> read() {
-    log.info("Reading files...");
-    return collection.find().as(RepositoryFile.class);
+    return null;
   }
 
 }

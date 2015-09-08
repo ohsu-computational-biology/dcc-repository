@@ -17,14 +17,16 @@
  */
 package org.icgc.dcc.repository.core.writer;
 
-import static org.icgc.dcc.common.core.model.ReleaseCollection.FILE_COLLECTION;
+import static org.icgc.dcc.repository.core.model.RepositoryFileCollection.FILE;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
 import org.icgc.dcc.repository.core.util.AbstractJongoWriter;
 import org.jongo.MongoCollection;
 
 import com.mongodb.MongoClientURI;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -33,33 +35,45 @@ import lombok.extern.slf4j.Slf4j;
 public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<RepositoryFile>> {
 
   /**
+   * Configuration.
+   */
+  @Getter
+  @NonNull
+  private final RepositoryFileCollection fileCollection;
+
+  /**
    * Dependencies.
    */
   @NonNull
-  protected final MongoCollection fileCollection;
+  protected final MongoCollection collection;
 
   public RepositoryFileWriter(@NonNull MongoClientURI mongoUri) {
+    this(mongoUri, FILE);
+  }
+
+  public RepositoryFileWriter(@NonNull MongoClientURI mongoUri, @NonNull RepositoryFileCollection fileCollection) {
     super(mongoUri);
-    this.fileCollection = getCollection(FILE_COLLECTION.getId());
+    this.fileCollection = fileCollection;
+    this.collection = getCollection(fileCollection);
   }
 
   @Override
   public void write(@NonNull Iterable<RepositoryFile> files) {
-    log.info("Clearing file documents...");
+    log.info("Clearing '{}' documents...", collection.getName());
     clearFiles();
 
-    log.info("Writing file documents...");
+    log.info("Writing '{}' documents...", collection.getName());
     for (val file : files) {
       saveFile(file);
     }
   }
 
   public void clearFiles() {
-    clearDocuments(fileCollection.getName());
+    clearDocuments(fileCollection);
   }
 
   protected void saveFile(RepositoryFile file) {
-    fileCollection.save(file);
+    collection.save(file);
   }
 
 }

@@ -17,59 +17,26 @@
  */
 package org.icgc.dcc.repository.core.writer;
 
-import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
 import org.icgc.dcc.repository.core.model.RepositorySource;
-import org.icgc.dcc.repository.core.util.AbstractJongoWriter;
-import org.jongo.MongoCollection;
 
 import com.mongodb.MongoClientURI;
 
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class RepositorySourceFileWriter extends AbstractJongoWriter<Iterable<RepositoryFile>> {
+public class RepositorySourceFileWriter extends RepositoryFileWriter {
 
   /**
-   * Metadata.
+   * Configuration.
    */
+  @Getter
   @NonNull
   protected final RepositorySource source;
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  protected final MongoCollection fileCollection;
-
-  public RepositorySourceFileWriter(@NonNull MongoClientURI mongoUri, @NonNull RepositorySource source) {
-    super(mongoUri);
-    this.fileCollection = getCollection(source);
+  public RepositorySourceFileWriter(@NonNull MongoClientURI mongoUri, RepositorySource source) {
+    super(mongoUri, RepositoryFileCollection.forSource(source));
     this.source = source;
-  }
-
-  @Override
-  public void write(@NonNull Iterable<RepositoryFile> files) {
-    log.info("Clearing file documents...");
-    clearFiles();
-
-    log.info("Writing file documents...");
-    for (val file : files) {
-      saveFile(file);
-    }
-  }
-
-  public void clearFiles() {
-    clearDocuments(fileCollection.getName());
-  }
-
-  protected void saveFile(RepositoryFile file) {
-    fileCollection.save(file);
-  }
-
-  private MongoCollection getCollection(RepositorySource source) {
-    return getCollection(source.getId() + "File");
   }
 
 }

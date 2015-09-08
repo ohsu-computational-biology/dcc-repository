@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.core.reader;
 
+import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import com.mongodb.MongoClientURI;
@@ -26,7 +27,7 @@ import lombok.NonNull;
 public class RepositorySourceFileReader extends RepositoryFileReader {
 
   public RepositorySourceFileReader(@NonNull MongoClientURI mongoUri, RepositorySource source) {
-    super(mongoUri, source.getId() + "File");
+    super(mongoUri, RepositoryFileCollection.forSource(source));
   }
 
 }

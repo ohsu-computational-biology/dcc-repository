@@ -26,16 +26,13 @@ import java.util.Set;
 import org.icgc.dcc.repository.aws.core.AWSCompletedIdResolver;
 import org.icgc.dcc.repository.aws.core.AWSFileProcessor;
 import org.icgc.dcc.repository.aws.reader.AWSS3BucketReader;
-import org.icgc.dcc.repository.aws.writer.AWSS3ObjectIdWriter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-import lombok.Cleanup;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,13 +70,6 @@ public class AWSImporter extends GenericRepositorySourceFileImporter {
 
   private List<S3ObjectSummary> readObjectSummaries() {
     return new AWSS3BucketReader().readSummaries();
-  }
-
-  @SneakyThrows
-  private void writeObjectIds(Set<String> objectIds) {
-    @Cleanup
-    val writer = new AWSS3ObjectIdWriter(context.getMongoUri());
-    writer.write(objectIds);
   }
 
 }

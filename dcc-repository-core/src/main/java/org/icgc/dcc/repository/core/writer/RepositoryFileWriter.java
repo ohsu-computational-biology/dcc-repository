@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2014 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,17 +15,14 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.aws.writer;
+package org.icgc.dcc.repository.core.writer;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.model.ReleaseCollection.FILE_COLLECTION;
 
-import java.util.Set;
-
+import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.AbstractJongoWriter;
 import org.jongo.MongoCollection;
 
-import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientURI;
 
 import lombok.NonNull;
@@ -33,42 +30,36 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AWSS3ObjectIdWriter extends AbstractJongoWriter<Set<String>> {
+public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<RepositoryFile>> {
 
   /**
    * Dependencies.
    */
   @NonNull
-  protected final MongoCollection awsCollection;
+  protected final MongoCollection fileCollection;
 
-  public AWSS3ObjectIdWriter(MongoClientURI mongoUri) {
+  public RepositoryFileWriter(@NonNull MongoClientURI mongoUri) {
     super(mongoUri);
-    this.awsCollection = jongo.getCollection("AWS");
+    this.fileCollection = getCollection(FILE_COLLECTION.getId());
   }
 
   @Override
-  public void write(Set<String> objectIds) {
-    log.info("Clearing object id documents...");
-    clearObjectIds();
+  public void write(@NonNull Iterable<RepositoryFile> files) {
+    log.info("Clearing file documents...");
+    clearFiles();
 
-    log.info("Writing object id documents...");
-    saveObjectIds(objectIds);
-  }
-
-  private void clearObjectIds() {
-    log.info("Clearing '{}' documents in collection '{}'", awsCollection.getName());
-    val result = awsCollection.remove("{}");
-    checkState(result.getLastError().ok(), "Error clearing mongo: %s", result);
-
-    log.info("Finished clearing {} documents in collection '{}'",
-        formatCount(result.getN()), awsCollection.getName());
-  }
-
-  private void saveObjectIds(Set<String> objectIds) {
-    for (val objectId : objectIds) {
-      val document = ImmutableMap.of("objectId", objectId);
-      awsCollection.save(document);
+    log.info("Writing file documents...");
+    for (val file : files) {
+      saveFile(file);
     }
+  }
+
+  public void clearFiles() {
+    clearDocuments(fileCollection.getName());
+  }
+
+  protected void saveFile(RepositoryFile file) {
+    fileCollection.save(file);
   }
 
 }

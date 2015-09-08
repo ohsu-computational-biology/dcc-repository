@@ -24,6 +24,7 @@ import static org.apache.commons.lang.StringUtils.repeat;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 
 import java.util.List;
+import java.util.Set;
 
 import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.repository.aws.AWSImporter;
@@ -31,7 +32,9 @@ import org.icgc.dcc.repository.cghub.CGHubImporter;
 import org.icgc.dcc.repository.client.index.RepositoryFileIndexer;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
+import org.icgc.dcc.repository.core.writer.RepositoryFileWriter;
 import org.icgc.dcc.repository.pcawg.PCAWGImporter;
 import org.icgc.dcc.repository.tcga.TCGAImporter;
 
@@ -74,31 +77,19 @@ public class RepositoryImporter {
   public void execute(Iterable<RepositorySource> activeSources) {
     val watch = createStarted();
 
-    // Key steps, order matters
-    val exceptions = ImmutableList.<Exception> builder()
-        .addAll(writeFiles(activeSources))
-        .addAll(indexFiles())
-        .build();
+    // TODO: Improve exception handling
+    // Key steps, order matter
+    val exceptions = ImmutableList.<Exception> builder().addAll(writeSourceFiles(activeSources)).build();
+    val files = collectFiles();
+    val combined = combineFiles(files);
+    writeFiles(combined);
 
     report(watch, exceptions);
 
     checkState(exceptions.isEmpty(), "Exception(s) processing %s", exceptions);
   }
 
-  private void report(Stopwatch watch, List<Exception> exceptions) {
-    val success = exceptions.isEmpty();
-    if (success) {
-      log.info("Finished importing repository in {}", watch);
-    } else {
-      log.warn("Finished importing repository with errors in {}", watch);
-    }
-
-    val subject = "DCC - Repository Importer - " + (success ? "SUCCESS" : "ERROR");
-    val body = "Finished in " + watch + "\n\n" + NEWLINE.join(exceptions);
-    new Mailer().sendMail(subject, body);
-  }
-
-  private Iterable<Exception> writeFiles(Iterable<RepositorySource> activeSources) {
+  private Iterable<Exception> writeSourceFiles(Iterable<RepositorySource> activeSources) {
     val importers = createImporters(context);
 
     val exceptions = ImmutableList.<Exception> builder();
@@ -118,6 +109,26 @@ public class RepositoryImporter {
     return exceptions.build();
   }
 
+  private Iterable<Set<RepositoryFile>> collectFiles() {
+    logBanner("Collecting files");
+    val collector = new RepositoryFileCollector(context);
+    return collector.collectFiles();
+  }
+
+  private Iterable<RepositoryFile> combineFiles(Iterable<Set<RepositoryFile>> files) {
+    logBanner("Combining files");
+    val combiner = new RepositoryFileCombiner();
+    return combiner.combineFiles(files);
+  }
+
+  @SneakyThrows
+  private void writeFiles(Iterable<RepositoryFile> files) {
+    logBanner("Writing files");
+    @Cleanup
+    val writer = new RepositoryFileWriter(context.getMongoUri());
+    writer.write(files);
+  }
+
   @SneakyThrows
   private Iterable<Exception> indexFiles() {
     val exceptions = ImmutableList.<Exception> builder();
@@ -131,6 +142,19 @@ public class RepositoryImporter {
     }
 
     return exceptions.build();
+  }
+
+  private void report(Stopwatch watch, List<Exception> exceptions) {
+    val success = exceptions.isEmpty();
+    if (success) {
+      log.info("Finished importing repository in {}", watch);
+    } else {
+      log.warn("Finished importing repository with errors in {}", watch);
+    }
+
+    val subject = "DCC Repository Importer - " + (success ? "SUCCESS" : "ERROR");
+    val body = "Finished in " + watch + "\n\n" + NEWLINE.join(exceptions);
+    new Mailer().sendMail(subject, body);
   }
 
   private static List<RepositorySourceFileImporter> createImporters(RepositoryFileContext context) {

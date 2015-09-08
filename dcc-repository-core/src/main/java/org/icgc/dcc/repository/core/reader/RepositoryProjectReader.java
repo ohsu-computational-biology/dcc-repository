@@ -23,10 +23,10 @@ import java.util.Map;
 
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
 
-import lombok.val;
-
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientURI;
+
+import lombok.val;
 
 public class RepositoryProjectReader extends AbstractJongoComponent {
 
@@ -36,7 +36,7 @@ public class RepositoryProjectReader extends AbstractJongoComponent {
 
   public Map<String, String> getPrimarySites() {
     val map = ImmutableMap.<String, String> builder();
-    eachDocument(PROJECT_COLLECTION, project -> {
+    eachDocument(PROJECT_COLLECTION.getId(), project -> {
       String projectName = project.get("_project_id").textValue();
       String primarySite = project.get("primary_site").textValue();
 

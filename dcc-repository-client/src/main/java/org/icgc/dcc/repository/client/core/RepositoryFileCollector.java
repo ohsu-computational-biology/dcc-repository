@@ -48,14 +48,29 @@ public class RepositoryFileCollector {
   public Iterable<Set<RepositoryFile>> collectFiles() {
     log.info("Collecting files...");
     val readers = createReaders();
+    val files = readFiles(readers);
 
+    return iterable(files);
+
+  }
+
+  private HashMultimap<String, RepositoryFile> readFiles(Iterable<RepositorySourceFileReader> readers) {
     val files = HashMultimap.<String, RepositoryFile> create();
     for (val reader : readers) {
       for (val file : reader.read()) {
         files.put(file.getId(), file);
       }
     }
+    return files;
+  }
 
+  private Iterable<RepositorySourceFileReader> createReaders() {
+    return stream(RepositorySource.values())
+        .map(source -> new RepositorySourceFileReader(context.getMongoUri(), source))
+        .collect(toImmutableList());
+  }
+
+  private Iterable<Set<RepositoryFile>> iterable(HashMultimap<String, RepositoryFile> files) {
     return new Iterable<Set<RepositoryFile>>() {
 
       @Override
@@ -78,13 +93,6 @@ public class RepositoryFileCollector {
         };
       }
     };
-
-  }
-
-  private Iterable<RepositorySourceFileReader> createReaders() {
-    return stream(RepositorySource.values())
-        .map(source -> new RepositorySourceFileReader(context.getMongoUri(), source))
-        .collect(toImmutableList());
   }
 
 }

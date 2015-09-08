@@ -17,29 +17,19 @@
  */
 package org.icgc.dcc.repository.core.writer;
 
-import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.common.core.model.ReleaseCollection.FILE_COLLECTION;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.util.AbstractJongoWriter;
+import org.jongo.MongoCollection;
+
+import com.mongodb.MongoClientURI;
 
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jongo.MongoCollection;
-
-import com.mongodb.MongoClientURI;
-
 @Slf4j
 public class RepositorySourceFileWriter extends AbstractJongoWriter<Iterable<RepositoryFile>> {
-
-  /**
-   * Constants.
-   */
-  public static final String FILE_REPOSITORY_ORG_FIELD_NAME = "repository.repo_org";
 
   /**
    * Metadata.
@@ -55,7 +45,7 @@ public class RepositorySourceFileWriter extends AbstractJongoWriter<Iterable<Rep
 
   public RepositorySourceFileWriter(@NonNull MongoClientURI mongoUri, @NonNull RepositorySource source) {
     super(mongoUri);
-    this.fileCollection = getCollection(FILE_COLLECTION);
+    this.fileCollection = getCollection(source);
     this.source = source;
   }
 
@@ -71,16 +61,15 @@ public class RepositorySourceFileWriter extends AbstractJongoWriter<Iterable<Rep
   }
 
   public void clearFiles() {
-    log.info("Clearing '{}' documents in collection '{}'", source.getId(), fileCollection.getName());
-    val result = fileCollection.remove("{ " + FILE_REPOSITORY_ORG_FIELD_NAME + ": # }", source.getId());
-    checkState(result.getLastError().ok(), "Error clearing mongo: %s", result);
-
-    log.info("Finished clearing {} '{}' documents in collection '{}'",
-        formatCount(result.getN()), source.getId(), fileCollection.getName());
+    clearDocuments(fileCollection.getName());
   }
 
   protected void saveFile(RepositoryFile file) {
     fileCollection.save(file);
+  }
+
+  private MongoCollection getCollection(RepositorySource source) {
+    return getCollection(source.getId() + "File");
   }
 
 }

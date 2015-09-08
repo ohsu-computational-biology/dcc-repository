@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.repository.core.util;
 
+import static com.google.common.base.Preconditions.checkState;
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.repository.core.util.Jongos.newJongo;
 
 import java.io.Closeable;
@@ -25,7 +27,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.icgc.dcc.common.core.model.ReleaseCollection;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 import org.jongo.MongoCursor;
@@ -36,7 +37,9 @@ import com.mongodb.MongoClientURI;
 
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class AbstractJongoComponent implements Closeable {
 
   /**
@@ -59,17 +62,28 @@ public abstract class AbstractJongoComponent implements Closeable {
     jongo.getDatabase().getMongo().close();
   }
 
-  protected MongoCollection getCollection(@NonNull ReleaseCollection releaseCollection) {
-    return jongo.getCollection(releaseCollection.getId());
+  protected MongoCollection getCollection(@NonNull String collectionName) {
+    return jongo.getCollection(collectionName);
   }
 
-  protected MongoCursor<ObjectNode> readDocuments(ReleaseCollection collection) {
-    return getCollection(collection).find().as(ObjectNode.class);
+  protected MongoCursor<ObjectNode> readDocuments(@NonNull String collectionName) {
+    return getCollection(collectionName).find().as(ObjectNode.class);
   }
 
-  protected int eachDocument(@NonNull ReleaseCollection collection, @NonNull Consumer<ObjectNode> handler) {
+  protected void clearDocuments(@NonNull String collectionName) {
+    val collection = getCollection(collectionName);
+
+    log.info("Clearing documents in collection '{}'", collection.getName());
+    val result = collection.remove();
+    checkState(result.getLastError().ok(), "Error clearing mongo: %s", result);
+
+    log.info("Finished clearing {} documents in collection '{}'",
+        formatCount(result.getN()), collection.getName());
+  }
+
+  protected int eachDocument(@NonNull String collectionName, @NonNull Consumer<ObjectNode> handler) {
     int documentCount = 0;
-    for (val document : readDocuments(collection)) {
+    for (val document : readDocuments(collectionName)) {
       handler.accept(document);
 
       documentCount++;
@@ -78,9 +92,9 @@ public abstract class AbstractJongoComponent implements Closeable {
     return documentCount;
   }
 
-  protected <T> List<T> mapDocument(@NonNull ReleaseCollection collection, @NonNull Function<ObjectNode, T> mapping) {
+  protected <T> List<T> mapDocument(@NonNull String collectionName, @NonNull Function<ObjectNode, T> mapping) {
     val results = ImmutableList.<T> builder();
-    for (val document : readDocuments(collection)) {
+    for (val document : readDocuments(collectionName)) {
       val result = mapping.apply(document);
 
       results.add(result);

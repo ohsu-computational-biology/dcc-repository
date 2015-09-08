@@ -17,14 +17,22 @@
  */
 package org.icgc.dcc.repository.client.core;
 
+import static org.elasticsearch.common.collect.Iterables.getFirst;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+
 import java.util.Iterator;
 import java.util.Set;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class RepositoryFileCombiner {
 
   public Iterable<RepositoryFile> combineFiles(Iterable<Set<RepositoryFile>> files) {
+    log.info("Lazily combining files...");
     return new Iterable<RepositoryFile>() {
 
       @Override
@@ -51,7 +59,16 @@ public class RepositoryFileCombiner {
   }
 
   private RepositoryFile combineFiles(Set<RepositoryFile> files) {
-    return null;
+    // Combine all servers
+    val servers = files.stream()
+        .flatMap(file -> file.getRepository().getRepoServer().stream())
+        .collect(toImmutableList());
+
+    // Designate one file as the representative for the group
+    val representative = getFirst(files, null);
+    representative.getRepository().setRepoServer(servers);
+
+    return representative;
   }
 
 }

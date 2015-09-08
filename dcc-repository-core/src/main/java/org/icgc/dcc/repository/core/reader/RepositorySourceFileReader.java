@@ -26,7 +26,7 @@ import lombok.NonNull;
 public class RepositorySourceFileReader extends RepositoryFileReader {
 
   public RepositorySourceFileReader(@NonNull MongoClientURI mongoUri, RepositorySource source) {
-    super(mongoUri, source.getId());
+    super(mongoUri, source.getId() + "File");
   }
 
 }

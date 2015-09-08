@@ -163,7 +163,7 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
   }
 
   private int indexFileDocuments(BulkProcessor processor) {
-    return eachDocument(FILE_COLLECTION, file -> {
+    return eachDocument(FILE_COLLECTION.getId(), file -> {
       String id = file.get("id").textValue();
 
       // Need to remove this as to not conflict with Elasticsearch
@@ -195,7 +195,7 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
     }
 
     // Collect
-    eachDocument(FILE_COLLECTION, file -> {
+    eachDocument(FILE_COLLECTION.getId(), file -> {
       JsonNode donor = file.path("donor");
       String donorId = donor.get("donor_id").textValue();
       donorIds.add(donorId);

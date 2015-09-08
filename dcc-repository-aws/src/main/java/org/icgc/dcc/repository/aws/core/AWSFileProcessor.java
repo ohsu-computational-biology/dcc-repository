@@ -20,6 +20,7 @@ package org.icgc.dcc.repository.aws.core;
 import static java.lang.String.format;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.core.model.RepositoryServers.getAWSServer;
 
 import java.io.File;
 import java.util.Set;
@@ -27,7 +28,6 @@ import java.util.Set;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -58,6 +58,8 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
   private RepositoryFile createFile(S3ObjectSummary summary) {
     val id = getObjectId(summary);
 
+    val server = getAWSServer();
+
     log.debug("Bucket entry: {}", format("%-30s %-50s %10d %s",
         id,
         summary.getKey(),
@@ -68,10 +70,17 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         .setId(id)
         .setFileId(context.ensureFileId(id));
 
-    file.getFileCopies().add(new FileCopy()
-        .setRepoOrg("ICGC")
+    file.addFileCopy()
+        .setRepoType(server.getType().getId())
+        .setRepoOrg(server.getSource().getId())
+        .setRepoName(server.getName())
+        .setRepoCode(server.getCode())
+        .setRepoCountry(server.getCountry())
+        .setRepoBaseUrl(server.getBaseUrl())
+        .setRepoMetadataPath(server.getType().getMetadataPath())
+        .setRepoDataPath(server.getType().getDataPath())
         .setLastModified(summary.getLastModified().getTime())
-        .setFileSize(summary.getSize()));
+        .setFileSize(summary.getSize());
 
     return file;
   }

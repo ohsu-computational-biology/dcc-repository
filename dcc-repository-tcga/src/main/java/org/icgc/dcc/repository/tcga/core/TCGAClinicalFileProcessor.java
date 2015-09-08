@@ -29,9 +29,12 @@ import java.util.regex.Pattern;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Program;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.tcga.model.TCGAArchiveClinicalFile;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchiveListReader;
@@ -127,45 +130,43 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setId(id)
         .setFileId(context.ensureFileId(id))
         .setStudy(null) // N/A
-        .setAccess("open");
+        .setAccess(FileAccess.OPEN);
 
     clinicalFile.getDataCategorization()
-        .setDataType("Clinical")
+        .setDataType(DataType.CLINICAL)
         .setExperimentalStrategy(null); // N/A
 
-    clinicalFile.getFileCopies().add(
-        new FileCopy()
-            .setRepoType(tcgaServer.getType().getId())
-            .setRepoOrg(tcgaServer.getSource().getId())
-            .setRepoName(tcgaServer.getName())
-            .setRepoCode(tcgaServer.getCode())
-            .setRepoCountry(tcgaServer.getCountry())
-            .setRepoBaseUrl(tcgaServer.getBaseUrl())
-            .setRepoMetadataPath(tcgaServer.getType().getMetadataPath())
-            .setRepoDataPath(tcgaServer.getType().getDataPath())
-            .setFileName(archiveClinicalFile.getFileName())
-            .setFileFormat("XML")
-            .setFileMd5sum(archiveClinicalFile.getFileMd5())
-            .setFileSize(archiveClinicalFile.getFileSize())
-            .setLastModified(archiveClinicalFile.getLastModified()));
+    clinicalFile.addFileCopy()
+        .setRepoType(tcgaServer.getType().getId())
+        .setRepoOrg(tcgaServer.getSource().getId())
+        .setRepoName(tcgaServer.getName())
+        .setRepoCode(tcgaServer.getCode())
+        .setRepoCountry(tcgaServer.getCountry())
+        .setRepoBaseUrl(tcgaServer.getBaseUrl())
+        .setRepoMetadataPath(tcgaServer.getType().getMetadataPath())
+        .setRepoDataPath(tcgaServer.getType().getDataPath())
+        .setFileName(archiveClinicalFile.getFileName())
+        .setFileFormat(FileFormat.XML)
+        .setFileMd5sum(archiveClinicalFile.getFileMd5())
+        .setFileSize(archiveClinicalFile.getFileSize())
+        .setLastModified(archiveClinicalFile.getLastModified());
 
-    clinicalFile.getDonors().add(
-        new Donor()
-            .setPrimarySite(context.getPrimarySite(projectCode))
-            .setProgram("TCGA")
-            .setProjectCode(projectCode)
-            .setStudy(null) // Set downstream
-            .setDonorId(context.getDonorId(submittedDonorId, projectCode))
-            .setSpecimenId(null) // N/A
-            .setSampleId(null) // N/A
-            .setSubmittedDonorId(null) // Set downstream
-            .setSubmittedSpecimenId(null) // Set downstream
-            .setSubmittedSampleId(null) // Set downstream
-            .setOtherIdentifiers(
-                new OtherIdentifiers()
-                    .setTcgaParticipantBarcode(submittedDonorId)
-                    .setTcgaSampleBarcode(null) // N/A
-                    .setTcgaAliquotBarcode(null))); // N/A
+    clinicalFile.addDonor()
+        .setPrimarySite(context.getPrimarySite(projectCode))
+        .setProgram(Program.TCGA)
+        .setProjectCode(projectCode)
+        .setStudy(null) // Set downstream
+        .setDonorId(context.getDonorId(submittedDonorId, projectCode))
+        .setSpecimenId(null) // N/A
+        .setSampleId(null) // N/A
+        .setSubmittedDonorId(null) // Set downstream
+        .setSubmittedSpecimenId(null) // Set downstream
+        .setSubmittedSampleId(null) // Set downstream
+        .setOtherIdentifiers(
+            new OtherIdentifiers()
+                .setTcgaParticipantBarcode(submittedDonorId)
+                .setTcgaSampleBarcode(null) // N/A
+                .setTcgaAliquotBarcode(null)); // N/A
 
     return clinicalFile;
   }
@@ -195,7 +196,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
       for (val donor : clinicalFile.getDonors()) {
         val pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
         if (pcawg) {
-          donor.setStudy(PCAWG_STUDY_VALUE);
+          donor.setStudy(Study.PCAWG);
         }
       }
     }

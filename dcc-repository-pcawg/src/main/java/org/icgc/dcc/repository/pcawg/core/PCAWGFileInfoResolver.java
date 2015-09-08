@@ -18,6 +18,9 @@
 package org.icgc.dcc.repository.pcawg.core;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile.DataCategorization;
+import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
+import org.icgc.dcc.repository.core.model.RepositoryFile.ExperimentalStrategy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 
 import lombok.NonNull;
 import lombok.val;
@@ -30,17 +33,17 @@ public class PCAWGFileInfoResolver {
   public static DataCategorization resolveDataCategorization(String analysisType, String fileName) {
     if (isRNASeq(analysisType)) {
       return new DataCategorization()
-          .setDataType("RNA-Seq")
-          .setExperimentalStrategy("RNA-Seq");
+          .setDataType(DataType.RNA_SEQ)
+          .setExperimentalStrategy(ExperimentalStrategy.RNA_SEQ);
     } else if (isDNASeq(analysisType)) {
       return new DataCategorization()
-          .setDataType("DNA-Seq")
-          .setExperimentalStrategy("WGS");
+          .setDataType(DataType.DNA_SEQ)
+          .setExperimentalStrategy(ExperimentalStrategy.WGS);
     } else if (isSangerVariantCalling(analysisType)) {
       val dataType = resolveSangerVariantCallingDataType(fileName);
       return new DataCategorization()
           .setDataType(dataType)
-          .setExperimentalStrategy("WGS");
+          .setExperimentalStrategy(ExperimentalStrategy.WGS);
     } else {
       return new DataCategorization();
     }
@@ -49,14 +52,14 @@ public class PCAWGFileInfoResolver {
   @NonNull
   public static String resolveFileFormat(String analysisType, String fileName) {
     if (isRNASeq(analysisType)) {
-      return "BAM";
+      return FileFormat.BAM;
     } else if (isDNASeq(analysisType)) {
-      return "DNA-Seq";
+      return FileFormat.DNA_SEQ;
     } else if (isSangerVariantCalling(analysisType)) {
       val dataType = resolveSangerVariantCallingDataType(fileName);
-      return dataType == null ? null : "VCF";
+      return dataType == null ? null : FileFormat.VCF;
     } else {
-      return "Unknown";
+      return null;
     }
   }
 
@@ -74,13 +77,13 @@ public class PCAWGFileInfoResolver {
 
   private static String resolveSangerVariantCallingDataType(String fileName) {
     if (fileName.endsWith(".somatic.snv_mnv.vcf.gz")) {
-      return "SSM";
+      return DataType.SSM;
     } else if (fileName.endsWith(".somatic.cnv.vcf.gz")) {
-      return "CNSM";
+      return DataType.CNSM;
     } else if (fileName.endsWith(".somatic.sv.vcf.gz")) {
-      return "StSM";
+      return DataType.STSM;
     } else if (fileName.endsWith(".somatic.indel.vcf.gz")) {
-      return "SSM";
+      return DataType.SSM;
     } else {
       return null;
     }

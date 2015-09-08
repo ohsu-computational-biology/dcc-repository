@@ -17,11 +17,15 @@
  */
 package org.icgc.dcc.repository.core.model;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.val;
 import lombok.experimental.Accessors;
 
 /**
@@ -49,6 +53,20 @@ public class RepositoryFile {
   List<FileCopy> fileCopies = Lists.newArrayList();
 
   List<Donor> donors = Lists.newArrayList();
+
+  public Donor addDonor() {
+    val donor = new Donor();
+    donors.add(donor);
+
+    return donor;
+  }
+
+  public FileCopy addFileCopy() {
+    val fileCopy = new FileCopy();
+    fileCopies.add(fileCopy);
+
+    return fileCopy;
+  }
 
   @Data
   @Accessors(chain = true)
@@ -112,6 +130,7 @@ public class RepositoryFile {
   @Accessors(chain = true)
   public static class IndexFile {
 
+    String id;
     String fileId;
     String fileName;
     String fileFormat;
@@ -153,6 +172,60 @@ public class RepositoryFile {
     String tcgaParticipantBarcode;
     String tcgaSampleBarcode;
     String tcgaAliquotBarcode;
+
+  }
+
+  @NoArgsConstructor(access = PRIVATE)
+  public static final class Study {
+
+    public static final String PCAWG = "PCAWG";
+
+  }
+
+  @NoArgsConstructor(access = PRIVATE)
+  public static final class Program {
+
+    public static final String TCGA = "TCGA";
+
+  }
+
+  @NoArgsConstructor(access = PRIVATE)
+  public static final class FileFormat {
+
+    public static final String BAM = "BAM";
+    public static final String BAI = "BAI";
+    public static final String XML = "XML";
+    public static final String DNA_SEQ = "DNA-Seq";
+    public static final String VCF = "VCF";
+
+  }
+
+  @NoArgsConstructor(access = PRIVATE)
+  public static final class FileAccess {
+
+    public static final String CONTROLLED = "controlled";
+    public static final String OPEN = "open";
+
+  }
+
+  @NoArgsConstructor(access = PRIVATE)
+  public static final class DataType {
+
+    public static final String CLINICAL = "Clinical";
+    public static final String RNA_SEQ = "RNA-Seq";
+    public static final String DNA_SEQ = "DNA-Seq";
+
+    public static final String SSM = "SSM";
+    public static final String CNSM = "CNSM";
+    public static final String STSM = "StSM";
+
+  }
+
+  @NoArgsConstructor(access = PRIVATE)
+  public static final class ExperimentalStrategy {
+
+    public static final String WGS = "WGS";
+    public static final String RNA_SEQ = "RNA-Seq";
 
   }
 

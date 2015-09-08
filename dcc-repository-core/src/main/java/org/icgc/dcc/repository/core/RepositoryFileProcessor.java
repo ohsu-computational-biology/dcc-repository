@@ -17,20 +17,15 @@
  */
 package org.icgc.dcc.repository.core;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import org.icgc.dcc.common.core.util.UUID5;
 
 import com.google.common.base.Joiner;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
 @RequiredArgsConstructor
 public abstract class RepositoryFileProcessor {
-
-  /**
-   * Constants.
-   */
-  protected final String PCAWG_STUDY_VALUE = "PCAWG";
 
   /**
    * Dependencies.

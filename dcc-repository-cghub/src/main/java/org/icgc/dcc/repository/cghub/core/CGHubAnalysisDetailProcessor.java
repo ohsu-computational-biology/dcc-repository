@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.cghub.core;
 
+import static org.elasticsearch.common.collect.Iterables.getFirst;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAliquotId;
@@ -40,13 +41,16 @@ import static org.icgc.dcc.repository.core.model.RepositoryServers.getCGHubServe
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryProject;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
@@ -90,13 +94,22 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> processResult(JsonNode result) {
+    val baiFiles = resolveBaiFiles(result);
+    val baiFile = Optional.ofNullable(getFirst(baiFiles, null));
+
     return stream(getFiles(result))
         .filter(file -> isBamFile(file))
-        .map(file -> createAnalysisFile(result, file))
+        .map(file -> createAnalysisFile(result, file, baiFile))
         .collect(toImmutableList());
   }
 
-  private RepositoryFile createAnalysisFile(JsonNode result, JsonNode file) {
+  private List<JsonNode> resolveBaiFiles(JsonNode result) {
+    return stream(getFiles(result))
+        .filter(file -> isBaiFile(file))
+        .collect(toImmutableList());
+  }
+
+  private RepositoryFile createAnalysisFile(JsonNode result, JsonNode file, Optional<JsonNode> baiFile) {
     val project = resolveProject(result);
     val projectCode = project.getProjectCode();
 
@@ -112,7 +125,7 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
         .setId(id)
         .setFileId(context.ensureFileId(id))
         .setStudy(null) // N/A
-        .setAccess("controlled");
+        .setAccess(FileAccess.CONTROLLED);
 
     analysisFile.getDataBundle()
         .setDataBundleId(analysisId);
@@ -121,8 +134,8 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
         .setDataType(resolveDataType(result))
         .setExperimentalStrategy(getLibraryStrategy(result));
 
-    analysisFile.getFileCopies().add(new FileCopy()
-        .setFileFormat("BAM")
+    val fileCopy = analysisFile.addFileCopy()
+        .setFileFormat(FileFormat.BAM)
         .setRepoType(cghubServer.getType().getId())
         .setRepoOrg(cghubServer.getSource().getId())
         .setRepoName(cghubServer.getName())
@@ -134,9 +147,21 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
         .setFileName(fileName)
         .setFileMd5sum(getChecksum(file))
         .setFileSize(getFileSize(file))
-        .setLastModified(resolveLastModified(result)));
+        .setLastModified(resolveLastModified(result));
 
-    analysisFile.getDonors().add(new Donor()
+    if (baiFile.isPresent()) {
+      val baiFileName = getFileName(baiFile.get());
+      val baiId = resolveId(analysisId, baiFileName);
+      fileCopy.getIndexFile()
+          .setId(baiId)
+          .setFileId(context.ensureFileId(baiId))
+          .setFileFormat(FileFormat.BAI)
+          .setFileName(baiFileName)
+          .setFileSize(getFileSize(baiFile.get()))
+          .setFileMd5sum(getChecksum(baiFile.get()));
+    }
+
+    analysisFile.addDonor()
         .setPrimarySite(context.getPrimarySite(projectCode))
         .setProjectCode(projectCode)
         .setProgram(project.getProgram())
@@ -150,7 +175,7 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
         .setOtherIdentifiers(new OtherIdentifiers()
             .setTcgaParticipantBarcode(legacyDonorId)
             .setTcgaSampleBarcode(legacySpecimenId)
-            .setTcgaAliquotBarcode(legacySampleId)));
+            .setTcgaAliquotBarcode(legacySampleId));
 
     return analysisFile;
   }
@@ -160,7 +185,7 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
       for (val donor : analysisFile.getDonors()) {
         val pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
         if (pcawg) {
-          donor.setStudy(PCAWG_STUDY_VALUE);
+          donor.setStudy(Study.PCAWG);
         }
       }
     }
@@ -175,9 +200,9 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
   private static String resolveDataType(JsonNode result) {
     val analyteCode = getAnalyteCode(result);
     if (DNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
-      return "DNA-Seq";
+      return DataType.DNA_SEQ;
     } else if (RNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
-      return "RNA-Seq";
+      return DataType.RNA_SEQ;
     }
 
     return null;
@@ -191,6 +216,10 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
 
   private static boolean isBamFile(JsonNode file) {
     return getFileName(file).endsWith(".bam");
+  }
+
+  private static boolean isBaiFile(JsonNode file) {
+    return getFileName(file).endsWith(".bai");
   }
 
 }

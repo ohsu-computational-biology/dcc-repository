@@ -60,9 +60,9 @@ import java.util.Set;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryServers;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -157,6 +157,7 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
           for (val workflowType : PCAWG_WORKFLOW_TYPES) {
             val workflow = specimen.path(workflowType);
             val analysisType = resolveAnalysisType(libraryStrategyName, specimenClass, workflowType);
+
             for (val workflowFile : getFiles(workflow)) {
               val donorFile = createDonorFile(projectCode, submittedDonorId, analysisType, workflow, workflowFile);
               donorFiles.add(donorFile);
@@ -190,15 +191,15 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
     val donorFile = new RepositoryFile()
         .setId(id)
         .setFileId(context.ensureFileId(id))
-        .setStudy(ImmutableList.of(PCAWG_STUDY_VALUE))
-        .setAccess("controlled")
+        .setStudy(ImmutableList.of(Study.PCAWG))
+        .setAccess(FileAccess.CONTROLLED)
         .setDataCategorization(dataCategorization);
 
     donorFile.getDataBundle()
         .setDataBundleId(gnosId);
 
     for (val pcawgServer : pcawgServers) {
-      donorFile.getFileCopies().add(new FileCopy()
+      donorFile.addFileCopy()
           .setRepoType(pcawgServer.getType().getId())
           .setRepoOrg(pcawgServer.getSource().getId())
           .setRepoMetadataPath(pcawgServer.getType().getMetadataPath())
@@ -207,14 +208,15 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
           .setFileFormat(fileFormat)
           .setFileMd5sum(resolveMd5sum(workflowFile))
           .setFileSize(fileSize)
-          .setLastModified(resolveLastModified(workflow)));
+          .setIndexFile(null) // TODO: Implement after upstream JSONL file has values
+          .setLastModified(resolveLastModified(workflow));
     }
 
-    donorFile.getDonors().add(new Donor()
+    donorFile.addDonor()
         .setPrimarySite(context.getPrimarySite(projectCode))
         .setProgram(project.getProgram())
         .setProjectCode(projectCode)
-        .setStudy(PCAWG_STUDY_VALUE)
+        .setStudy(Study.PCAWG)
         .setDonorId(null) // Set downstream
         .setSpecimenId(null) // Set downstream
         .setSpecimenType(specimenType)
@@ -225,7 +227,7 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
         .setOtherIdentifiers(new OtherIdentifiers()
             .setTcgaParticipantBarcode(null) // Set downstream
             .setTcgaSampleBarcode(null) // Set downstream
-            .setTcgaAliquotBarcode(null))); // Set downstream
+            .setTcgaAliquotBarcode(null)); // Set downstream
 
     return donorFile;
   }

@@ -55,7 +55,7 @@ public class RepositoryFileReader extends AbstractJongoComponent {
   }
 
   public Iterable<RepositoryFile> read() {
-    log.info("Reading files...");
+    log.info("Reading '{}' files...", collection.getName());
     return collection.find().as(RepositoryFile.class);
   }
 

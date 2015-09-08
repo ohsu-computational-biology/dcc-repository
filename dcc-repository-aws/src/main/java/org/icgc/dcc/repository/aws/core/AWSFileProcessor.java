@@ -27,6 +27,7 @@ import java.util.Set;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -57,7 +58,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
   private RepositoryFile createFile(S3ObjectSummary summary) {
     val id = getObjectId(summary);
 
-    log.info("Bucket entry: {}", format("%-30s %-50s %10d %s",
+    log.debug("Bucket entry: {}", format("%-30s %-50s %10d %s",
         id,
         summary.getKey(),
         summary.getSize(),
@@ -66,10 +67,10 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
     val file = new RepositoryFile()
         .setId(id);
 
-    file.getRepository()
+    file.getFileCopies().add(new FileCopy()
         .setRepoOrg("ICGC")
         .setLastModified(summary.getLastModified().toString())
-        .setFileSize(summary.getSize());
+        .setFileSize(summary.getSize()));
 
     return file;
   }

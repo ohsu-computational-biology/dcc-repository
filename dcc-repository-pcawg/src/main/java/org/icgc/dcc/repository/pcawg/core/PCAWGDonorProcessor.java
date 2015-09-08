@@ -32,7 +32,8 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getTCGAProjects;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getPCAWGServer;
-import static org.icgc.dcc.repository.pcawg.core.PCAWGFileDataTypeResolver.resolveFileDataType;
+import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveDataCategorization;
+import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveFileFormat;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_LIBRARY_STRATEGY_NAMES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_SPECIMEN_CLASSES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_WORKFLOW_TYPES;
@@ -59,8 +60,10 @@ import java.util.Set;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryServers;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -93,7 +96,7 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> donorFiles) {
-    return filter(donorFiles, donorFile -> !isNullOrEmpty(donorFile.getDataType().getDataType()));
+    return filter(donorFiles, donorFile -> !isNullOrEmpty(donorFile.getDataCategorization().getDataType()));
   }
 
   private void translateUUIDs(Iterable<RepositoryFile> donorFiles) {
@@ -103,12 +106,12 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
     log.info("Translating {} TCGA barcodes to TCGA UUIDs...", formatCount(uuids));
     val barcodes = context.getTCGABarcodes(uuids);
     for (val donorFile : donorFiles) {
-      val donor = donorFile.getDonor();
-
-      donor
-          .setTcgaParticipantBarcode(barcodes.get(donor.getSubmittedDonorId()))
-          .setTcgaSampleBarcode(barcodes.get(donor.getSubmittedSpecimenId()))
-          .setTcgaAliquotBarcode(barcodes.get(donor.getSubmittedSampleId()));
+      for (val donor : donorFile.getDonors()) {
+        donor.getOtherIdentifiers()
+            .setTcgaParticipantBarcode(barcodes.get(donor.getSubmittedDonorId()))
+            .setTcgaSampleBarcode(barcodes.get(donor.getSubmittedSpecimenId()))
+            .setTcgaAliquotBarcode(barcodes.get(donor.getSubmittedSampleId()));
+      }
     }
   }
 
@@ -117,23 +120,27 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
 
     log.info("Assigning ICGC ids...");
     for (val donorFile : donorFiles) {
-      val donor = donorFile.getDonor();
-      val projectCode = donor.getProjectCode();
+      for (val donor : donorFile.getDonors()) {
+        val projectCode = donor.getProjectCode();
 
-      // Special case for TCGA who submits barcodes to DCC but UUIDs to PCAWG
-      val tcga = tcgaProjectCodes.contains(donor.getProjectCode());
-      val submittedDonorId = tcga ? donor.getTcgaParticipantBarcode() : donor.getSubmittedDonorId();
-      val submittedSpecimenId = tcga ? donor.getTcgaSampleBarcode() : donor.getSubmittedSpecimenId();
-      val submittedSampleId = tcga ? donor.getTcgaAliquotBarcode() : donor.getSubmittedSampleId();
+        // Special case for TCGA who submits barcodes to DCC but UUIDs to PCAWG
+        val tcga = tcgaProjectCodes.contains(donor.getProjectCode());
+        val submittedDonorId =
+            tcga ? donor.getOtherIdentifiers().getTcgaParticipantBarcode() : donor.getSubmittedDonorId();
+        val submittedSpecimenId =
+            tcga ? donor.getOtherIdentifiers().getTcgaSampleBarcode() : donor.getSubmittedSpecimenId();
+        val submittedSampleId =
+            tcga ? donor.getOtherIdentifiers().getTcgaAliquotBarcode() : donor.getSubmittedSampleId();
 
-      // Get IDs or create if they don't exist. This is different than the other repos.
-      donor
-          .setDonorId(
-              submittedDonorId == null ? null : context.ensureDonorId(submittedDonorId, projectCode))
-          .setSpecimenId(
-              submittedSpecimenId == null ? null : context.ensureSpecimenId(submittedSpecimenId, projectCode))
-          .setSampleId(
-              submittedSampleId == null ? null : context.ensureSampleId(submittedSampleId, projectCode));
+        // Get IDs or create if they don't exist. This is different than the other repos.
+        donor
+            .setDonorId(
+                submittedDonorId == null ? null : context.ensureDonorId(submittedDonorId, projectCode))
+            .setSpecimenId(
+                submittedSpecimenId == null ? null : context.ensureSpecimenId(submittedSpecimenId, projectCode))
+            .setSampleId(
+                submittedSampleId == null ? null : context.ensureSampleId(submittedSampleId, projectCode));
+      }
     }
   }
 
@@ -175,52 +182,50 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
     val fileName = resolveFileName(workflowFile);
     val fileSize = resolveFileSize(workflowFile);
     val fileId = resolveFileId(gnosId, fileName);
-    val dataType = resolveFileDataType(analysisType, fileName);
+    val fileFormat = resolveFileFormat(analysisType, fileName);
+    val dataCategorization = resolveDataCategorization(analysisType, fileName);
 
-    List<RepositoryServer> pcawgServers = resolvePCAWGServers(workflow);
+    val pcawgServers = resolvePCAWGServers(workflow);
 
     val donorFile = new RepositoryFile()
         .setId(fileId)
-        .setStudy(PCAWG_STUDY_VALUE)
-        .setAccess("controlled");
+        .setStudy(ImmutableList.of(PCAWG_STUDY_VALUE))
+        .setAccess("controlled")
+        .setDataCategorization(dataCategorization);
 
-    donorFile
-        .setDataType(dataType);
+    donorFile.getDataBundle()
+        .setDataBundleId(gnosId);
 
-    donorFile.getRepository()
-        .setRepoType(pcawgServers.get(0).getType().getId())
-        .setRepoOrg(pcawgServers.get(0).getSource().getId())
-        .setRepoEntityId(gnosId);
+    for (val pcawgServer : pcawgServers) {
+      donorFile.getFileCopies().add(new FileCopy()
+          .setRepoType(pcawgServer.getType().getId())
+          .setRepoOrg(pcawgServer.getSource().getId())
+          .setRepoEntityId(gnosId)
+          .setRepoMetadataPath(pcawgServer.getType().getMetadataPath())
+          .setRepoDataPath(pcawgServer.getType().getDataPath())
+          .setFileName(fileName)
+          .setFileFormat(fileFormat)
+          .setFileMd5sum(resolveMd5sum(workflowFile))
+          .setFileSize(fileSize)
+          .setLastModified(resolveLastModified(workflow)));
+    }
 
-    donorFile.getRepository()
-        .setRepoServer(resolveRepositoryServers(pcawgServers));
-
-    donorFile.getRepository()
-        .setRepoMetadataPath(pcawgServers.get(0).getType().getMetadataPath())
-        .setRepoDataPath(pcawgServers.get(0).getType().getDataPath())
-        .setFileName(fileName)
-        .setFileMd5sum(resolveMd5sum(workflowFile))
-        .setFileSize(fileSize)
-        .setLastModified(resolveLastModified(workflow));
-
-    donorFile.getDonor()
+    donorFile.getDonors().add(new Donor()
         .setPrimarySite(context.getPrimarySite(projectCode))
         .setProgram(project.getProgram())
         .setProjectCode(projectCode)
         .setStudy(PCAWG_STUDY_VALUE)
-
-    .setDonorId(null) // Set downstream
+        .setDonorId(null) // Set downstream
         .setSpecimenId(null) // Set downstream
         .setSpecimenType(specimenType)
         .setSampleId(null) // Set downstream
-
-    .setSubmittedDonorId(submittedDonorId)
+        .setSubmittedDonorId(submittedDonorId)
         .setSubmittedSpecimenId(submitterSpecimenId)
         .setSubmittedSampleId(submitterSampleId)
-
-    .setTcgaParticipantBarcode(null) // Set downstream
-        .setTcgaSampleBarcode(null) // Set downstream
-        .setTcgaAliquotBarcode(null); // Set downstream
+        .setOtherIdentifiers(new OtherIdentifiers()
+            .setTcgaParticipantBarcode(null) // Set downstream
+            .setTcgaSampleBarcode(null) // Set downstream
+            .setTcgaAliquotBarcode(null))); // Set downstream
 
     return donorFile;
   }
@@ -228,17 +233,6 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
   private static List<RepositoryServers.RepositoryServer> resolvePCAWGServers(JsonNode workflow) {
     return stream(getGnosRepo(workflow))
         .map(genosRepo -> getPCAWGServer(genosRepo.asText()))
-        .collect(toImmutableList());
-  }
-
-  private static List<RepositoryFile.RepositoryServer> resolveRepositoryServers(
-      List<RepositoryServers.RepositoryServer> pcawgServers) {
-    return pcawgServers.stream()
-        .map(pcawgServer -> new RepositoryFile.RepositoryServer()
-            .setRepoName(pcawgServer.getName())
-            .setRepoCode(pcawgServer.getCode())
-            .setRepoCountry(pcawgServer.getCountry())
-            .setRepoBaseUrl(pcawgServer.getBaseUrl()))
         .collect(toImmutableList());
   }
 
@@ -250,25 +244,25 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
     val tcgaProjectCodes = resolveTCGAProjectCodes();
     val uuids = Sets.<String> newHashSet();
     for (val donorFile : donorFiles) {
-      val donor = donorFile.getDonor();
+      for (val donor : donorFile.getDonors()) {
+        val donorId = donor.getSubmittedDonorId();
+        val specimenId = donor.getSubmittedSpecimenId();
+        val sampleId = donor.getSubmittedSampleId();
 
-      val donorId = donor.getSubmittedDonorId();
-      val specimenId = donor.getSubmittedSpecimenId();
-      val sampleId = donor.getSubmittedSampleId();
+        val tcga = tcgaProjectCodes.contains(donor.getProjectCode());
+        if (!tcga) {
+          continue;
+        }
 
-      val tcga = tcgaProjectCodes.contains(donor.getProjectCode());
-      if (!tcga) {
-        continue;
-      }
-
-      if (isUUID(donorId)) {
-        uuids.add(donorId);
-      }
-      if (isUUID(specimenId)) {
-        uuids.add(specimenId);
-      }
-      if (isUUID(sampleId)) {
-        uuids.add(sampleId);
+        if (isUUID(donorId)) {
+          uuids.add(donorId);
+        }
+        if (isUUID(specimenId)) {
+          uuids.add(specimenId);
+        }
+        if (isUUID(sampleId)) {
+          uuids.add(sampleId);
+        }
       }
     }
 

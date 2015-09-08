@@ -17,35 +17,46 @@
  */
 package org.icgc.dcc.repository.pcawg.core;
 
-import org.icgc.dcc.repository.core.model.RepositoryFile.RepositoryFileDataType;
+import org.icgc.dcc.repository.core.model.RepositoryFile.DataCategorization;
 
 import lombok.NonNull;
 import lombok.val;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class PCAWGFileDataTypeResolver {
+public class PCAWGFileInfoResolver {
 
   @NonNull
-  public static RepositoryFileDataType resolveFileDataType(String analysisType, String fileName) {
+  public static DataCategorization resolveDataCategorization(String analysisType, String fileName) {
     if (isRNASeq(analysisType)) {
-      return new RepositoryFileDataType()
+      return new DataCategorization()
           .setDataType("RNA-Seq")
-          .setDataFormat("BAM")
           .setExperimentalStrategy("RNA-Seq");
     } else if (isDNASeq(analysisType)) {
-      return new RepositoryFileDataType()
+      return new DataCategorization()
           .setDataType("DNA-Seq")
-          .setDataFormat("BAM")
           .setExperimentalStrategy("WGS");
     } else if (isSangerVariantCalling(analysisType)) {
       val dataType = resolveSangerVariantCallingDataType(fileName);
-      return new RepositoryFileDataType()
+      return new DataCategorization()
           .setDataType(dataType)
-          .setDataFormat(dataType == null ? null : "VCF")
           .setExperimentalStrategy("WGS");
     } else {
-      return new RepositoryFileDataType();
+      return new DataCategorization();
+    }
+  }
+
+  @NonNull
+  public static String resolveFileFormat(String analysisType, String fileName) {
+    if (isRNASeq(analysisType)) {
+      return "BAM";
+    } else if (isDNASeq(analysisType)) {
+      return "DNA-Seq";
+    } else if (isSangerVariantCalling(analysisType)) {
+      val dataType = resolveSangerVariantCallingDataType(fileName);
+      return dataType == null ? null : "VCF";
+    } else {
+      return "Unknown";
     }
   }
 

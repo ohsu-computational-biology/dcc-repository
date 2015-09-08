@@ -108,7 +108,7 @@ public class AWSS3TransferJobReader {
 
   @SneakyThrows
   private ObjectNode readFile(File jsonFile) {
-    log.info("Reading '{}'...", jsonFile);
+    log.debug("Reading '{}'...", jsonFile);
     return (ObjectNode) MAPPER.readTree(jsonFile);
   }
 

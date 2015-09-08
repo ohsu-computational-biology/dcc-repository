@@ -67,7 +67,7 @@ public class AWSS3BucketReader {
   private void readBucket(String bucketName, String prefix, Consumer<S3ObjectSummary> callback) {
     val s3 = createS3Client();
     val request = new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix);
-    log.info("Reading summaries from '{}'...");
+    log.info("Reading summaries from '{}/{}'...", bucketName, prefix);
 
     ObjectListing listing;
     do {

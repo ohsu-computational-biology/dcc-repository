@@ -44,6 +44,9 @@ import java.util.List;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryProject;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
@@ -77,7 +80,8 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
     val analysisFiles = stream(details)
         .flatMap(detail -> stream(getResults(detail)))
         .flatMap(result -> stream(processResult(result)))
-        .filter(analysisFile -> analysisFile.getDonor().hasDonorId()) // Filter out non-ICGC donors
+        // Filter out non-ICGC donors
+        .filter(analysisFile -> analysisFile.getDonors().stream().anyMatch(donor -> donor.hasDonorId()))
         .collect(toImmutableList());
 
     assignStudy(analysisFiles);
@@ -108,57 +112,55 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
         .setStudy(null) // N/A
         .setAccess("controlled");
 
-    analysisFile.getDataType()
+    analysisFile.getDataBundle()
+        .setDataBundleId(analysisId);
+
+    analysisFile.getDataCategorization()
         .setDataType(resolveDataType(result))
-        .setDataFormat("BAM")
         .setExperimentalStrategy(getLibraryStrategy(result));
 
-    analysisFile.getRepository()
+    analysisFile.getFileCopies().add(new FileCopy()
+        .setFileFormat("BAM")
         .setRepoType(cghubServer.getType().getId())
         .setRepoOrg(cghubServer.getSource().getId())
-        .setRepoEntityId(analysisId);
-
-    analysisFile.getRepository().getRepoServer().get(0)
+        .setRepoEntityId(analysisId)
         .setRepoName(cghubServer.getName())
         .setRepoCode(cghubServer.getCode())
         .setRepoCountry(cghubServer.getCountry())
-        .setRepoBaseUrl(cghubServer.getBaseUrl());
-
-    analysisFile.getRepository()
+        .setRepoBaseUrl(cghubServer.getBaseUrl())
         .setRepoMetadataPath(cghubServer.getType().getMetadataPath())
         .setRepoDataPath(cghubServer.getType().getDataPath())
         .setFileName(fileName)
         .setFileMd5sum(getChecksum(file))
         .setFileSize(getFileSize(file))
-        .setLastModified(resolveLastModified(result));
+        .setLastModified(resolveLastModified(result)));
 
-    analysisFile.getDonor()
+    analysisFile.getDonors().add(new Donor()
         .setPrimarySite(context.getPrimarySite(projectCode))
         .setProjectCode(projectCode)
         .setProgram(project.getProgram())
         .setStudy(null) // Set downstream
-
-    .setDonorId(context.getDonorId(legacyDonorId, projectCode))
+        .setDonorId(context.getDonorId(legacyDonorId, projectCode))
         .setSpecimenId(context.getSpecimenId(legacySpecimenId, projectCode))
         .setSampleId(context.getSampleId(legacySampleId, projectCode))
-
-    .setSubmittedDonorId(getParticipantId(result))
+        .setSubmittedDonorId(getParticipantId(result))
         .setSubmittedSpecimenId(getSampleId(result))
         .setSubmittedSampleId(getAliquotId(result))
-
-    .setTcgaParticipantBarcode(legacyDonorId)
-        .setTcgaSampleBarcode(legacySpecimenId)
-        .setTcgaAliquotBarcode(legacySampleId);
+        .setOtherIdentifiers(new OtherIdentifiers()
+            .setTcgaParticipantBarcode(legacyDonorId)
+            .setTcgaSampleBarcode(legacySpecimenId)
+            .setTcgaAliquotBarcode(legacySampleId)));
 
     return analysisFile;
   }
 
   private void assignStudy(Iterable<RepositoryFile> analysisFiles) {
     for (val analysisFile : analysisFiles) {
-      val donor = analysisFile.getDonor();
-      val pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
-      if (pcawg) {
-        donor.setStudy(PCAWG_STUDY_VALUE);
+      for (val donor : analysisFile.getDonors()) {
+        val pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
+        if (pcawg) {
+          donor.setStudy(PCAWG_STUDY_VALUE);
+        }
       }
     }
   }

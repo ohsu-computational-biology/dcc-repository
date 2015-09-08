@@ -43,20 +43,20 @@ public abstract class GenericRepositorySourceFileImporter extends AbstractReposi
   public void execute() {
     val watch = createStarted();
 
-    log.info("Reading files...");
+    log.info("Reading '{}' files...", source);
     val files = readFiles();
-    log.info("Finished reading files");
+    log.info("Finished '{}' reading files", source);
 
     if (isEmpty(files)) {
       log.error("**** Files are empty! Reusing previous imported files");
       return;
     }
 
-    log.info("Writing files...");
+    log.info("Writing '{}' files...", source);
     writeFiles(files);
-    log.info("Finished writing files");
+    log.info("Finished '{}' writing files", source);
 
-    log.info("Imported {} files in {}.", formatCount(files), watch);
+    log.info("Imported {} '{}' files in {}.", formatCount(files), source, watch);
   }
 
   protected abstract Iterable<RepositoryFile> readFiles();

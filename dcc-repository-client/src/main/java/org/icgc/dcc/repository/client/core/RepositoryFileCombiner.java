@@ -59,14 +59,14 @@ public class RepositoryFileCombiner {
   }
 
   private RepositoryFile combineFiles(Set<RepositoryFile> files) {
-    // Combine all servers
-    val servers = files.stream()
-        .flatMap(file -> file.getRepository().getRepoServer().stream())
+    // Combine all file copies
+    val fileCopies = files.stream()
+        .flatMap(file -> file.getFileCopies().stream())
         .collect(toImmutableList());
 
     // Designate one file as the representative for the group
     val representative = getFirst(files, null);
-    representative.getRepository().setRepoServer(servers);
+    representative.setFileCopies(fileCopies);
 
     return representative;
   }

@@ -29,15 +29,18 @@ import java.util.regex.Pattern;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.tcga.model.TCGAArchiveClinicalFile;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchiveListReader;
 
+import com.google.common.collect.ImmutableList;
+
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
-import com.google.common.collect.ImmutableList;
 
 @Slf4j
 public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
@@ -68,7 +71,8 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> filterClinicalFiles(Iterable<RepositoryFile> clinicalFiles) {
-    return filter(clinicalFiles, clinicalFile -> clinicalFile.getDonor().hasDonorId());
+    return filter(clinicalFiles,
+        clinicalFile -> clinicalFile.getDonors().stream().anyMatch(donor -> donor.hasDonorId()));
   }
 
   private Iterable<RepositoryFile> createClinicalFiles() {
@@ -124,48 +128,44 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setStudy(null) // N/A
         .setAccess("open");
 
-    clinicalFile.getDataType()
+    clinicalFile.getDataCategorization()
         .setDataType("Clinical")
-        .setDataFormat("XML")
         .setExperimentalStrategy(null); // N/A
 
-    clinicalFile.getRepository()
-        .setRepoType(tcgaServer.getType().getId())
-        .setRepoOrg(tcgaServer.getSource().getId())
-        .setRepoEntityId(repoEntityId);
+    clinicalFile.getFileCopies().add(
+        new FileCopy()
+            .setRepoType(tcgaServer.getType().getId())
+            .setRepoOrg(tcgaServer.getSource().getId())
+            .setRepoEntityId(repoEntityId)
+            .setRepoName(tcgaServer.getName())
+            .setRepoCode(tcgaServer.getCode())
+            .setRepoCountry(tcgaServer.getCountry())
+            .setRepoBaseUrl(tcgaServer.getBaseUrl())
+            .setRepoMetadataPath(tcgaServer.getType().getMetadataPath())
+            .setRepoDataPath(tcgaServer.getType().getDataPath())
+            .setFileName(archiveClinicalFile.getFileName())
+            .setFileFormat("XML")
+            .setFileMd5sum(archiveClinicalFile.getFileMd5())
+            .setFileSize(archiveClinicalFile.getFileSize())
+            .setLastModified(archiveClinicalFile.getLastModified().toString()));
 
-    clinicalFile.getRepository().getRepoServer().get(0)
-        .setRepoName(tcgaServer.getName())
-        .setRepoCode(tcgaServer.getCode())
-        .setRepoCountry(tcgaServer.getCountry())
-        .setRepoBaseUrl(tcgaServer.getBaseUrl());
-
-    clinicalFile.getRepository()
-        .setRepoMetadataPath(tcgaServer.getType().getMetadataPath())
-        .setRepoDataPath(tcgaServer.getType().getDataPath())
-        .setFileName(archiveClinicalFile.getFileName())
-        .setFileMd5sum(archiveClinicalFile.getFileMd5())
-        .setFileSize(archiveClinicalFile.getFileSize())
-        .setLastModified(archiveClinicalFile.getLastModified().toString());
-
-    clinicalFile.getDonor()
-        .setPrimarySite(context.getPrimarySite(projectCode))
-        .setProgram("TCGA")
-        .setProjectCode(projectCode)
-
-        .setStudy(null) // Set downstream
-
-        .setDonorId(context.getDonorId(submittedDonorId, projectCode))
-        .setSpecimenId(null) // N/A
-        .setSampleId(null) // N/A
-
-        .setSubmittedDonorId(null) // Set downstream
-        .setSubmittedSpecimenId(null) // Set downstream
-        .setSubmittedSampleId(null) // Set downstream
-
-        .setTcgaParticipantBarcode(submittedDonorId)
-        .setTcgaSampleBarcode(null) // N/A
-        .setTcgaAliquotBarcode(null); // N/A
+    clinicalFile.getDonors().add(
+        new Donor()
+            .setPrimarySite(context.getPrimarySite(projectCode))
+            .setProgram("TCGA")
+            .setProjectCode(projectCode)
+            .setStudy(null) // Set downstream
+            .setDonorId(context.getDonorId(submittedDonorId, projectCode))
+            .setSpecimenId(null) // N/A
+            .setSampleId(null) // N/A
+            .setSubmittedDonorId(null) // Set downstream
+            .setSubmittedSpecimenId(null) // Set downstream
+            .setSubmittedSampleId(null) // Set downstream
+            .setOtherIdentifiers(
+                new OtherIdentifiers()
+                    .setTcgaParticipantBarcode(submittedDonorId)
+                    .setTcgaSampleBarcode(null) // N/A
+                    .setTcgaAliquotBarcode(null))); // N/A
 
     return clinicalFile;
   }
@@ -173,26 +173,30 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
   private void translateBarcodes(Iterable<RepositoryFile> clinicalFiles) {
     log.info("Collecting TCGA barcodes...");
     val barcodes = stream(clinicalFiles)
-        .map(clinicalFile -> clinicalFile.getDonor().getTcgaParticipantBarcode())
+        .flatMap(clinicalFile -> clinicalFile.getDonors().stream())
+        .map(donor -> donor.getOtherIdentifiers().getTcgaParticipantBarcode())
         .collect(toImmutableSet());
 
     log.info("Translating {} TCGA barcodes to TCGA UUIDs...", formatCount(barcodes));
 
     val uuids = context.getTCGAUUIDs(barcodes);
     for (val clinicalFile : clinicalFiles) {
-      val participantBarcode = clinicalFile.getDonor().getTcgaParticipantBarcode();
+      for (val donor : clinicalFile.getDonors()) {
+        val participantBarcode = donor.getOtherIdentifiers().getTcgaParticipantBarcode();
 
-      val uuid = uuids.get(participantBarcode);
-      clinicalFile.getDonor().setSubmittedDonorId(uuid);
+        val uuid = uuids.get(participantBarcode);
+        donor.setSubmittedDonorId(uuid);
+      }
     }
   }
 
   private void assignStudy(Iterable<RepositoryFile> clinicalFiles) {
     for (val clinicalFile : clinicalFiles) {
-      val donor = clinicalFile.getDonor();
-      val pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
-      if (pcawg) {
-        donor.setStudy(PCAWG_STUDY_VALUE);
+      for (val donor : clinicalFile.getDonors()) {
+        val pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
+        if (pcawg) {
+          donor.setStudy(PCAWG_STUDY_VALUE);
+        }
       }
     }
   }

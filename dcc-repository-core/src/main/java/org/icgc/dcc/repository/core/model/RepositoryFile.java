@@ -17,68 +17,112 @@
  */
 package org.icgc.dcc.repository.core.model;
 
-import static com.google.common.collect.Lists.newArrayList;
-
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+/**
+ * Repository file.
+ * 
+ * @see https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories
+ */
 @Data
 @Accessors(chain = true)
 public class RepositoryFile {
 
   String id;
-  String study;
+  List<String> study = Lists.newArrayList();
   String access;
 
-  RepositoryFileDataType dataType = new RepositoryFileDataType();
-  Repository repository = new Repository();
-  RepositoryDonor donor = new RepositoryDonor();
+  DataBundle dataBundle = new DataBundle();
+
+  AnalysisMethod analysisMethod = new AnalysisMethod();
+
+  DataCategorization dataCategorization = new DataCategorization();
+
+  ReferenceGenome referenceGenome = new ReferenceGenome();
+
+  List<FileCopy> fileCopies = Lists.newArrayList();
+
+  List<Donor> donors = Lists.newArrayList();
 
   @Data
   @Accessors(chain = true)
-  public static class RepositoryFileDataType {
+  public static class DataBundle {
+
+    String dataBundleId;
+
+  }
+
+  @Data
+  @Accessors(chain = true)
+  public static class AnalysisMethod {
+
+    String analysisType;
+    String software;
+
+  }
+
+  @Data
+  @Accessors(chain = true)
+  public static class DataCategorization {
 
     String dataType;
-    String dataFormat;
     String experimentalStrategy;
 
   }
 
   @Data
   @Accessors(chain = true)
-  public static class Repository {
+  public static class ReferenceGenome {
 
-    String repoType;
-    String repoOrg;
-    String repoEntityId;
-
-    List<RepositoryServer> repoServer = newArrayList(new RepositoryServer());
-    String repoMetadataPath;
-    String repoDataPath;
-
-    String fileName;
-    Long fileSize;
-    String fileMd5sum;
-    String lastModified;
+    String genomeBuild;
+    String referenceName;
+    String downloadUrl;
 
   }
 
   @Data
   @Accessors(chain = true)
-  public static class RepositoryServer {
+  public static class FileCopy {
 
+    String fileName;
+    String fileFormat;
+    Long fileSize;
+    String fileMd5sum;
+    String lastModified;
+    IndexFile indexFile = new IndexFile();
+
+    String repoType;
+    String repoOrg; // TODO: Verify if this should be included
+    String repoEntityId; // TODO: Verify if this should be included
     String repoName;
     String repoCode;
     String repoCountry;
     String repoBaseUrl;
+    String repoDataPath;
+    String repoMetadataPath;
 
   }
 
   @Data
   @Accessors(chain = true)
-  public static class RepositoryDonor {
+  public static class IndexFile {
+
+    String fileId;
+    String fileName;
+    String fileFormat;
+    Long fileSize;
+    String fileMd5sum;
+
+  }
+
+  @Data
+  @Accessors(chain = true)
+  public static class Donor {
 
     String projectCode;
     String program;
@@ -94,13 +138,21 @@ public class RepositoryFile {
     String submittedSpecimenId;
     String submittedSampleId;
 
-    String tcgaParticipantBarcode;
-    String tcgaSampleBarcode;
-    String tcgaAliquotBarcode;
+    OtherIdentifiers otherIdentifiers = new OtherIdentifiers();
 
     public boolean hasDonorId() {
       return donorId != null;
     }
+
+  }
+
+  @Data
+  @Accessors(chain = true)
+  public static class OtherIdentifiers {
+
+    String tcgaParticipantBarcode;
+    String tcgaSampleBarcode;
+    String tcgaAliquotBarcode;
 
   }
 

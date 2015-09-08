@@ -65,11 +65,12 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         summary.getStorageClass()));
 
     val file = new RepositoryFile()
-        .setId(id);
+        .setId(id)
+        .setFileId(context.ensureFileId(id));
 
     file.getFileCopies().add(new FileCopy()
         .setRepoOrg("ICGC")
-        .setLastModified(summary.getLastModified().toString())
+        .setLastModified(summary.getLastModified().getTime())
         .setFileSize(summary.getSize()));
 
     return file;

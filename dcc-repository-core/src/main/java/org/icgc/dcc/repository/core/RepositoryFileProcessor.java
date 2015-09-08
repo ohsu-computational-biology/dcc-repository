@@ -38,7 +38,7 @@ public abstract class RepositoryFileProcessor {
   @NonNull
   protected final RepositoryFileContext context;
 
-  protected static String resolveFileId(String... parts) {
+  protected static String resolveId(String... parts) {
     return UUID5.fromUTF8(UUID5.getNamespace(), Joiner.on('/').join(parts)).toString();
   }
 

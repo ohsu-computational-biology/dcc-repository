@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.icgc.dcc.common.core.tcga.TCGAClient;
-import org.icgc.dcc.etl.core.id.IdentifierClient;
+import org.icgc.dcc.id.client.core.IdClient;
 
 import com.mongodb.MongoClientURI;
 
@@ -56,7 +56,7 @@ public class RepositoryFileContext {
    * Dependencies.
    */
   @NonNull
-  private final IdentifierClient identifierClient;
+  private final IdClient idClient;
   @NonNull
   private final TCGAClient tcgaClient;
   @NonNull
@@ -80,7 +80,7 @@ public class RepositoryFileContext {
 
   @NonNull
   public String getDonorId(String submittedDonorId, String submittedProjectId) {
-    return identifierClient.getDonorId(submittedDonorId, submittedProjectId).orElse(null);
+    return idClient.getDonorId(submittedDonorId, submittedProjectId).orElse(null);
   }
 
   @NonNull
@@ -89,12 +89,12 @@ public class RepositoryFileContext {
       return getDonorId(submittedDonorId, submittedProjectId);
     }
 
-    return identifierClient.createDonorId(submittedDonorId, submittedProjectId);
+    return idClient.createDonorId(submittedDonorId, submittedProjectId);
   }
 
   @NonNull
   public String getSpecimenId(String submittedSpecimenId, String submittedProjectId) {
-    return identifierClient.getSpecimenId(submittedSpecimenId, submittedProjectId).orElse(null);
+    return idClient.getSpecimenId(submittedSpecimenId, submittedProjectId).orElse(null);
   }
 
   @NonNull
@@ -103,12 +103,12 @@ public class RepositoryFileContext {
       return getSpecimenId(submittedSpecimenId, submittedProjectId);
     }
 
-    return identifierClient.createSpecimenId(submittedSpecimenId, submittedProjectId);
+    return idClient.createSpecimenId(submittedSpecimenId, submittedProjectId);
   }
 
   @NonNull
   public String getSampleId(String submittedSampleId, String submittedProjectId) {
-    return identifierClient.getSampleId(submittedSampleId, submittedProjectId).orElse(null);
+    return idClient.getSampleId(submittedSampleId, submittedProjectId).orElse(null);
   }
 
   @NonNull
@@ -117,7 +117,21 @@ public class RepositoryFileContext {
       return getSampleId(submittedSampleId, submittedProjectId);
     }
 
-    return identifierClient.createSampleId(submittedSampleId, submittedProjectId);
+    return idClient.createSampleId(submittedSampleId, submittedProjectId);
+  }
+
+  @NonNull
+  public String ensureFileId(String submittedFileId) {
+    if (readOnly) {
+      return getFileId(submittedFileId);
+    }
+
+    return idClient.createFileId(submittedFileId);
+  }
+
+  @NonNull
+  public String getFileId(String submittedFileId) {
+    return idClient.getFileId(submittedFileId).orElse(null);
   }
 
   @NonNull

@@ -34,6 +34,7 @@ import lombok.experimental.Accessors;
 public class RepositoryFile {
 
   String id;
+  String fileId;
   List<String> study = Lists.newArrayList();
   String access;
 
@@ -93,7 +94,7 @@ public class RepositoryFile {
     String fileFormat;
     Long fileSize;
     String fileMd5sum;
-    String lastModified;
+    Long lastModified;
     IndexFile indexFile = new IndexFile();
 
     String repoType;

@@ -120,11 +120,12 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
 
   private RepositoryFile createClinicalFile(String projectCode, TCGAArchiveClinicalFile archiveClinicalFile) {
     val submittedDonorId = archiveClinicalFile.getDonorId();
-
     val repoEntityId = resolveRepoEntityId(archiveClinicalFile);
+    val id = resolveId(tcgaServer.getType().getDataPath(), repoEntityId);
 
     val clinicalFile = new RepositoryFile()
-        .setId(resolveFileId(tcgaServer.getType().getDataPath(), repoEntityId))
+        .setId(id)
+        .setFileId(context.ensureFileId(id))
         .setStudy(null) // N/A
         .setAccess("open");
 
@@ -147,7 +148,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
             .setFileFormat("XML")
             .setFileMd5sum(archiveClinicalFile.getFileMd5())
             .setFileSize(archiveClinicalFile.getFileSize())
-            .setLastModified(archiveClinicalFile.getLastModified().toString()));
+            .setLastModified(archiveClinicalFile.getLastModified()));
 
     clinicalFile.getDonors().add(
         new Donor()

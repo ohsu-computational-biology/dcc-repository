@@ -33,6 +33,7 @@ public class RepositoryImporterTest {
     val context = newLocalRepositoryFileContext();
     val repositoryImporter = new RepositoryImporter(context);
     repositoryImporter.execute();
+    // repositoryImporter.execute(ImmutableList.of(PCAWG, AWS));
   }
 
 }

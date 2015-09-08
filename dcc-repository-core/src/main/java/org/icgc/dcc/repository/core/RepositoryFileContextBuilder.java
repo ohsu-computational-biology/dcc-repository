@@ -23,10 +23,10 @@ import static lombok.AccessLevel.PRIVATE;
 import java.util.Map;
 
 import org.icgc.dcc.common.core.tcga.TCGAClient;
-import org.icgc.dcc.etl.core.id.CachingIdentifierClient;
-import org.icgc.dcc.etl.core.id.HashIdentifierClient;
-import org.icgc.dcc.etl.core.id.HttpIdentifierClient;
-import org.icgc.dcc.etl.core.id.IdentifierClient;
+import org.icgc.dcc.id.client.core.IdClient;
+import org.icgc.dcc.id.client.http.HttpIdClient;
+import org.icgc.dcc.id.client.util.CachingIdClient;
+import org.icgc.dcc.id.client.util.HashIdClient;
 import org.icgc.dcc.repository.core.reader.RepositoryProjectReader;
 
 import com.mongodb.MongoClientURI;
@@ -78,14 +78,14 @@ public final class RepositoryFileContextBuilder {
   @NonNull
   public RepositoryFileContext build() {
     val primarySites = getProjectPrimarySites(geneMongoUri);
-    val identifierClient = createIdentifierClient();
+    val idClient = createIdClient();
     val tcgaClient = createTCGAClient();
 
-    return new RepositoryFileContext(repoMongoUri, esUri, primarySites, identifierClient, tcgaClient, pcawgIdResolver);
+    return new RepositoryFileContext(repoMongoUri, esUri, primarySites, idClient, tcgaClient, pcawgIdResolver);
   }
 
-  private IdentifierClient createIdentifierClient() {
-    return realIds ? new CachingIdentifierClient(new HttpIdentifierClient(idUrl, "")) : new HashIdentifierClient();
+  private IdClient createIdClient() {
+    return realIds ? new CachingIdClient(new HttpIdClient(idUrl, "", "<token>")) : new HashIdClient();
   }
 
   private static TCGAClient createTCGAClient() {

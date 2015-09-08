@@ -106,9 +106,11 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
 
     val analysisId = getAnalysisId(result);
     val fileName = getFileName(file);
+    val id = resolveId(analysisId, fileName);
 
     val analysisFile = new RepositoryFile()
-        .setId(resolveFileId(analysisId, fileName))
+        .setId(id)
+        .setFileId(context.ensureFileId(id))
         .setStudy(null) // N/A
         .setAccess("controlled");
 
@@ -182,10 +184,10 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
     return null;
   }
 
-  private static String resolveLastModified(JsonNode result) {
+  private static long resolveLastModified(JsonNode result) {
     val instant = Instant.parse(getLastModified(result));
 
-    return instant.toString();
+    return instant.getEpochSecond();
   }
 
   private static boolean isBamFile(JsonNode file) {

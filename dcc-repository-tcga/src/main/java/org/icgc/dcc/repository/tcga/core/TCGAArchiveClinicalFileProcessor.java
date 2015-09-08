@@ -27,12 +27,12 @@ import org.icgc.dcc.repository.tcga.model.TCGAArchivePageEntry;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchiveManifestReader;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchivePageReader;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 @Slf4j
 public class TCGAArchiveClinicalFileProcessor {
@@ -69,8 +69,8 @@ public class TCGAArchiveClinicalFileProcessor {
     return clinicalFiles.build();
   }
 
-  private static String resolveLastModified(TCGAArchivePageEntry entry) {
-    return entry.getLastModified().toString();
+  private static long resolveLastModified(TCGAArchivePageEntry entry) {
+    return entry.getLastModified().getEpochSecond();
   }
 
   private Map<String, String> resolveArchiveFileMD5Sums(String archiveFolderUrl) {

@@ -16,11 +16,11 @@
 
   <dependencies>
   
-    <!-- DCC - ETL -->
+    <!-- DCC - ID -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-etl-core</artifactId>
-    </dependency>
+      <artifactId>dcc-id-client</artifactId>
+    </dependency>    
 
   </dependencies>
 

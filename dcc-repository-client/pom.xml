@@ -30,10 +30,17 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- DCC -->
+    <!-- DCC - Common -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-common-resources</artifactId>
+    </dependency>
+
+    <!-- DCC - ETL -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-etl-core</artifactId>
+      <version>${dcc-etl.version}</version>
     </dependency>
 
     <!-- DCC - Repository -->
@@ -109,7 +116,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>    
+      </plugin>
 
       <!-- Assembly -->
       <plugin>
@@ -137,7 +144,7 @@
     <!-- Spring -->
     <main.class>org.icgc.dcc.repository.client.ClientMain</main.class>
     <start-class>${main.class}</start-class>
-      
+
     <!-- Versions - Spring -->
     <spring-boot.version>1.2.5.RELEASE</spring-boot.version>
     <spring-maven-plugin.version>1.2.5.RELEASE</spring-maven-plugin.version>

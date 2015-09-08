@@ -24,7 +24,7 @@ public class TCGAArchiveClinicalFile {
 
   String donorId;
   String fileName;
-  String lastModified;
+  long lastModified;
   long fileSize;
   String fileMd5;
   String url;

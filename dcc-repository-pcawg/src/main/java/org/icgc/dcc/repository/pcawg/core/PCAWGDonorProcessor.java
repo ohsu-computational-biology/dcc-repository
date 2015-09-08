@@ -181,14 +181,15 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
 
     val fileName = resolveFileName(workflowFile);
     val fileSize = resolveFileSize(workflowFile);
-    val fileId = resolveFileId(gnosId, fileName);
     val fileFormat = resolveFileFormat(analysisType, fileName);
     val dataCategorization = resolveDataCategorization(analysisType, fileName);
+    val id = resolveId(gnosId, fileName);
 
     val pcawgServers = resolvePCAWGServers(workflow);
 
     val donorFile = new RepositoryFile()
-        .setId(fileId)
+        .setId(id)
+        .setFileId(context.ensureFileId(id))
         .setStudy(ImmutableList.of(PCAWG_STUDY_VALUE))
         .setAccess("controlled")
         .setDataCategorization(dataCategorization);
@@ -286,11 +287,11 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
     return max(getFileSize(workflowFile), getBamFileSize(workflowFile));
   }
 
-  private static String resolveLastModified(JsonNode workflow) {
+  private static long resolveLastModified(JsonNode workflow) {
     val text = getGnosLastModified(workflow);
     val dateTime = ISO_OFFSET_DATE_TIME.parse(text, Instant::from);
 
-    return dateTime.toString();
+    return dateTime.getEpochSecond();
   }
 
 }

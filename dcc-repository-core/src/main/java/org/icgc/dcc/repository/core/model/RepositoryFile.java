@@ -99,7 +99,6 @@ public class RepositoryFile {
 
     String repoType;
     String repoOrg; // TODO: Verify if this should be included
-    String repoEntityId; // TODO: Verify if this should be included
     String repoName;
     String repoCode;
     String repoCountry;

@@ -137,7 +137,6 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         new FileCopy()
             .setRepoType(tcgaServer.getType().getId())
             .setRepoOrg(tcgaServer.getSource().getId())
-            .setRepoEntityId(repoEntityId)
             .setRepoName(tcgaServer.getName())
             .setRepoCode(tcgaServer.getCode())
             .setRepoCountry(tcgaServer.getCountry())

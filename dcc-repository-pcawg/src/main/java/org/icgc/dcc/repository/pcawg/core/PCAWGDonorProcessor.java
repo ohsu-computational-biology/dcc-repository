@@ -201,7 +201,6 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
       donorFile.getFileCopies().add(new FileCopy()
           .setRepoType(pcawgServer.getType().getId())
           .setRepoOrg(pcawgServer.getSource().getId())
-          .setRepoEntityId(gnosId)
           .setRepoMetadataPath(pcawgServer.getType().getMetadataPath())
           .setRepoDataPath(pcawgServer.getType().getDataPath())
           .setFileName(fileName)

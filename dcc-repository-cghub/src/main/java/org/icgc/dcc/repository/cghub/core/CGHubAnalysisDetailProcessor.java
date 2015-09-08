@@ -125,7 +125,6 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
         .setFileFormat("BAM")
         .setRepoType(cghubServer.getType().getId())
         .setRepoOrg(cghubServer.getSource().getId())
-        .setRepoEntityId(analysisId)
         .setRepoName(cghubServer.getName())
         .setRepoCode(cghubServer.getCode())
         .setRepoCountry(cghubServer.getCountry())

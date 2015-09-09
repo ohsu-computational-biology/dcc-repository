@@ -30,13 +30,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
-import lombok.val;
-
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
+
+import lombok.val;
 
 /**
  * Repository file index specific conventions, metadata and utilities.
@@ -46,7 +46,8 @@ public class RepositoryFileIndex {
   /**
    * Index naming.
    */
-  public static final String REPO_INDEX_ALIAS = "icgc-repository";
+  // TODO: Change back after development
+  public static final String REPO_INDEX_ALIAS = "test-icgc-repository";
   public static final DateTimeFormatter INDEX_NAME_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
   /**

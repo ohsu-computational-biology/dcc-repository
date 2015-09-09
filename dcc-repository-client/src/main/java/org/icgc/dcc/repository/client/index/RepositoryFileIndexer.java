@@ -19,16 +19,10 @@ package org.icgc.dcc.repository.client.index;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Stopwatch.createStarted;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Throwables.propagate;
-import static org.elasticsearch.client.Requests.indexRequest;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_FILE_DONOR_TEXT_NAME;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_FILE_NAME;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_FILE_TEXT_NAME;
 import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_NAMES;
 import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.REPO_INDEX_ALIAS;
 import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.compareIndexDateDescending;
@@ -48,17 +42,8 @@ import org.elasticsearch.action.bulk.BulkProcessor.Listener;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.collect.Maps;
-import org.elasticsearch.common.collect.Sets;
 import org.elasticsearch.common.unit.ByteSizeValue;
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
-import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
 import com.mongodb.MongoClientURI;
 
 import lombok.Cleanup;
@@ -68,11 +53,13 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class RepositoryFileIndexer extends AbstractJongoComponent implements Closeable {
+public class RepositoryFileIndexer implements Closeable {
 
   /**
    * Configuration.
    */
+  @NonNull
+  private final MongoClientURI mongoUri;
   @NonNull
   private final String indexName;
 
@@ -83,7 +70,7 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
   private final TransportClient client;
 
   public RepositoryFileIndexer(@NonNull MongoClientURI mongoUri, @NonNull String esUri) {
-    super(mongoUri);
+    this.mongoUri = mongoUri;
     this.indexName = getCurrentIndexName();
     this.client = newTransportClient(esUri);
   }
@@ -98,7 +85,6 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
   @Override
   public void close() throws IOException {
     client.close();
-    super.close();
   }
 
   private void initializeIndex() {
@@ -151,88 +137,29 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
     val watch = createStarted();
 
     @Cleanup
-    val processor = createBulkProcessor();
+    val bulkProcessor = createBulkProcessor();
 
     log.info("Indexing file documents...");
-    val fileCount = indexFileDocuments(processor);
+    val fileCount = indexFileDocuments(bulkProcessor);
     log.info("Indexing file donor documents...");
-    val fileDonorCount = indexFileDonorDocuments(processor);
+    val fileDonorCount = indexFileDonorDocuments(bulkProcessor);
 
     log.info("Finished indexing {} file and {} documents in {}", formatCount(fileCount), formatCount(fileDonorCount),
         watch);
   }
 
-  private int indexFileDocuments(BulkProcessor processor) {
-    return eachDocument(RepositoryFileCollection.FILE, file -> {
-      String id = file.get("id").textValue();
-
-      // Need to remove this as to not conflict with Elasticsearch
-      file.remove("_id");
-      processor.add(indexRequest(indexName).type(INDEX_TYPE_FILE_NAME).id(id).source(file.toString()));
-
-      JsonNode fileText = createFileText(file, id);
-      processor.add(indexRequest(indexName).type(INDEX_TYPE_FILE_TEXT_NAME).id(id).source(fileText.toString()));
-    });
+  @SneakyThrows
+  private int indexFileDocuments(BulkProcessor bulkProcessor) {
+    @Cleanup
+    val processor = new FileDocumentProcessor(mongoUri, indexName, bulkProcessor);
+    return processor.process();
   }
 
   @SneakyThrows
-  private int indexFileDonorDocuments(BulkProcessor processor) {
-    val fieldNames = ImmutableList.of(
-        "specimen_id",
-        "sample_id",
-        "submitted_specimen_id",
-        "submitted_sample_id",
-        "tcga_participant_barcode",
-        "tcga_sample_barcode",
-        "tcga_aliquot_barcode");
-
-    val donorIds = Sets.<String> newHashSet();
-    val submittedDonorIds = Maps.<String, String> newHashMap();
-
-    val donorFields = Maps.<String, Multimap<String, String>> newHashMap();
-    for (val fieldName : fieldNames) {
-      donorFields.put(fieldName, HashMultimap.<String, String> create());
-    }
-
-    // Collect
-    eachDocument(RepositoryFileCollection.FILE, file -> {
-      JsonNode donor = file.path("donor");
-      String donorId = donor.get("donor_id").textValue();
-      donorIds.add(donorId);
-
-      String submittedDonorId = donor.get("submitted_donor_id").textValue();
-      submittedDonorIds.put(donorId, submittedDonorId);
-
-      for (String fieldName : fieldNames) {
-        String value = donor.get(fieldName).textValue();
-        if (!isNullOrEmpty(value)) {
-          donorFields.get(fieldName).put(donorId, value);
-        }
-      }
-    });
-
-    // Index
-    for (val donorId : donorIds) {
-      val submittedDonorId = submittedDonorIds.get(donorId);
-      val fileDonor = DEFAULT.createObjectNode();
-
-      // By convention this is called id
-      fileDonor.put("id", donorId);
-      fileDonor.put("donor_id", donorId);
-
-      if (!isNullOrEmpty(submittedDonorId)) {
-        fileDonor.put("submitted_donor_id", submittedDonorId);
-      }
-
-      for (val fieldName : fieldNames) {
-        fileDonor.putPOJO(fieldName, donorFields.get(fieldName).get(donorId));
-      }
-
-      processor.add(indexRequest(indexName).type(INDEX_TYPE_FILE_DONOR_TEXT_NAME).id(donorId)
-          .source(DEFAULT.writeValueAsString(fileDonor)));
-    }
-
-    return donorIds.size();
+  private int indexFileDonorDocuments(BulkProcessor bulkProcessor) {
+    @Cleanup
+    val processor = new FileDonorDocumentProcessor(mongoUri, indexName, bulkProcessor);
+    return processor.process();
   }
 
   private BulkProcessor createBulkProcessor() {
@@ -304,19 +231,6 @@ public class RepositoryFileIndexer extends AbstractJongoComponent implements Clo
         .actionGet()
         .isAcknowledged(),
         "Index '%s' deletion was not acknowledged", Arrays.toString(staleRepoIndexNames));
-  }
-
-  private JsonNode createFileText(ObjectNode file, String id) {
-    val fileName = file.path("repository").path("file_name");
-    val donorId = file.path("donor").path("donor_id");
-
-    val fileText = DEFAULT.createObjectNode();
-    fileText.put("type", "file");
-    fileText.put("id", id);
-    fileText.put("file_name", fileName);
-    fileText.put("donor_id", donorId);
-
-    return fileText;
   }
 
   private Set<String> getIndexNames() {

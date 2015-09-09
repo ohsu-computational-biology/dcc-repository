@@ -83,7 +83,7 @@ public class RepositoryImporter {
     val files = collectFiles();
     val combined = combineFiles(files);
     writeFiles(combined);
-
+    indexFiles();
     report(watch, exceptions);
 
     checkState(exceptions.isEmpty(), "Exception(s) processing %s", exceptions);

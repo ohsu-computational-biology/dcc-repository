@@ -17,13 +17,15 @@
  */
 package org.icgc.dcc.repository.client.core;
 
-import static org.elasticsearch.common.collect.Iterables.getFirst;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -59,16 +61,35 @@ public class RepositoryFileCombiner {
   }
 
   private RepositoryFile combineFiles(Set<RepositoryFile> files) {
-    // Combine all file copies
-    val fileCopies = files.stream()
-        .flatMap(file -> file.getFileCopies().stream())
-        .collect(toImmutableList());
+    // Round up all file copies
+    val fileCopies = resolveFileCopies(files);
 
     // Designate one file as the representative for the group
-    val representative = getFirst(files, null);
+    val representative = calculateRepresentative(files);
+
+    // Combine all file copies
     representative.setFileCopies(fileCopies);
 
     return representative;
+  }
+
+  private List<FileCopy> resolveFileCopies(Set<RepositoryFile> files) {
+    return files.stream()
+        .flatMap(file -> file.getFileCopies().stream())
+        .collect(toImmutableList());
+  }
+
+  private RepositoryFile calculateRepresentative(Set<RepositoryFile> files) {
+    // Prioritize PCAWG ahead of others since it carries the most information
+    return files.stream().sorted((f1, f2) -> isPCAWGFile(f1) ? 1 : 0).findFirst().get();
+  }
+
+  private static boolean isPCAWGFile(RepositoryFile file) {
+    return file.getFileCopies().stream().anyMatch(fileCopy -> isPCAWGFileCopy(fileCopy));
+  }
+
+  private static boolean isPCAWGFileCopy(FileCopy fileCopy) {
+    return fileCopy.getRepoOrg().equals(PCAWG.getId());
   }
 
 }

@@ -17,15 +17,18 @@
  */
 package org.icgc.dcc.repository.core;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.icgc.dcc.common.core.util.UUID5;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
 
 import com.google.common.base.Joiner;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 @RequiredArgsConstructor
 public abstract class RepositoryFileProcessor {
@@ -35,6 +38,14 @@ public abstract class RepositoryFileProcessor {
    */
   @NonNull
   protected final RepositoryFileContext context;
+
+  protected static void eachFileDonor(@NonNull Iterable<RepositoryFile> files, @NonNull Consumer<Donor> consumer) {
+    for (val file : files) {
+      for (val donor : file.getDonors()) {
+        consumer.accept(donor);
+      }
+    }
+  }
 
   protected static Predicate<? super RepositoryFile> hasDonorId() {
     return (RepositoryFile file) -> file.getDonors().stream().anyMatch(donor -> donor.hasDonorId());

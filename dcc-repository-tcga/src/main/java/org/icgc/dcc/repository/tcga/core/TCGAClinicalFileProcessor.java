@@ -121,9 +121,18 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
   }
 
   private RepositoryFile createClinicalFile(String projectCode, TCGAArchiveClinicalFile archiveClinicalFile) {
+
+    //
+    // Prepare
+    //
+
     val submittedDonorId = archiveClinicalFile.getDonorId();
     val repoEntityId = resolveRepoEntityId(archiveClinicalFile);
     val id = resolveId(tcgaServer.getType().getDataPath(), repoEntityId);
+
+    //
+    // Create
+    //
 
     val clinicalFile = new RepositoryFile()
         .setId(id)
@@ -136,19 +145,20 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setExperimentalStrategy(null); // N/A
 
     clinicalFile.addFileCopy()
+        .setFileName(archiveClinicalFile.getFileName())
+        .setFileFormat(FileFormat.XML)
+        .setFileSize(archiveClinicalFile.getFileSize())
+        .setFileMd5sum(archiveClinicalFile.getFileMd5())
+        .setLastModified(archiveClinicalFile.getLastModified())
+        .setIndexFile(null) // TODO: Fix
         .setRepoType(tcgaServer.getType().getId())
         .setRepoOrg(tcgaServer.getSource().getId())
         .setRepoName(tcgaServer.getName())
         .setRepoCode(tcgaServer.getCode())
         .setRepoCountry(tcgaServer.getCountry())
         .setRepoBaseUrl(tcgaServer.getBaseUrl())
-        .setRepoMetadataPath(tcgaServer.getType().getMetadataPath())
         .setRepoDataPath(tcgaServer.getType().getDataPath())
-        .setFileName(archiveClinicalFile.getFileName())
-        .setFileFormat(FileFormat.XML)
-        .setFileMd5sum(archiveClinicalFile.getFileMd5())
-        .setFileSize(archiveClinicalFile.getFileSize())
-        .setLastModified(archiveClinicalFile.getLastModified());
+        .setRepoMetadataPath(tcgaServer.getType().getMetadataPath());
 
     clinicalFile.addDonor()
         .setPrimarySite(context.getPrimarySite(projectCode))

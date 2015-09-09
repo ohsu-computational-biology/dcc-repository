@@ -28,6 +28,8 @@ import java.util.Set;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
+import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -37,6 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AWSFileProcessor extends RepositoryFileProcessor {
+
+  /**
+   * Metadata.
+   */
+  private final RepositoryServer server = getAWSServer();
 
   public AWSFileProcessor(RepositoryFileContext context) {
     super(context);
@@ -51,36 +58,44 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
   }
 
   private RepositoryFile processObject(S3ObjectSummary s3Object) {
+    log.debug("Processing bucket entry: {}", format("%-50s %10d %s",
+        s3Object.getKey(), s3Object.getSize(), s3Object.getStorageClass()));
 
     return createFile(s3Object);
   }
 
-  private RepositoryFile createFile(S3ObjectSummary summary) {
-    val id = getObjectId(summary);
+  private RepositoryFile createFile(S3ObjectSummary s3Object) {
 
-    val server = getAWSServer();
+    //
+    // Prepare
+    //
 
-    log.debug("Bucket entry: {}", format("%-30s %-50s %10d %s",
-        id,
-        summary.getKey(),
-        summary.getSize(),
-        summary.getStorageClass()));
+    val id = getObjectId(s3Object);
+
+    //
+    // Create
+    //
 
     val file = new RepositoryFile()
         .setId(id)
-        .setFileId(context.ensureFileId(id));
+        .setFileId(context.ensureFileId(id))
+        .setAccess(FileAccess.CONTROLLED);
 
     file.addFileCopy()
+        .setFileName(id)
+        .setFileFormat(null) // TODO: Fix
+        .setFileSize(s3Object.getSize())
+        .setFileMd5sum(null) // TODO: Fix
+        .setLastModified(s3Object.getLastModified().getTime())
+        .setIndexFile(null) // TODO: Fix
         .setRepoType(server.getType().getId())
         .setRepoOrg(server.getSource().getId())
         .setRepoName(server.getName())
         .setRepoCode(server.getCode())
         .setRepoCountry(server.getCountry())
         .setRepoBaseUrl(server.getBaseUrl())
-        .setRepoMetadataPath(server.getType().getMetadataPath())
         .setRepoDataPath(server.getType().getDataPath())
-        .setLastModified(summary.getLastModified().getTime())
-        .setFileSize(summary.getSize());
+        .setRepoMetadataPath(server.getType().getMetadataPath());
 
     return file;
   }

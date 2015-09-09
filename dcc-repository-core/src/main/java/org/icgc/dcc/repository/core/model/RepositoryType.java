@@ -18,17 +18,18 @@
 package org.icgc.dcc.repository.core.model;
 
 import static lombok.AccessLevel.PRIVATE;
+
+import org.icgc.dcc.common.core.model.Identifiable;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-
-import org.icgc.dcc.common.core.model.Identifiable;
 
 @Getter
 @RequiredArgsConstructor(access = PRIVATE)
 public enum RepositoryType implements Identifiable {
 
-  S3("S3", null, null),
+  S3("S3", "/oicr.icgc/meta", "/oicr.icgc/data"),
   GNOS("GNOS", "/cghub/metadata/analysisFull/", "/cghub/data/analysis/download/"),
   WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/");
 

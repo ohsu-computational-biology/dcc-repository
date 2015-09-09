@@ -105,14 +105,11 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
 
     log.info("Translating {} TCGA barcodes to TCGA UUIDs...", formatCount(uuids));
     val barcodes = context.getTCGABarcodes(uuids);
-    for (val donorFile : donorFiles) {
-      for (val donor : donorFile.getDonors()) {
-        donor.getOtherIdentifiers()
-            .setTcgaParticipantBarcode(barcodes.get(donor.getSubmittedDonorId()))
-            .setTcgaSampleBarcode(barcodes.get(donor.getSubmittedSpecimenId()))
-            .setTcgaAliquotBarcode(barcodes.get(donor.getSubmittedSampleId()));
-      }
-    }
+    eachFileDonor(donorFiles, donor -> donor.getOtherIdentifiers()
+        .setTcgaParticipantBarcode(barcodes.get(donor.getSubmittedDonorId()))
+        .setTcgaSampleBarcode(barcodes.get(donor.getSubmittedSpecimenId()))
+        .setTcgaAliquotBarcode(barcodes.get(donor.getSubmittedSampleId())));
+
   }
 
   private void assignIds(Iterable<RepositoryFile> donorFiles) {
@@ -172,6 +169,11 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
 
   private RepositoryFile createDonorFile(String projectCode, String submittedDonorId, String analysisType,
       JsonNode workflow, JsonNode workflowFile) {
+
+    //
+    // Prepare
+    //
+
     val project = getProjectCodeProject(projectCode).orNull();
     checkState(project != null, "No project found for project code '%s'", projectCode);
 
@@ -183,33 +185,46 @@ public class PCAWGDonorProcessor extends RepositoryFileProcessor {
     val fileName = resolveFileName(workflowFile);
     val fileSize = resolveFileSize(workflowFile);
     val fileFormat = resolveFileFormat(analysisType, fileName);
-    val dataCategorization = resolveDataCategorization(analysisType, fileName);
     val id = resolveId(gnosId, fileName);
 
     val pcawgServers = resolvePCAWGServers(workflow);
+
+    //
+    // Create
+    //
 
     val donorFile = new RepositoryFile()
         .setId(id)
         .setFileId(context.ensureFileId(id))
         .setStudy(ImmutableList.of(Study.PCAWG))
-        .setAccess(FileAccess.CONTROLLED)
-        .setDataCategorization(dataCategorization);
+        .setAccess(FileAccess.CONTROLLED);
 
     donorFile.getDataBundle()
         .setDataBundleId(gnosId);
 
+    donorFile.getAnalysisMethod()
+        .setAnalysisType(null) // TODO: Fix
+        .setSoftware(null); // TODO: Fix
+
+    donorFile
+        .setDataCategorization(resolveDataCategorization(analysisType, fileName));
+
     for (val pcawgServer : pcawgServers) {
       donorFile.addFileCopy()
-          .setRepoType(pcawgServer.getType().getId())
-          .setRepoOrg(pcawgServer.getSource().getId())
-          .setRepoMetadataPath(pcawgServer.getType().getMetadataPath())
-          .setRepoDataPath(pcawgServer.getType().getDataPath())
           .setFileName(fileName)
           .setFileFormat(fileFormat)
-          .setFileMd5sum(resolveMd5sum(workflowFile))
           .setFileSize(fileSize)
-          .setIndexFile(null) // TODO: Implement after upstream JSONL file has values
-          .setLastModified(resolveLastModified(workflow));
+          .setFileMd5sum(resolveMd5sum(workflowFile))
+          .setLastModified(resolveLastModified(workflow))
+          .setIndexFile(null) // TODO: Fix
+          .setRepoType(pcawgServer.getType().getId())
+          .setRepoOrg(pcawgServer.getSource().getId())
+          .setRepoName(pcawgServer.getName())
+          .setRepoCode(pcawgServer.getCode())
+          .setRepoCountry(pcawgServer.getCountry())
+          .setRepoBaseUrl(pcawgServer.getBaseUrl())
+          .setRepoDataPath(pcawgServer.getType().getDataPath())
+          .setRepoMetadataPath(pcawgServer.getType().getMetadataPath());
     }
 
     donorFile.addDonor()

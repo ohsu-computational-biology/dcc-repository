@@ -19,7 +19,6 @@ package org.icgc.dcc.repository.client.index;
 
 import static org.elasticsearch.client.Requests.indexRequest;
 import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_FILE_NAME;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
@@ -61,7 +60,7 @@ public abstract class DocumentProcessor extends AbstractJongoComponent {
     val source = serialize(document);
     bulkProcessor.add(
         indexRequest(indexName)
-            .type(INDEX_TYPE_FILE_NAME)
+            .type(type)
             .id(id)
             .source(source));
   }

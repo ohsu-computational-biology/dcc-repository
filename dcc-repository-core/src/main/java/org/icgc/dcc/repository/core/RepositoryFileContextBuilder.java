@@ -59,7 +59,7 @@ public final class RepositoryFileContextBuilder {
   private MongoClientURI geneMongoUri = getLocalMongoClientUri("dcc-genome");
   @Setter
   @Accessors(chain = true, fluent = true)
-  private MongoClientURI repoMongoUri = getLocalMongoClientUri("dcc-repo");
+  private MongoClientURI repoMongoUri = getLocalMongoClientUri("dcc-repository");
   @Setter
   @Accessors(chain = true, fluent = true)
   private String esUri = "es://localhost:9300";

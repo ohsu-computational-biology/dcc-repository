@@ -64,7 +64,7 @@ public class RepositoryFileIndex {
   /**
    * Metadata location.
    */
-  private static final String ES_CONFIG_BASE_PATH = "mappings";
+  private static final String ES_CONFIG_BASE_PATH = "mappings-new";
 
   public static ObjectNode getSettings() throws IOException {
     val resourceName = format("%s/index.settings.json", ES_CONFIG_BASE_PATH);

@@ -51,10 +51,11 @@ public class RepositoryFileCollector {
     val files = readFiles(readers);
 
     return iterable(files);
-
   }
 
   private HashMultimap<String, RepositoryFile> readFiles(Iterable<RepositorySourceFileReader> readers) {
+    // TODO: This isn't lazy and should be doing an N-way merge instead to avoid bringing everything into memory at
+    // once.
     val files = HashMultimap.<String, RepositoryFile> create();
     for (val reader : readers) {
       for (val file : reader.read()) {

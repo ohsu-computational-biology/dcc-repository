@@ -144,8 +144,8 @@ public class RepositoryFileIndexer implements Closeable {
     log.info("Indexing file donor documents...");
     val fileDonorCount = indexFileDonorDocuments(bulkProcessor);
 
-    log.info("Finished indexing {} file and {} documents in {}", formatCount(fileCount), formatCount(fileDonorCount),
-        watch);
+    log.info("Finished indexing {} file and {} file donor documents in {}",
+        formatCount(fileCount), formatCount(fileDonorCount), watch);
   }
 
   @SneakyThrows

@@ -81,7 +81,7 @@ public class RepositoryFileCombiner {
 
   private RepositoryFile calculateRepresentative(Set<RepositoryFile> files) {
     // Prioritize PCAWG ahead of others since it carries the most information
-    return files.stream().sorted((f1, f2) -> isPCAWGFile(f1) ? 1 : 0).findFirst().get();
+    return files.stream().sorted((f1, f2) -> isPCAWGFile(f1) ? -1 : 0).findFirst().get();
   }
 
   private static boolean isPCAWGFile(RepositoryFile file) {

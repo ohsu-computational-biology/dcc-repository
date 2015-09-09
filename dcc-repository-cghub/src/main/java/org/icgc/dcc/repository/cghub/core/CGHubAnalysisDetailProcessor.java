@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.repository.cghub.core;
 
-import static org.elasticsearch.common.collect.Iterables.getFirst;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAliquotId;
@@ -42,6 +41,8 @@ import static org.icgc.dcc.repository.core.model.RepositoryServers.getCGHubServe
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
@@ -84,8 +85,7 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
     val analysisFiles = stream(details)
         .flatMap(detail -> stream(getResults(detail)))
         .flatMap(result -> stream(processResult(result)))
-        // Filter out non-ICGC donors
-        .filter(analysisFile -> analysisFile.getDonors().stream().anyMatch(donor -> donor.hasDonorId()))
+        .filter(hasDonorId()) // Filter out non-ICGC donors
         .collect(toImmutableList());
 
     assignStudy(analysisFiles);
@@ -94,19 +94,19 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> processResult(JsonNode result) {
-    val baiFiles = resolveBaiFiles(result);
-    val baiFile = Optional.ofNullable(getFirst(baiFiles, null));
+    val baiFile = resolveBaiFile(result);
 
-    return stream(getFiles(result))
-        .filter(file -> isBamFile(file))
+    return resolveFiles(result, file -> isBamFile(file))
         .map(file -> createAnalysisFile(result, file, baiFile))
         .collect(toImmutableList());
   }
 
-  private List<JsonNode> resolveBaiFiles(JsonNode result) {
-    return stream(getFiles(result))
-        .filter(file -> isBaiFile(file))
-        .collect(toImmutableList());
+  private Optional<JsonNode> resolveBaiFile(JsonNode result) {
+    return resolveFiles(result, file -> isBaiFile(file)).findFirst();
+  }
+
+  private Stream<JsonNode> resolveFiles(JsonNode result, Predicate<? super JsonNode> filter) {
+    return stream(getFiles(result)).filter(filter);
   }
 
   private RepositoryFile createAnalysisFile(JsonNode result, JsonNode file, Optional<JsonNode> baiFile) {

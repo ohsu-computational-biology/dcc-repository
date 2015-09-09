@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.icgc.dcc.common.core.tcga.TCGAClient;
 import org.icgc.dcc.id.client.core.IdClient;
+import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import com.mongodb.MongoClientURI;
 
@@ -45,6 +46,9 @@ public class RepositoryFileContext {
   @NonNull
   private final String esUri;
   private final boolean readOnly = false;
+  @Getter
+  @NonNull
+  private final Set<RepositorySource> sources;
 
   /**
    * Metadata.

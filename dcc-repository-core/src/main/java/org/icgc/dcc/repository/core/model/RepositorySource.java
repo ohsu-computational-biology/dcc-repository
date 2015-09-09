@@ -18,11 +18,17 @@
 package org.icgc.dcc.repository.core.model;
 
 import static lombok.AccessLevel.PRIVATE;
+
+import java.util.Set;
+
+import org.icgc.dcc.common.core.model.Identifiable;
+
+import com.google.common.collect.ImmutableSet;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-
-import org.icgc.dcc.common.core.model.Identifiable;
+import lombok.experimental.Accessors;
 
 @RequiredArgsConstructor(access = PRIVATE)
 public enum RepositorySource implements Identifiable {
@@ -35,5 +41,9 @@ public enum RepositorySource implements Identifiable {
   @Getter
   @NonNull
   private final String id;
+
+  @Getter(lazy = true)
+  @Accessors(fluent = true)
+  private static final Set<RepositorySource> all = ImmutableSet.copyOf(values());
 
 }

@@ -21,12 +21,14 @@ import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.icgc.dcc.common.core.tcga.TCGAClient;
 import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.http.HttpIdClient;
 import org.icgc.dcc.id.client.util.CachingIdClient;
 import org.icgc.dcc.id.client.util.HashIdClient;
+import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.reader.RepositoryProjectReader;
 
 import com.mongodb.MongoClientURI;
@@ -66,6 +68,9 @@ public final class RepositoryFileContextBuilder {
   private String idUrl = DEFAULT_ID_SERVICE_URL;
   @Setter
   @Accessors(chain = true, fluent = true)
+  private Set<RepositorySource> sources = RepositorySource.all();
+  @Setter
+  @Accessors(chain = true, fluent = true)
   private boolean realIds = false;
   @Setter
   @Accessors(chain = true, fluent = true)
@@ -81,7 +86,7 @@ public final class RepositoryFileContextBuilder {
     val idClient = createIdClient();
     val tcgaClient = createTCGAClient();
 
-    return new RepositoryFileContext(repoMongoUri, esUri, primarySites, idClient, tcgaClient, pcawgIdResolver);
+    return new RepositoryFileContext(repoMongoUri, esUri, sources, primarySites, idClient, tcgaClient, pcawgIdResolver);
   }
 
   private IdClient createIdClient() {

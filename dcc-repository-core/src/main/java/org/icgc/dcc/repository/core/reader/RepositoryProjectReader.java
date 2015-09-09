@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientURI;
 
@@ -37,13 +38,18 @@ public class RepositoryProjectReader extends AbstractJongoComponent {
   public Map<String, String> getPrimarySites() {
     val map = ImmutableMap.<String, String> builder();
     eachDocument(PROJECT_COLLECTION.getId(), project -> {
-      String projectName = project.get("_project_id").textValue();
-      String primarySite = project.get("primary_site").textValue();
-
-      map.put(projectName, primarySite);
+      map.put(getProjectName(project), getPrimarySite(project));
     });
 
     return map.build();
+  }
+
+  private static String getProjectName(ObjectNode project) {
+    return project.get("_project_id").textValue();
+  }
+
+  private static String getPrimarySite(ObjectNode project) {
+    return project.get("primary_site").textValue();
   }
 
 }

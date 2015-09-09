@@ -45,7 +45,7 @@ public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<Repositor
    * Dependencies.
    */
   @NonNull
-  protected final MongoCollection collection;
+  private final MongoCollection collection;
 
   public RepositoryFileWriter(@NonNull MongoClientURI mongoUri) {
     this(mongoUri, FILE);

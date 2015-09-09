@@ -17,7 +17,10 @@
  */
 package org.icgc.dcc.repository.core;
 
+import java.util.function.Predicate;
+
 import org.icgc.dcc.common.core.util.UUID5;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
 
 import com.google.common.base.Joiner;
 
@@ -32,6 +35,10 @@ public abstract class RepositoryFileProcessor {
    */
   @NonNull
   protected final RepositoryFileContext context;
+
+  protected static Predicate<? super RepositoryFile> hasDonorId() {
+    return (RepositoryFile file) -> file.getDonors().stream().anyMatch(donor -> donor.hasDonorId());
+  }
 
   protected static String resolveId(String... parts) {
     return UUID5.fromUTF8(UUID5.getNamespace(), Joiner.on('/').join(parts)).toString();

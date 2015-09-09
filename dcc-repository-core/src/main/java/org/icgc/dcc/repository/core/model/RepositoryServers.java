@@ -29,11 +29,11 @@ import static org.icgc.dcc.repository.core.model.RepositoryType.WEB_ARCHIVE;
 
 import java.util.List;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Value;
 
 @NoArgsConstructor(access = PRIVATE)
@@ -55,27 +55,28 @@ public final class RepositoryServers {
       );
   // @formatter:on
 
-  @NonNull
   public static Iterable<RepositoryServer> getServers() {
     return SERVERS;
   }
 
   public static RepositoryServer getCGHubServer() {
-    return tryFind(getServers(), server -> server.getSource() == CGHUB).orNull();
+    return findServer(server -> server.getSource() == CGHUB);
   }
 
   public static RepositoryServer getTCGAServer() {
-    return tryFind(getServers(), server -> server.getSource() == TCGA).orNull();
+    return findServer(server -> server.getSource() == TCGA);
   }
 
-  @NonNull
   public static RepositoryServer getPCAWGServer(String genosRepo) {
-    return tryFind(getServers(), server -> server.getSource() == PCAWG && server.getBaseUrl().equals(genosRepo))
-        .orNull();
+    return findServer(server -> server.getSource() == PCAWG && server.getBaseUrl().equals(genosRepo));
   }
 
   public static RepositoryServer getAWSServer() {
-    return tryFind(getServers(), server -> server.getSource() == AWS).orNull();
+    return findServer(server -> server.getSource() == AWS);
+  }
+
+  private static RepositoryServer findServer(Predicate<RepositoryServer> predicate) {
+    return tryFind(getServers(), predicate).orNull();
   }
 
   @Value

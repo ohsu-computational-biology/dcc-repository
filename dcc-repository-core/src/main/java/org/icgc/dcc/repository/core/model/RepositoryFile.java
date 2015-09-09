@@ -17,16 +17,14 @@
  */
 package org.icgc.dcc.repository.core.model;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.val;
 import lombok.experimental.Accessors;
+import lombok.experimental.UtilityClass;
 
 /**
  * Repository file.
@@ -175,57 +173,57 @@ public class RepositoryFile {
 
   }
 
-  @NoArgsConstructor(access = PRIVATE)
-  public static final class Study {
+  @UtilityClass
+  public class Study {
 
-    public static final String PCAWG = "PCAWG";
-
-  }
-
-  @NoArgsConstructor(access = PRIVATE)
-  public static final class Program {
-
-    public static final String TCGA = "TCGA";
+    public String PCAWG = "PCAWG";
 
   }
 
-  @NoArgsConstructor(access = PRIVATE)
-  public static final class FileFormat {
+  @UtilityClass
+  public class Program {
 
-    public static final String BAM = "BAM";
-    public static final String BAI = "BAI";
-    public static final String XML = "XML";
-    public static final String DNA_SEQ = "DNA-Seq";
-    public static final String VCF = "VCF";
+    public String TCGA = "TCGA";
 
   }
 
-  @NoArgsConstructor(access = PRIVATE)
-  public static final class FileAccess {
+  @UtilityClass
+  public class FileFormat {
 
-    public static final String CONTROLLED = "controlled";
-    public static final String OPEN = "open";
-
-  }
-
-  @NoArgsConstructor(access = PRIVATE)
-  public static final class DataType {
-
-    public static final String CLINICAL = "Clinical";
-    public static final String RNA_SEQ = "RNA-Seq";
-    public static final String DNA_SEQ = "DNA-Seq";
-
-    public static final String SSM = "SSM";
-    public static final String CNSM = "CNSM";
-    public static final String STSM = "StSM";
+    public String BAM = "BAM";
+    public String BAI = "BAI";
+    public String XML = "XML";
+    public String DNA_SEQ = "DNA-Seq";
+    public String VCF = "VCF";
 
   }
 
-  @NoArgsConstructor(access = PRIVATE)
-  public static final class ExperimentalStrategy {
+  @UtilityClass
+  public class FileAccess {
 
-    public static final String WGS = "WGS";
-    public static final String RNA_SEQ = "RNA-Seq";
+    public String CONTROLLED = "controlled";
+    public String OPEN = "open";
+
+  }
+
+  @UtilityClass
+  public class DataType {
+
+    public String CLINICAL = "Clinical";
+    public String RNA_SEQ = "RNA-Seq";
+    public String DNA_SEQ = "DNA-Seq";
+
+    public String SSM = "SSM";
+    public String CNSM = "CNSM";
+    public String STSM = "StSM";
+
+  }
+
+  @UtilityClass
+  public class ExperimentalStrategy {
+
+    public String WGS = "WGS";
+    public String RNA_SEQ = "RNA-Seq";
 
   }
 

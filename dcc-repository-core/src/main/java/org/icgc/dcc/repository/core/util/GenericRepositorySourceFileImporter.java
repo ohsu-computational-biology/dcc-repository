@@ -22,21 +22,35 @@ import static com.google.common.collect.Iterables.isEmpty;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.writer.RepositorySourceFileWriter;
 
 import lombok.Cleanup;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class GenericRepositorySourceFileImporter extends AbstractRepositorySourceFileImporter {
+@RequiredArgsConstructor
+public abstract class GenericRepositorySourceFileImporter implements RepositorySourceFileImporter {
 
-  public GenericRepositorySourceFileImporter(RepositorySource source, RepositoryFileContext context) {
-    super(source, context);
-  }
+  /**
+   * Metadata.
+   */
+  @NonNull
+  @Getter
+  protected final RepositorySource source;
+
+  /**
+   * Dependencies.
+   */
+  @NonNull
+  protected final RepositoryFileContext context;
 
   @Override
   @SneakyThrows

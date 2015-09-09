@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.repository.tcga.core;
 
-import static com.google.common.collect.Iterables.filter;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
@@ -74,8 +74,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> filterClinicalFiles(Iterable<RepositoryFile> clinicalFiles) {
-    return filter(clinicalFiles,
-        clinicalFile -> clinicalFile.getDonors().stream().anyMatch(donor -> donor.hasDonorId()));
+    return stream(clinicalFiles).filter(hasDonorId()).collect(toImmutableList());
   }
 
   private Iterable<RepositoryFile> createClinicalFiles() {

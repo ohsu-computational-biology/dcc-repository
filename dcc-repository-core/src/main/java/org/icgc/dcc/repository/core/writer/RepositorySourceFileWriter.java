@@ -32,7 +32,7 @@ public class RepositorySourceFileWriter extends RepositoryFileWriter {
    */
   @Getter
   @NonNull
-  protected final RepositorySource source;
+  private final RepositorySource source;
 
   public RepositorySourceFileWriter(@NonNull MongoClientURI mongoUri, RepositorySource source) {
     super(mongoUri, RepositoryFileCollection.forSource(source));

@@ -173,7 +173,11 @@ public class RepositoryImporter {
     if (success) {
       log.info("Finished importing repository in {}", watch);
     } else {
-      log.warn("Finished importing repository with errors in {}", watch);
+      log.error("Finished importing repository with errors in {}:", watch);
+      int i = 0;
+      for (val e : exceptions) {
+        log.error("[" + ++i + "/" + exceptions.size() + "]: ", e);
+      }
     }
 
     val subject = "DCC Repository Importer - " + (success ? "SUCCESS" : "ERROR");

@@ -6,9 +6,21 @@ Importer for the ICGC "Data Repository" feature which imports file metadata from
 Modules
 ---
 
-Sub-system modules:
+The Repository system is comprised of the following modules.
 
+### Core
+
+This module is the shared understanding of the system
 - [Core](dcc-repository-core/README.md)
+
+### Client
+
+This is the main entry point of the application.
+- [Client](dcc-repository-client/README.md)
+
+### Sources
+
+These modules index various data sources.
 - [AWS](dcc-repository-aws/README.md)
 - [CGHub](dcc-repository-cghub/README.md)
 - [PCAWG](dcc-repository-pcawg/README.md)
@@ -19,7 +31,7 @@ Build
 
 From the command line:
 
-	mvn -pl dcc-repository-client -am clean package -DskipTests
+	mvn clean package
 	
 Changes
 ---

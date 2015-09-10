@@ -17,23 +17,35 @@
  */
 package org.icgc.dcc.repository.client.core;
 
+import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
+import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-//@Ignore("For development only")
+@Ignore("For development only")
 public class RepositoryImporterTest {
 
   @Test
-  public void testExecute() throws IOException {
+  public void testExecuteAll() throws IOException {
+    val importer = createImporter();
+    importer.execute();
+  }
+
+  @Test
+  public void testExecuteSomeFast() throws IOException {
+    val importer = createImporter();
+    importer.execute(PCAWG, AWS);
+  }
+
+  private static RepositoryImporter createImporter() {
     val context = newLocalRepositoryFileContext();
-    val repositoryImporter = new RepositoryImporter(context);
-    repositoryImporter.execute();
-    // repositoryImporter.execute(ImmutableList.of(PCAWG, AWS));
+    return new RepositoryImporter(context);
   }
 
 }

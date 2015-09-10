@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -36,7 +35,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -75,18 +73,6 @@ public class AWSS3TransferJobReader {
 
     log.info("Reading {} completed jobs from {}...", formatCount(jobFiles.size()), completedDir);
     return readFiles(jobFiles);
-  }
-
-  public Set<String> readObjectIds() {
-    val objectIds = ImmutableSet.<String> builder();
-    for (val job : read()) {
-      for (val file : job.withArray("files")) {
-        val objectId = file.get("object_id").textValue();
-        objectIds.add(objectId);
-      }
-    }
-
-    return objectIds.build();
   }
 
   private List<ObjectNode> readFiles(List<File> files) throws IOException, JsonProcessingException {

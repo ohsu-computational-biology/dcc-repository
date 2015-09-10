@@ -100,6 +100,7 @@ public class ClientMain {
         .authToken(config.getAuthToken())
         .geneMongoUri(new MongoClientURI(config.getGeneMongoUri()))
         .repoMongoUri(new MongoClientURI(config.getRepoMongoUri()))
+        .idUrl(config.getIdentifierServiceUri())
         .esUri(config.getEsUri())
         .realIds(true)
         .pcawgIdResolver(new PCAWGDonorIdResolver())

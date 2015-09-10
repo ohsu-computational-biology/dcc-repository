@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,23 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.cghub;
+package org.icgc.dcc.repository.aws.util;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import static lombok.AccessLevel.PRIVATE;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import lombok.val;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-public class CGHubImporterTest {
+@NoArgsConstructor(access = PRIVATE)
+public final class AWSS3TransferJobs {
 
-  @Test
-  @Ignore("For development only")
-  public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val cghubImporter = new CGHubImporter(context);
-    cghubImporter.execute();
+  public static ArrayNode getFiles(@NonNull ObjectNode job) {
+    return job.withArray("files");
+  }
+
+  public static String getObjectId(@NonNull JsonNode file) {
+    return file.get("object_id").textValue();
   }
 
 }

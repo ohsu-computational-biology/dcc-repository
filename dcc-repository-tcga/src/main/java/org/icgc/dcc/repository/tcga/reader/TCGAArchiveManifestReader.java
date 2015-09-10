@@ -20,38 +20,41 @@ package org.icgc.dcc.repository.tcga.reader;
 import static com.google.common.io.Resources.readLines;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.URLs.getUrl;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.tcga.model.TCGAArchiveManifestEntry;
 
 import lombok.SneakyThrows;
 import lombok.val;
 
-import com.google.common.collect.ImmutableList;
-
 public class TCGAArchiveManifestReader {
+
+  /**
+   * Constants.
+   */
+  private static final String MANIFEST_FILE_NAME = "MANIFEST.txt";
 
   @SneakyThrows
   public static Iterable<TCGAArchiveManifestEntry> readEntries(String archiveUrl) {
-    val entries = ImmutableList.<TCGAArchiveManifestEntry> builder();
-
-    val lines = readManifest(archiveUrl);
-    for (val line : lines) {
-      String[] fields = parseFields(line);
-      val md5 = fields[0];
-      val fileName = fields[1];
-
-      entries.add(new TCGAArchiveManifestEntry(md5, fileName));
-    }
-
-    return entries.build();
+    return readManifest(archiveUrl)
+        .map(line -> parseLine(line))
+        .collect(toImmutableList());
   }
 
-  private static List<String> readManifest(String archiveUrl) throws IOException {
-    val manifestUrl = getUrl(archiveUrl + "/MANIFEST.txt");
-    return readLines(manifestUrl, UTF_8);
+  private static TCGAArchiveManifestEntry parseLine(String line) {
+    String[] fields = parseFields(line);
+    val md5 = fields[0];
+    val fileName = fields[1];
+
+    return new TCGAArchiveManifestEntry(md5, fileName);
+  }
+
+  private static Stream<String> readManifest(String archiveUrl) throws IOException {
+    val manifestUrl = getUrl(archiveUrl + "/" + MANIFEST_FILE_NAME);
+    return readLines(manifestUrl, UTF_8).stream();
   }
 
   private static String[] parseFields(String line) {

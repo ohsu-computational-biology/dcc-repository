@@ -95,14 +95,12 @@ public class ClientMain {
     log.info("         gene mongo uri - {}", config.getGeneMongoUri());
     log.info("         repo mongo uri - {}", config.getRepoMongoUri());
 
-    val sources = options.sources;
-    val geneMongoUri = new MongoClientURI(config.getGeneMongoUri());
-    val repoMongoUri = new MongoClientURI(config.getRepoMongoUri());
-    val esUri = config.getEsUri();
     val context = RepositoryFileContextBuilder.builder()
-        .geneMongoUri(geneMongoUri)
-        .repoMongoUri(repoMongoUri)
-        .esUri(esUri)
+        .sources(options.sources)
+        .authToken(config.getAuthToken())
+        .geneMongoUri(new MongoClientURI(config.getGeneMongoUri()))
+        .repoMongoUri(new MongoClientURI(config.getRepoMongoUri()))
+        .esUri(config.getEsUri())
         .realIds(true)
         .pcawgIdResolver(new PCAWGDonorIdResolver())
         .build();
@@ -110,7 +108,7 @@ public class ClientMain {
     val importer = new RepositoryImporter(context);
 
     // Business method
-    importer.execute(sources);
+    importer.execute(options.sources);
   }
 
   private static void usage(JCommander cli) {

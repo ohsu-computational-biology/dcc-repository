@@ -29,7 +29,7 @@ import java.util.Set;
 import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.repository.aws.AWSImporter;
 import org.icgc.dcc.repository.cghub.CGHubImporter;
-import org.icgc.dcc.repository.client.index.RepositoryFileIndexer;
+import org.icgc.dcc.repository.client.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
@@ -40,6 +40,7 @@ import org.icgc.dcc.repository.tcga.TCGAImporter;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import lombok.Cleanup;
 import lombok.NonNull;
@@ -77,24 +78,54 @@ public class RepositoryImporter {
   public void execute(Iterable<RepositorySource> activeSources) {
     val watch = createStarted();
 
-    // TODO: Improve exception handling
-    // Key steps, order matter
-    val exceptions = ImmutableList.<Exception> builder().addAll(writeSourceFiles(activeSources)).build();
-    val files = collectFiles();
-    val combined = combineFiles(files);
-    writeFiles(combined);
-    indexFiles();
-    report(watch, exceptions);
+    val exceptions = Lists.<Exception> newArrayList();
+    try {
+
+      //
+      // Write
+      //
+
+      // Always continue if an exception
+      exceptions.addAll(writeSourceFiles());
+
+      //
+      // Read
+      //
+
+      val files = collectFiles();
+
+      //
+      // Aggregate
+      //
+
+      val combinedFiles = combineFiles(files);
+
+      //
+      // Write
+      //
+
+      writeFiles(combinedFiles);
+
+      //
+      // Index
+      //
+
+      indexFiles();
+    } catch (Exception e) {
+      exceptions.add(e);
+    } finally {
+      report(watch, exceptions);
+    }
 
     checkState(exceptions.isEmpty(), "Exception(s) processing %s", exceptions);
   }
 
-  private Iterable<Exception> writeSourceFiles(Iterable<RepositorySource> activeSources) {
+  private List<Exception> writeSourceFiles() {
     val importers = createImporters(context);
 
     val exceptions = ImmutableList.<Exception> builder();
     for (val importer : importers) {
-      boolean active = contains(activeSources, importer.getSource());
+      boolean active = contains(context.getSources(), importer.getSource());
       if (active) {
         try {
           logBanner("Importing '" + importer.getSource() + "' sourced files");
@@ -130,18 +161,11 @@ public class RepositoryImporter {
   }
 
   @SneakyThrows
-  private Iterable<Exception> indexFiles() {
-    val exceptions = ImmutableList.<Exception> builder();
-    try {
-      logBanner("Indexing files");
-      @Cleanup
-      val indexer = new RepositoryFileIndexer(context.getMongoUri(), context.getEsUri());
-      indexer.indexFiles();
-    } catch (Exception e) {
-      exceptions.add(e);
-    }
-
-    return exceptions.build();
+  private void indexFiles() {
+    logBanner("Indexing files");
+    @Cleanup
+    val indexer = new RepositoryFileIndexer(context.getMongoUri(), context.getEsUri());
+    indexer.indexFiles();
   }
 
   private void report(Stopwatch watch, List<Exception> exceptions) {

@@ -74,6 +74,9 @@ public final class RepositoryFileContextBuilder {
   private boolean realIds = false;
   @Setter
   @Accessors(chain = true, fluent = true)
+  private String authToken = null;
+  @Setter
+  @Accessors(chain = true, fluent = true)
   private RepositoryIdResolver pcawgIdResolver;
 
   public static RepositoryFileContextBuilder builder() {
@@ -90,7 +93,7 @@ public final class RepositoryFileContextBuilder {
   }
 
   private IdClient createIdClient() {
-    return realIds ? new CachingIdClient(new HttpIdClient(idUrl, "", "<token>")) : new HashIdClient();
+    return realIds ? new CachingIdClient(new HttpIdClient(idUrl, "", authToken)) : new HashIdClient();
   }
 
   private static TCGAClient createTCGAClient() {

@@ -15,35 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index;
+package org.icgc.dcc.repository.client.index.document;
 
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_FILE_NAME;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_FILE_TEXT_NAME;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.util.List;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
+import org.icgc.dcc.repository.client.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
 import com.mongodb.MongoClientURI;
 
 import lombok.val;
 
-public class FileDocumentProcessor extends DocumentProcessor {
+public class FileTextDocumentProcessor extends DocumentProcessor {
 
-  public FileDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
-    super(mongoUri, indexName, processor);
+  public FileTextDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
+    super(mongoUri, indexName, DocumentType.FILE_TEXT, processor);
   }
 
   @Override
   public int process() {
-    return eachDocument(RepositoryFileCollection.FILE, file -> {
-      String id = file.get("id").textValue();
+    return eachFile(file -> {
+      String id = getId(file);
+      ObjectNode fileText = createFileText(file, id);
 
-      add(INDEX_TYPE_FILE_NAME, id, file);
-      add(INDEX_TYPE_FILE_TEXT_NAME, id, createFileText(file, id));
+      addDocument(id, fileText);
     });
   }
 
@@ -51,20 +50,14 @@ public class FileDocumentProcessor extends DocumentProcessor {
     val fileText = createDocument();
     fileText.put("type", "file");
     fileText.put("id", id);
-    fileText.putPOJO("file_name", childTextValues(file, "file_copies", "file_name"));
-    fileText.putPOJO("donor_id", childTextValues(file, "donors", "donor_id"));
+    fileText.putPOJO("file_name", arrayTextValues(file, "file_copies", "file_name"));
+    fileText.putPOJO("donor_id", arrayTextValues(file, "donors", "donor_id"));
 
     return fileText;
   }
 
-  private static List<String> childTextValues(ObjectNode objectNode, String parent, String child) {
-    val textValues = Lists.<String> newArrayList();
-    for (val element : objectNode.path(parent)) {
-      val textValue = element.path(child).textValue();
-      textValues.add(textValue);
-    }
-
-    return textValues;
+  private static List<String> arrayTextValues(ObjectNode objectNode, String arrayPath, String fileName) {
+    return stream(objectNode.path(arrayPath)).map(element -> element.path(fileName).textValue()).collect(toList());
   }
 
 }

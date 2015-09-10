@@ -15,31 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.util;
+package org.icgc.dcc.repository.client.index.model;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
-import org.icgc.dcc.repository.core.RepositoryIdResolver;
+import org.icgc.dcc.common.core.model.Identifiable;
 
-import com.google.common.collect.ImmutableSet;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-import lombok.NoArgsConstructor;
+@Getter
+@RequiredArgsConstructor(access = PRIVATE)
+public enum DocumentType implements Identifiable {
 
-@NoArgsConstructor(access = PRIVATE)
-public final class RepositoryFileContexts {
+  FILE_CENTRIC("file-centric"),
+  FILE_TEXT("file-text"),
+  DONOR_TEXT("donor-text");
 
-  public static RepositoryFileContext newLocalRepositoryFileContext() {
-    return RepositoryFileContextBuilder
-        .builder()
-        .realIds(false)
-        .pcawgIdResolver(newEmptyIdResovler())
-        .build();
-  }
-
-  private static RepositoryIdResolver newEmptyIdResovler() {
-    return () -> ImmutableSet.<String> of();
-  }
+  @NonNull
+  private final String id;
 
 }

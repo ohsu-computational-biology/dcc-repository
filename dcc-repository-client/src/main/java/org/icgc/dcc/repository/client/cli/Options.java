@@ -17,15 +17,13 @@
  */
 package org.icgc.dcc.repository.client.cli;
 
-import static com.google.common.collect.Lists.newArrayList;
-
-import java.util.List;
+import java.util.Set;
 
 import org.icgc.dcc.repository.core.model.RepositorySource;
 
-import lombok.ToString;
-
 import com.beust.jcommander.Parameter;
+
+import lombok.ToString;
 
 /**
  * Command line options.
@@ -33,8 +31,8 @@ import com.beust.jcommander.Parameter;
 @ToString
 public class Options {
 
-  @Parameter(names = { "--sources" }, converter = RepositorySourceConverter.class, description = "Organizations to import. Comma seperated list of: 'pcawg', 'tcga', 'cghub'. By default all organizations will be imported.")
-  public List<RepositorySource> sources = newArrayList(RepositorySource.values());
+  @Parameter(names = { "--sources" }, converter = RepositorySourceConverter.class, description = "Source to import. Comma seperated list of: 'aws', 'pcawg', 'tcga', 'cghub'. By default all sources will be imported.")
+  public Set<RepositorySource> sources = RepositorySource.all();
 
   @Parameter(names = { "--config" }, required = true, description = "Path to the repository config file")
   public String configFilePath;

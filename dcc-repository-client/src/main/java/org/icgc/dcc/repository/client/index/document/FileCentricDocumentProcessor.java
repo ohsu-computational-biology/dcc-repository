@@ -15,63 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index;
-
-import static org.elasticsearch.client.Requests.indexRequest;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
+package org.icgc.dcc.repository.client.index.document;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
+import org.icgc.dcc.repository.client.index.model.DocumentType;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.MongoClientURI;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
+public class FileCentricDocumentProcessor extends DocumentProcessor {
 
-public abstract class DocumentProcessor extends AbstractJongoComponent {
-
-  /**
-   * Configuration.
-   */
-  @NonNull
-  private final String indexName;
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final BulkProcessor bulkProcessor;
-
-  public DocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
-    super(mongoUri);
-    this.bulkProcessor = processor;
-    this.indexName = indexName;
+  public FileCentricDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
+    super(mongoUri, indexName, DocumentType.FILE_CENTRIC, processor);
   }
 
-  abstract public int process();
+  @Override
+  public int process() {
+    return eachFile(file -> {
+      String id = getId(file);
 
-  protected void add(String type, String id, ObjectNode document) {
-    // Need to remove this as to not conflict with Elasticsearch
-    document.remove("_id");
-
-    val source = serialize(document);
-    bulkProcessor.add(
-        indexRequest(indexName)
-            .type(type)
-            .id(id)
-            .source(source));
-  }
-
-  protected static ObjectNode createDocument() {
-    return DEFAULT.createObjectNode();
-  }
-
-  @SneakyThrows
-  protected static String serialize(JsonNode node) {
-    return DEFAULT.writeValueAsString(node);
+      addDocument(id, file);
+    });
   }
 
 }

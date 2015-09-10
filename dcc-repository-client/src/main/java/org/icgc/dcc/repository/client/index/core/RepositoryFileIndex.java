@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index;
+package org.icgc.dcc.repository.client.index.core;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.io.Resources.getResource;
@@ -27,14 +27,12 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.Predicate;
 
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
 import lombok.val;
 
@@ -51,20 +49,9 @@ public class RepositoryFileIndex {
   public static final DateTimeFormatter INDEX_NAME_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
   /**
-   * Index types.
-   */
-  public static final String INDEX_TYPE_FILE_NAME = "file";
-  public static final String INDEX_TYPE_FILE_TEXT_NAME = "file-text";
-  public static final String INDEX_TYPE_FILE_DONOR_TEXT_NAME = "file-donor-text";
-  public static final List<String> INDEX_TYPE_NAMES = ImmutableList.of(
-      INDEX_TYPE_FILE_NAME,
-      INDEX_TYPE_FILE_TEXT_NAME,
-      INDEX_TYPE_FILE_DONOR_TEXT_NAME);
-
-  /**
    * Metadata location.
    */
-  private static final String ES_CONFIG_BASE_PATH = "mappings-new";
+  private static final String ES_CONFIG_BASE_PATH = "mappings";
 
   public static ObjectNode getSettings() throws IOException {
     val resourceName = format("%s/index.settings.json", ES_CONFIG_BASE_PATH);

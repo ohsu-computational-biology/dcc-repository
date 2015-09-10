@@ -62,6 +62,7 @@ public class RepositoryFileCollector {
         files.put(file.getId(), file);
       }
     }
+
     return files;
   }
 

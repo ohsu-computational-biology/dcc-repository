@@ -15,26 +15,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index;
+package org.icgc.dcc.repository.client.index.document;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_FILE_DONOR_TEXT_NAME;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.elasticsearch.common.collect.Maps;
-import org.elasticsearch.common.collect.Sets;
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
+import org.icgc.dcc.repository.client.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.mongodb.MongoClientURI;
 
 import lombok.SneakyThrows;
@@ -42,7 +40,7 @@ import lombok.Value;
 import lombok.val;
 import lombok.experimental.Accessors;
 
-public class FileDonorDocumentProcessor extends DocumentProcessor {
+public class DonorTextDocumentProcessor extends DocumentProcessor {
 
   /**
    * Constants.
@@ -56,8 +54,8 @@ public class FileDonorDocumentProcessor extends DocumentProcessor {
       "tcga_sample_barcode",
       "tcga_aliquot_barcode");
 
-  public FileDonorDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor bulkProcessor) {
-    super(mongoUri, indexName, bulkProcessor);
+  public DonorTextDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor bulkProcessor) {
+    super(mongoUri, indexName, DocumentType.DONOR_TEXT, bulkProcessor);
   }
 
   @Override
@@ -65,34 +63,30 @@ public class FileDonorDocumentProcessor extends DocumentProcessor {
   public int process() {
     val summary = resolveFileDonorSummary();
 
-    // Index
-    for (val donorId : summary.donorIds()) {
+    val donorIds = summary.donorIds();
+    for (val donorId : donorIds) {
       val fileDonor = createFileDonor(summary, donorId);
 
-      add(INDEX_TYPE_FILE_DONOR_TEXT_NAME, donorId, fileDonor);
+      addDocument(donorId, fileDonor);
     }
 
-    return summary.donorIds().size();
+    return donorIds.size();
   }
 
   private FileDonorSummary resolveFileDonorSummary() {
     val summary = new FileDonorSummary();
 
     // Collect
-    eachDocument(RepositoryFileCollection.FILE, file -> {
-      ArrayNode donors = file.withArray("donors");
-      for (JsonNode donor : donors) {
-        String donorId = donor.get("donor_id").textValue();
-        summary.donorIds().add(donorId);
-
-        String submittedDonorId = donor.get("submitted_donor_id").textValue();
-        summary.submittedDonorIds().put(donorId, submittedDonorId);
+    eachFile(file -> {
+      for (JsonNode donor : getDonors(file)) {
+        summary.donorIds().add(getDonorId(donor));
+        summary.submittedDonorIds().put(getDonorId(donor), getSubmittedDonorId(donor));
 
         for (String fieldName : FIELD_NAMES) {
-          String value = resolveFieldValue(donor, fieldName);
-          if (!isNullOrEmpty(value)) {
-            Multimap<String, String> values = summary.donorFields().get(fieldName);
-            values.put(donorId, value);
+          String fieldValu = resolveFieldValue(donor, fieldName);
+          if (!isNullOrEmpty(fieldValu)) {
+            Multimap<String, String> fieldValues = summary.donorFields().get(fieldName);
+            fieldValues.put(getDonorId(donor), fieldValu);
           }
         }
       }
@@ -102,8 +96,11 @@ public class FileDonorDocumentProcessor extends DocumentProcessor {
   }
 
   private String resolveFieldValue(JsonNode donor, String fieldName) {
-    return fieldName.startsWith("tcga") ? donor.get("other_identifiers").get(fieldName).textValue() : donor
-        .get(fieldName).textValue();
+    if (fieldName.startsWith("tcga")) {
+      return donor.path("other_identifiers").path(fieldName).textValue();
+    } else {
+      return donor.path(fieldName).textValue();
+    }
   }
 
   private ObjectNode createFileDonor(FileDonorSummary summary, String donorId) {

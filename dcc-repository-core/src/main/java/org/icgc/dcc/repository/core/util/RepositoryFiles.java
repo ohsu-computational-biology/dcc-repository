@@ -15,73 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.core;
+package org.icgc.dcc.repository.core.util;
 
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.repository.core.util.RepositoryFiles.inPCAWGOrder;
+import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.Comparator;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-@Slf4j
-public class RepositoryFileCombiner {
+@NoArgsConstructor(access = PRIVATE)
+public final class RepositoryFiles {
 
-  public Iterable<RepositoryFile> combineFiles(Iterable<Set<RepositoryFile>> files) {
-    log.info("Lazily combining files...");
-    return new Iterable<RepositoryFile>() {
-
-      @Override
-      public Iterator<RepositoryFile> iterator() {
-
-        Iterator<Set<RepositoryFile>> delegate = files.iterator();
-
-        return new Iterator<RepositoryFile>() {
-
-          @Override
-          public RepositoryFile next() {
-            return combineFiles(delegate.next());
-          }
-
-          @Override
-          public boolean hasNext() {
-            return delegate.hasNext();
-          }
-
-        };
-      }
-
-    };
+  public static Comparator<? super RepositoryFile> inPCAWGOrder() {
+    return (f1, f2) -> isPCAWGFile(f1) ? -1 : 0;
   }
 
-  private RepositoryFile combineFiles(Set<RepositoryFile> files) {
-    // Round up all file copies
-    val fileCopies = resolveFileCopies(files);
-
-    // Designate one file as the representative for the group
-    val representative = calculateRepresentative(files);
-
-    // Combine all file copies
-    representative.setFileCopies(fileCopies);
-
-    return representative;
+  public static boolean isPCAWGFile(@NonNull RepositoryFile file) {
+    return file.getFileCopies().stream().anyMatch(fileCopy -> isPCAWGFileCopy(fileCopy));
   }
 
-  private List<FileCopy> resolveFileCopies(Set<RepositoryFile> files) {
-    return files.stream()
-        .flatMap(file -> file.getFileCopies().stream())
-        .collect(toImmutableList());
-  }
-
-  private RepositoryFile calculateRepresentative(Set<RepositoryFile> files) {
-    // Prioritize PCAWG ahead of others since it carries the most information
-    return files.stream().sorted(inPCAWGOrder()).findFirst().get();
+  public static boolean isPCAWGFileCopy(@NonNull FileCopy fileCopy) {
+    return fileCopy.getRepoOrg().equals(PCAWG.getId());
   }
 
 }

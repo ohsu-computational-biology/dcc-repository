@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index;
+package org.icgc.dcc.repository.client.index.core;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Stopwatch.createStarted;
@@ -23,14 +23,13 @@ import static com.google.common.base.Throwables.propagate;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.INDEX_TYPE_NAMES;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.REPO_INDEX_ALIAS;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.compareIndexDateDescending;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.getCurrentIndexName;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.getSettings;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.getTypeMapping;
-import static org.icgc.dcc.repository.client.index.RepositoryFileIndex.isRepoIndexName;
-import static org.icgc.dcc.repository.client.index.TransportClientFactory.newTransportClient;
+import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.REPO_INDEX_ALIAS;
+import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.compareIndexDateDescending;
+import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.getCurrentIndexName;
+import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.getSettings;
+import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.getTypeMapping;
+import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.isRepoIndexName;
+import static org.icgc.dcc.repository.client.index.util.TransportClientFactory.newTransportClient;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -43,6 +42,10 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.unit.ByteSizeValue;
+import org.icgc.dcc.repository.client.index.document.DonorTextDocumentProcessor;
+import org.icgc.dcc.repository.client.index.document.FileCentricDocumentProcessor;
+import org.icgc.dcc.repository.client.index.document.FileTextDocumentProcessor;
+import org.icgc.dcc.repository.client.index.model.DocumentType;
 
 import com.mongodb.MongoClientURI;
 
@@ -115,7 +118,8 @@ public class RepositoryFileIndexer implements Closeable {
           .isAcknowledged(),
           "Index '%s' creation was not acknowledged!", indexName);
 
-      for (val typeName : INDEX_TYPE_NAMES) {
+      for (val type : DocumentType.values()) {
+        val typeName = type.getId();
         val source = getTypeMapping(typeName).toString();
 
         log.info("Creating index '{}' mapping for type '{}'...", indexName, typeName);
@@ -141,24 +145,33 @@ public class RepositoryFileIndexer implements Closeable {
 
     log.info("Indexing file documents...");
     val fileCount = indexFileDocuments(bulkProcessor);
+    log.info("Indexing file text documents...");
+    val fileTextCount = indexFileTextDocuments(bulkProcessor);
     log.info("Indexing file donor documents...");
     val fileDonorCount = indexFileDonorDocuments(bulkProcessor);
 
-    log.info("Finished indexing {} file and {} file donor documents in {}",
-        formatCount(fileCount), formatCount(fileDonorCount), watch);
+    log.info("Finished indexing {} file, {} file text and {} file donor documents in {}",
+        formatCount(fileCount), formatCount(fileTextCount), formatCount(fileDonorCount), watch);
   }
 
   @SneakyThrows
   private int indexFileDocuments(BulkProcessor bulkProcessor) {
     @Cleanup
-    val processor = new FileDocumentProcessor(mongoUri, indexName, bulkProcessor);
+    val processor = new FileCentricDocumentProcessor(mongoUri, indexName, bulkProcessor);
+    return processor.process();
+  }
+
+  @SneakyThrows
+  private int indexFileTextDocuments(BulkProcessor bulkProcessor) {
+    @Cleanup
+    val processor = new FileTextDocumentProcessor(mongoUri, indexName, bulkProcessor);
     return processor.process();
   }
 
   @SneakyThrows
   private int indexFileDonorDocuments(BulkProcessor bulkProcessor) {
     @Cleanup
-    val processor = new FileDonorDocumentProcessor(mongoUri, indexName, bulkProcessor);
+    val processor = new DonorTextDocumentProcessor(mongoUri, indexName, bulkProcessor);
     return processor.process();
   }
 

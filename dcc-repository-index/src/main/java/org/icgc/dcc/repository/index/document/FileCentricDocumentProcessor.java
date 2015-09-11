@@ -15,49 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index.document;
-
-import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-
-import java.util.List;
+package org.icgc.dcc.repository.index.document;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.client.index.model.DocumentType;
+import org.icgc.dcc.repository.index.model.DocumentType;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.MongoClientURI;
 
-import lombok.val;
+public class FileCentricDocumentProcessor extends DocumentProcessor {
 
-public class FileTextDocumentProcessor extends DocumentProcessor {
-
-  public FileTextDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
-    super(mongoUri, indexName, DocumentType.FILE_TEXT, processor);
+  public FileCentricDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
+    super(mongoUri, indexName, DocumentType.FILE_CENTRIC, processor);
   }
 
   @Override
   public int process() {
     return eachFile(file -> {
       String id = getId(file);
-      ObjectNode fileText = createFileText(file, id);
 
-      addDocument(id, fileText);
+      addDocument(id, file);
     });
-  }
-
-  private ObjectNode createFileText(ObjectNode file, String id) {
-    val fileText = createDocument();
-    fileText.put("type", "file");
-    fileText.put("id", id);
-    fileText.putPOJO("file_name", arrayTextValues(file, "file_copies", "file_name"));
-    fileText.putPOJO("donor_id", arrayTextValues(file, "donors", "donor_id"));
-
-    return fileText;
-  }
-
-  private static List<String> arrayTextValues(ObjectNode objectNode, String arrayPath, String fileName) {
-    return stream(objectNode.path(arrayPath)).map(element -> element.path(fileName).textValue()).collect(toList());
   }
 
 }

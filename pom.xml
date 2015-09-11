@@ -22,6 +22,7 @@
     <module>dcc-repository-cghub</module>
     <module>dcc-repository-pcawg</module>
     <module>dcc-repository-tcga</module>
+    <module>dcc-repository-index</module>
   </modules>
 
   <repositories>
@@ -37,11 +38,6 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-common-core</artifactId>
-        <version>${dcc-common.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>dcc-common-resources</artifactId>
         <version>${dcc-common.version}</version>
       </dependency>
       <dependency>

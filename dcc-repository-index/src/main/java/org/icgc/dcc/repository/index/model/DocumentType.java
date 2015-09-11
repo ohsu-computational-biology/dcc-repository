@@ -15,26 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index.document;
+package org.icgc.dcc.repository.index.model;
 
-import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.client.index.model.DocumentType;
+import static lombok.AccessLevel.PRIVATE;
 
-import com.mongodb.MongoClientURI;
+import org.icgc.dcc.common.core.model.Identifiable;
 
-public class FileCentricDocumentProcessor extends DocumentProcessor {
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-  public FileCentricDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
-    super(mongoUri, indexName, DocumentType.FILE_CENTRIC, processor);
-  }
+@Getter
+@RequiredArgsConstructor(access = PRIVATE)
+public enum DocumentType implements Identifiable {
 
-  @Override
-  public int process() {
-    return eachFile(file -> {
-      String id = getId(file);
+  FILE_CENTRIC("file-centric"),
+  FILE_TEXT("file-text"),
+  DONOR_TEXT("donor-text");
 
-      addDocument(id, file);
-    });
-  }
+  @NonNull
+  private final String id;
 
 }

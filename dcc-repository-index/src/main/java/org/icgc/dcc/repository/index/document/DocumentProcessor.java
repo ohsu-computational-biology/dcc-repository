@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index.document;
+package org.icgc.dcc.repository.index.document;
 
 import static org.elasticsearch.client.Requests.indexRequest;
 import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
@@ -23,9 +23,9 @@ import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
 import java.util.function.Consumer;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.client.index.model.DocumentType;
 import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
+import org.icgc.dcc.repository.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

@@ -20,11 +20,17 @@ This is the main entry point of the application.
 
 ### Sources
 
-These modules index various data sources.
+These modules collect various data sources.
 - [AWS](dcc-repository-aws/README.md)
 - [CGHub](dcc-repository-cghub/README.md)
 - [PCAWG](dcc-repository-pcawg/README.md)
 - [TCGA](dcc-repository-tcga/README.md)
+
+### Index
+
+This module indexes the collected data sources.
+
+- [Index](dcc-repository-index/README.md)
 
 Build
 ---

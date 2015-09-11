@@ -29,12 +29,12 @@ import java.util.Set;
 import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.repository.aws.AWSImporter;
 import org.icgc.dcc.repository.cghub.CGHubImporter;
-import org.icgc.dcc.repository.client.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.writer.RepositoryFileWriter;
+import org.icgc.dcc.repository.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.pcawg.PCAWGImporter;
 import org.icgc.dcc.repository.tcga.TCGAImporter;
 

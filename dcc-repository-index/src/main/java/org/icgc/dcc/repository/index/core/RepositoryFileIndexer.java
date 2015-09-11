@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.index.core;
+package org.icgc.dcc.repository.index.core;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Stopwatch.createStarted;
@@ -23,13 +23,13 @@ import static com.google.common.base.Throwables.propagate;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.REPO_INDEX_ALIAS;
-import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.compareIndexDateDescending;
-import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.getCurrentIndexName;
-import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.getSettings;
-import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.getTypeMapping;
-import static org.icgc.dcc.repository.client.index.core.RepositoryFileIndex.isRepoIndexName;
-import static org.icgc.dcc.repository.client.index.util.TransportClientFactory.newTransportClient;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.REPO_INDEX_ALIAS;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.compareIndexDateDescending;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.getCurrentIndexName;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.getSettings;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.getTypeMapping;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.isRepoIndexName;
+import static org.icgc.dcc.repository.index.util.TransportClientFactory.newTransportClient;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -42,10 +42,10 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.unit.ByteSizeValue;
-import org.icgc.dcc.repository.client.index.document.DonorTextDocumentProcessor;
-import org.icgc.dcc.repository.client.index.document.FileCentricDocumentProcessor;
-import org.icgc.dcc.repository.client.index.document.FileTextDocumentProcessor;
-import org.icgc.dcc.repository.client.index.model.DocumentType;
+import org.icgc.dcc.repository.index.document.DonorTextDocumentProcessor;
+import org.icgc.dcc.repository.index.document.FileCentricDocumentProcessor;
+import org.icgc.dcc.repository.index.document.FileTextDocumentProcessor;
+import org.icgc.dcc.repository.index.model.DocumentType;
 
 import com.mongodb.MongoClientURI;
 

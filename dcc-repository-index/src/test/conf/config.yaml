@@ -1,0 +1,21 @@
+# Release MongoDB URI (do not specify a database)
+releaseMongoUri: "mongodb://localhost"
+
+# Project MongoDB URI
+projectMongoUri: "mongodb://localhost/dcc-project"
+
+# Gene MongoDB URI
+geneMongoUri: "mongodb://localhost/dcc-genome"
+
+# ICGC Client configuration
+icgc:
+  cgpServiceUrl: "https://beta-tra.icgc.org/ud_oauth/1/search"
+  cudServiceUrl: ""
+  shortServiceUrl: ""
+  consumerKey: "SVxsazJThJhiv5sPj4Yu9KWFxvzZUGDj_ck"
+  consumerSecret: "DF7oXc32NDyHHE3xy5U44YZMz8ubhsMN_cs"
+  accessToken: "c39yXaCcVqgPhZSAiiLH3bi8C2bpqQvv_at"
+  accessSecret: "6agKu5qFU3aYxDM5bunfTawZn8KYTV9P_as"
+  cudAppId: ""
+  strictSSLCertificates: false
+  requestLoggingEnabled: false

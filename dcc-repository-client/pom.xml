@@ -30,12 +30,7 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- DCC - Common -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>dcc-common-resources</artifactId>
-    </dependency>
-
+  
     <!-- DCC - ETL -->
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -49,6 +44,11 @@
       <artifactId>dcc-repository-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-repository-index</artifactId>
+      <version>${project.version}</version>
+    </dependency>    
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-repository-aws</artifactId>
@@ -92,12 +92,6 @@
     <dependency>
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
-    </dependency>
-
-    <!-- Search -->
-    <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
     </dependency>
 
   </dependencies>

@@ -71,9 +71,9 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PCAWGDonorProcessor extends RepositoryFileProcessor {
+public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
-  public PCAWGDonorProcessor(RepositoryFileContext context) {
+  public PCAWGFileProcessor(RepositoryFileContext context) {
     super(context);
   }
 

@@ -19,7 +19,7 @@ package org.icgc.dcc.repository.cghub;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.CGHUB;
 
-import org.icgc.dcc.repository.cghub.core.CGHubAnalysisDetailProcessor;
+import org.icgc.dcc.repository.cghub.core.CGHubFileProcessor;
 import org.icgc.dcc.repository.cghub.reader.CGHubAnalysisDetailReader;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
@@ -58,7 +58,7 @@ public class CGHubImporter extends GenericRepositorySourceFileImporter {
   }
 
   private Iterable<RepositoryFile> processDetails(Iterable<ObjectNode> details) {
-    val processor = new CGHubAnalysisDetailProcessor(context);
+    val processor = new CGHubFileProcessor(context);
     return processor.processDetails(details);
   }
 

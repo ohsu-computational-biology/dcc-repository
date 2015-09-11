@@ -63,7 +63,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
+public class CGHubFileProcessor extends RepositoryFileProcessor {
 
   /**
    * Constants.
@@ -77,7 +77,7 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
   @NonNull
   private final RepositoryServer cghubServer = getCGHubServer();
 
-  public CGHubAnalysisDetailProcessor(RepositoryFileContext context) {
+  public CGHubFileProcessor(RepositoryFileContext context) {
     super(context);
   }
 

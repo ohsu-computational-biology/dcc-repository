@@ -21,16 +21,16 @@ import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
 
 import java.util.List;
-import java.util.Set;
 
-import org.icgc.dcc.repository.aws.core.AWSCompletedIdResolver;
 import org.icgc.dcc.repository.aws.core.AWSFileProcessor;
 import org.icgc.dcc.repository.aws.reader.AWSS3BucketReader;
+import org.icgc.dcc.repository.aws.reader.AWSS3TransferJobReader;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
 import lombok.val;
@@ -45,27 +45,27 @@ public class AWSImporter extends GenericRepositorySourceFileImporter {
 
   @Override
   protected Iterable<RepositoryFile> readFiles() {
-    log.info("Reading complete object ids...");
-    val completeObjectIds = readCompleteObjectIds();
-    log.info("Read {} complete object ids", formatCount(completeObjectIds));
+    log.info("Reading completed transfer jobs...");
+    val completedJobs = readCompletedJobs();
+    log.info("Read {} completed transfer jobs", formatCount(completedJobs));
 
     log.info("Reading object summaries...");
     val objectSummaries = readObjectSummaries();
     log.info("Read {} object summaries", formatCount(objectSummaries));
 
     log.info("Processing files...");
-    val files = processFiles(objectSummaries, completeObjectIds);
+    val files = processFiles(completedJobs, objectSummaries);
     log.info("Processed {} files", formatCount(files));
 
     return files;
   }
 
-  private Set<String> readCompleteObjectIds() {
-    return new AWSCompletedIdResolver().resolveIds();
+  private List<ObjectNode> readCompletedJobs() {
+    return new AWSS3TransferJobReader().read();
   }
 
-  private Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries, Set<String> completeObjectIds) {
-    return new AWSFileProcessor(context).processObjects(objectSummaries, completeObjectIds);
+  private Iterable<RepositoryFile> processFiles(List<ObjectNode> completedJobs, List<S3ObjectSummary> objectSummaries) {
+    return new AWSFileProcessor(context).processCompletedJobs(completedJobs, objectSummaries);
   }
 
   private List<S3ObjectSummary> readObjectSummaries() {

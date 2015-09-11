@@ -33,8 +33,24 @@ public final class AWSS3TransferJobs {
     return job.withArray("files");
   }
 
+  public static String getGnosId(@NonNull ObjectNode job) {
+    return job.get("gnos_id").textValue();
+  }
+
   public static String getObjectId(@NonNull JsonNode file) {
     return file.get("object_id").textValue();
+  }
+
+  public static String getFileName(@NonNull JsonNode file) {
+    return file.get("file_name").textValue();
+  }
+
+  public static long getFileSize(@NonNull JsonNode file) {
+    return file.get("file_size").longValue();
+  }
+
+  public static String getFileMd5sum(@NonNull JsonNode file) {
+    return file.get("file_md5sum").textValue();
   }
 
 }

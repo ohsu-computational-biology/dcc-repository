@@ -26,7 +26,7 @@ import java.net.URL;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.pcawg.core.PCAWGDonorProcessor;
+import org.icgc.dcc.repository.pcawg.core.PCAWGFileProcessor;
 import org.icgc.dcc.repository.pcawg.reader.PCAWGDonorArchiveReader;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -74,7 +74,7 @@ public class PCAWGImporter extends GenericRepositorySourceFileImporter {
   }
 
   private Iterable<RepositoryFile> processFiles(Iterable<ObjectNode> donors) {
-    val processor = new PCAWGDonorProcessor(context);
+    val processor = new PCAWGFileProcessor(context);
     return processor.processDonors(donors);
   }
 

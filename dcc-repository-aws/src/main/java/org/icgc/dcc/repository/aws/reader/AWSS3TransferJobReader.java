@@ -23,8 +23,10 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -34,7 +36,6 @@ import org.eclipse.jgit.api.errors.TransportException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -50,8 +51,8 @@ public class AWSS3TransferJobReader {
    * Constants.
    */
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final String DEFAULT_GIT_REPO_URL =
-      "https://github.com/ICGC-TCGA-PanCancer/s3-transfer-operations.git";
+  private static final String DEFAULT_GIT_ORG_URL = "https://github.com/ICGC-TCGA-PanCancer";
+  private static final String DEFAULT_GIT_REPO_URL = DEFAULT_GIT_ORG_URL + "/s3-transfer-operations.git";
 
   /**
    * Configuration.
@@ -75,27 +76,14 @@ public class AWSS3TransferJobReader {
     return readFiles(jobFiles);
   }
 
-  private List<ObjectNode> readFiles(List<File> files) throws IOException, JsonProcessingException {
+  private List<ObjectNode> readFiles(List<Path> files) throws IOException, JsonProcessingException {
     return files.stream().map(this::readFile).collect(toImmutableList());
   }
 
-  private File getCompletedDir(File repoDir) {
-    return new File(new File(repoDir, "s3-transfer-jobs"), "completed-jobs");
-  }
-
-  private List<File> resolveJobFiles(File completedDir) {
-    File[] jobFiles = completedDir.listFiles(fileName -> fileName.getName().endsWith(".json"));
-    if (jobFiles == null) {
-      return Collections.emptyList();
-    }
-
-    return ImmutableList.copyOf(jobFiles);
-  }
-
   @SneakyThrows
-  private ObjectNode readFile(File jsonFile) {
+  private ObjectNode readFile(Path jsonFile) {
     log.debug("Reading '{}'...", jsonFile);
-    return (ObjectNode) MAPPER.readTree(jsonFile);
+    return (ObjectNode) MAPPER.readTree(jsonFile.toFile());
   }
 
   private File cloneRepo() throws GitAPIException, InvalidRemoteException, TransportException {
@@ -108,6 +96,20 @@ public class AWSS3TransferJobReader {
         .call();
 
     return repoDir;
+  }
+
+  @SneakyThrows
+  private static List<Path> resolveJobFiles(File completedDir) {
+    return Files.list(completedDir.toPath()).filter(isJsonFile()).collect(toImmutableList());
+  }
+
+  private static File getCompletedDir(File repoDir) {
+    val jobsDir = new File(repoDir, "s3-transfer-jobs");
+    return new File(jobsDir, "completed-jobs");
+  }
+
+  private static Predicate<? super Path> isJsonFile() {
+    return path -> path.toString().endsWith(".json");
   }
 
 }

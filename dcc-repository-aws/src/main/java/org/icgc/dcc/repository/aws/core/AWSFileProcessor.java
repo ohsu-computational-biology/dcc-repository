@@ -18,21 +18,35 @@
 package org.icgc.dcc.repository.aws.core;
 
 import static java.lang.String.format;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.elasticsearch.common.collect.Maps.uniqueIndex;
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getFileMd5sum;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getFileName;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getFileSize;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getFiles;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getGnosId;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getObjectId;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getAWSServer;
 
 import java.io.File;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
@@ -50,46 +64,63 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
     super(context);
   }
 
-  public Iterable<RepositoryFile> processObjects(@NonNull Iterable<S3ObjectSummary> objectSummaries,
-      @NonNull Set<String> objectIds) {
-    log.info("Processing object summaries...");
-    return stream(objectSummaries)
-        .filter(isComplete(objectIds))
-        .map(objectSummary -> processObject(objectSummary))
-        .collect(toImmutableList());
+  public Iterable<RepositoryFile> processCompletedJobs(@NonNull List<ObjectNode> completedJobs,
+      @NonNull Iterable<S3ObjectSummary> objectSummaries) {
+    log.info("Indexing object summaries...");
+    val objectSummaryIndex = indexObjectSummaries(objectSummaries);
+    log.info("Finished indexing {} object summaries...", formatCount(objectSummaries));
+
+    log.info("Creating object files...");
+    val objectFiles = createObjectFiles(completedJobs, objectSummaryIndex);
+    log.info("Finished creating {} object files", formatCount(objectFiles));
+
+    return objectFiles;
   }
 
-  private RepositoryFile processObject(S3ObjectSummary objectSummary) {
+  private Iterable<RepositoryFile> createObjectFiles(List<ObjectNode> completedJobs,
+      Map<String, S3ObjectSummary> objectSummaryIndex) {
+    val objectFiles = ImmutableList.<RepositoryFile> builder();
+    for (val completedJob : completedJobs) {
+      for (val file : getFiles(completedJob)) {
+        val objectId = getObjectId(file);
+        val objectSummary = objectSummaryIndex.get(objectId);
+        val objectFile = createObjectFile(completedJob, file, objectSummary);
+
+        objectFiles.add(objectFile);
+      }
+    }
+
+    return objectFiles.build();
+  }
+
+  private RepositoryFile createObjectFile(ObjectNode job, JsonNode file, S3ObjectSummary objectSummary) {
     log.debug("Processing bucket entry: {}", format("%-50s %10d %s",
         objectSummary.getKey(), objectSummary.getSize(), objectSummary.getStorageClass()));
-
-    return createFile(objectSummary);
-  }
-
-  private RepositoryFile createFile(S3ObjectSummary s3Object) {
 
     //
     // Prepare
     //
 
-    val id = getObjectId(s3Object);
+    val id = getObjectId(file);
+    val gnosId = getGnosId(job);
+    val fileName = getFileName(file);
+    val baiFile = resolveBaiFile(job, fileName);
 
     //
     // Create
     //
 
-    val file = new RepositoryFile()
+    val objectFile = new RepositoryFile()
         .setId(id)
         .setFileId(context.ensureFileId(id))
         .setAccess(FileAccess.CONTROLLED);
 
-    file.addFileCopy()
-        .setFileName(id)
+    val fileCopy = objectFile.addFileCopy()
+        .setFileName(id) // TODO: Verify
         .setFileFormat(null) // TODO: Fix
-        .setFileSize(s3Object.getSize())
-        .setFileMd5sum(null) // TODO: Fix
-        .setLastModified(s3Object.getLastModified().getTime())
-        .setIndexFile(null) // TODO: Fix
+        .setFileSize(objectSummary.getSize())
+        .setFileMd5sum(getFileMd5sum(file))
+        .setLastModified(objectSummary.getLastModified().getTime())
         .setRepoType(server.getType().getId())
         .setRepoOrg(server.getSource().getId())
         .setRepoName(server.getName())
@@ -99,14 +130,35 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         .setRepoDataPath(server.getType().getDataPath())
         .setRepoMetadataPath(server.getType().getMetadataPath());
 
-    return file;
+    if (baiFile.isPresent()) {
+      val baiFileName = getFileName(baiFile.get());
+      val baiId = resolveId(gnosId, baiFileName);
+      fileCopy.getIndexFile()
+          .setId(baiId)
+          .setFileId(context.ensureFileId(baiId))
+          .setFileName(baiFileName)
+          .setFileFormat(FileFormat.BAI)
+          .setFileSize(getFileSize(baiFile.get()))
+          .setFileMd5sum(getFileMd5sum(baiFile.get()));
+    }
+
+    return objectFile;
   }
 
-  private static Predicate<? super S3ObjectSummary> isComplete(Set<String> completeObjectIds) {
-    return objectSummary -> completeObjectIds.contains(getObjectId(objectSummary));
+  private static Optional<JsonNode> resolveBaiFile(ObjectNode job, String fileName) {
+    val baiFileName = fileName + ".bai";
+    return resolveFiles(job, file -> baiFileName.equals(getFileName(file))).findFirst();
   }
 
-  private static String getObjectId(S3ObjectSummary objectSummary) {
+  private static Stream<JsonNode> resolveFiles(ObjectNode job, Predicate<? super JsonNode> filter) {
+    return stream(getFiles(job)).filter(filter);
+  }
+
+  private static Map<String, S3ObjectSummary> indexObjectSummaries(Iterable<S3ObjectSummary> objectSummaries) {
+    return uniqueIndex(objectSummaries, objectSummary -> getS3ObjectId(objectSummary));
+  }
+
+  private static String getS3ObjectId(S3ObjectSummary objectSummary) {
     return new File(objectSummary.getKey()).getName();
   }
 

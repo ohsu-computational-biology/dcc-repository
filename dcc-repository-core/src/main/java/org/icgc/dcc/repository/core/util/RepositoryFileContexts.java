@@ -39,7 +39,7 @@ public final class RepositoryFileContexts {
   }
 
   private static RepositoryIdResolver newEmptyIdResovler() {
-    return () -> ImmutableSet.<String> of();
+    return () -> ImmutableSet.of();
   }
 
 }

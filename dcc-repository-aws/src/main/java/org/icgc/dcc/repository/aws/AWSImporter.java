@@ -45,27 +45,27 @@ public class AWSImporter extends GenericRepositorySourceFileImporter {
 
   @Override
   protected Iterable<RepositoryFile> readFiles() {
-    log.info("Reading object ids...");
-    val objectIds = readObjectIds();
-    log.info("Read {} object ids", formatCount(objectIds));
+    log.info("Reading complete object ids...");
+    val completeObjectIds = readCompleteObjectIds();
+    log.info("Read {} complete object ids", formatCount(completeObjectIds));
 
     log.info("Reading object summaries...");
     val objectSummaries = readObjectSummaries();
     log.info("Read {} object summaries", formatCount(objectSummaries));
 
     log.info("Processing files...");
-    val files = processFiles(objectSummaries, objectIds);
+    val files = processFiles(objectSummaries, completeObjectIds);
     log.info("Processed {} files", formatCount(files));
 
     return files;
   }
 
-  private Set<String> readObjectIds() {
+  private Set<String> readCompleteObjectIds() {
     return new AWSCompletedIdResolver().resolveIds();
   }
 
-  private Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries, Set<String> objectIds) {
-    return new AWSFileProcessor(context).processObjects(objectSummaries, objectIds);
+  private Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries, Set<String> completeObjectIds) {
+    return new AWSFileProcessor(context).processObjects(objectSummaries, completeObjectIds);
   }
 
   private List<S3ObjectSummary> readObjectSummaries() {

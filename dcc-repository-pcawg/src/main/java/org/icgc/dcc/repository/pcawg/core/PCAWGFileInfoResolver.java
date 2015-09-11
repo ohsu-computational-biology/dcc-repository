@@ -29,8 +29,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PCAWGFileInfoResolver {
 
-  @NonNull
-  public static DataCategorization resolveDataCategorization(String analysisType, String fileName) {
+  public DataCategorization resolveDataCategorization(@NonNull String analysisType, @NonNull String fileName) {
     if (isRNASeq(analysisType)) {
       return new DataCategorization()
           .setDataType(DataType.RNA_SEQ)
@@ -49,8 +48,7 @@ public class PCAWGFileInfoResolver {
     }
   }
 
-  @NonNull
-  public static String resolveFileFormat(String analysisType, String fileName) {
+  public String resolveFileFormat(@NonNull String analysisType, @NonNull String fileName) {
     if (isRNASeq(analysisType)) {
       return FileFormat.BAM;
     } else if (isDNASeq(analysisType)) {

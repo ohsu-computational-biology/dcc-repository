@@ -34,7 +34,6 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Program;
-import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.tcga.model.TCGAArchiveClinicalFile;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchiveListReader;
@@ -64,10 +63,16 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
   }
 
   public Iterable<RepositoryFile> processClinicalFiles() {
-    // Key steps, order matters
+    log.info("Creating clinical files...");
     val clinicalFiles = createClinicalFiles();
+
+    log.info("Filtering clinical files...");
     val filteredClinicalFiles = filterClinicalFiles(clinicalFiles);
+
+    log.info("Translating TCGA barcodes...");
     translateBarcodes(filteredClinicalFiles);
+
+    log.info("Assigning study...");
     assignStudy(filteredClinicalFiles);
 
     return filteredClinicalFiles;
@@ -126,7 +131,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
     // Prepare
     //
 
-    val submittedDonorId = archiveClinicalFile.getDonorId();
+    val tcgaParticipantBarcode = archiveClinicalFile.getDonorId();
     val repoEntityId = resolveRepoEntityId(archiveClinicalFile);
     val id = resolveId(tcgaServer.getType().getDataPath(), repoEntityId);
 
@@ -165,7 +170,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setProgram(Program.TCGA)
         .setProjectCode(projectCode)
         .setStudy(null) // Set downstream
-        .setDonorId(context.getDonorId(submittedDonorId, projectCode))
+        .setDonorId(context.getDonorId(tcgaParticipantBarcode, projectCode))
         .setSpecimenId(null) // N/A
         .setSampleId(null) // N/A
         .setSubmittedDonorId(null) // Set downstream
@@ -173,7 +178,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setSubmittedSampleId(null) // Set downstream
         .setOtherIdentifiers(
             new OtherIdentifiers()
-                .setTcgaParticipantBarcode(submittedDonorId)
+                .setTcgaParticipantBarcode(tcgaParticipantBarcode)
                 .setTcgaSampleBarcode(null) // N/A
                 .setTcgaAliquotBarcode(null)); // N/A
 
@@ -196,17 +201,6 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
 
         val uuid = uuids.get(participantBarcode);
         donor.setSubmittedDonorId(uuid);
-      }
-    }
-  }
-
-  private void assignStudy(Iterable<RepositoryFile> clinicalFiles) {
-    for (val clinicalFile : clinicalFiles) {
-      for (val donor : clinicalFile.getDonors()) {
-        val pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
-        if (pcawg) {
-          donor.setStudy(Study.PCAWG);
-        }
       }
     }
   }

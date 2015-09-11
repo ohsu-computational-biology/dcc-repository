@@ -24,6 +24,7 @@ import static org.icgc.dcc.repository.core.model.RepositoryServers.getAWSServer;
 
 import java.io.File;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
@@ -51,17 +52,18 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
 
   public Iterable<RepositoryFile> processObjects(@NonNull Iterable<S3ObjectSummary> objectSummaries,
       @NonNull Set<String> objectIds) {
+    log.info("Processing object summaries...");
     return stream(objectSummaries)
-        .filter(objectSummary -> objectIds.contains(getObjectId(objectSummary)))
+        .filter(isComplete(objectIds))
         .map(objectSummary -> processObject(objectSummary))
         .collect(toImmutableList());
   }
 
-  private RepositoryFile processObject(S3ObjectSummary s3Object) {
+  private RepositoryFile processObject(S3ObjectSummary objectSummary) {
     log.debug("Processing bucket entry: {}", format("%-50s %10d %s",
-        s3Object.getKey(), s3Object.getSize(), s3Object.getStorageClass()));
+        objectSummary.getKey(), objectSummary.getSize(), objectSummary.getStorageClass()));
 
-    return createFile(s3Object);
+    return createFile(objectSummary);
   }
 
   private RepositoryFile createFile(S3ObjectSummary s3Object) {
@@ -98,6 +100,10 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         .setRepoMetadataPath(server.getType().getMetadataPath());
 
     return file;
+  }
+
+  private static Predicate<? super S3ObjectSummary> isComplete(Set<String> completeObjectIds) {
+    return objectSummary -> completeObjectIds.contains(getObjectId(objectSummary));
   }
 
   private static String getObjectId(S3ObjectSummary objectSummary) {

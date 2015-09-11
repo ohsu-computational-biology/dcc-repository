@@ -51,7 +51,6 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
-import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryProject;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
@@ -61,7 +60,9 @@ import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
 
   /**
@@ -82,12 +83,14 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
 
   @NonNull
   public Iterable<RepositoryFile> processDetails(Iterable<ObjectNode> details) {
+    log.info("Procesing and filtering details...");
     val analysisFiles = stream(details)
         .flatMap(detail -> stream(getResults(detail)))
         .flatMap(result -> stream(processResult(result)))
         .filter(hasDonorId()) // Filter out non-ICGC donors
         .collect(toImmutableList());
 
+    log.info("Assigning study...");
     assignStudy(analysisFiles);
 
     return analysisFiles;
@@ -99,14 +102,6 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
     return resolveFiles(result, file -> isBamFile(file))
         .map(file -> createAnalysisFile(result, file, baiFile))
         .collect(toImmutableList());
-  }
-
-  private Optional<JsonNode> resolveBaiFile(JsonNode result) {
-    return resolveFiles(result, file -> isBaiFile(file)).findFirst();
-  }
-
-  private Stream<JsonNode> resolveFiles(JsonNode result, Predicate<? super JsonNode> filter) {
-    return stream(getFiles(result)).filter(filter);
   }
 
   private RepositoryFile createAnalysisFile(JsonNode result, JsonNode file, Optional<JsonNode> baiFile) {
@@ -164,8 +159,8 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
       fileCopy.getIndexFile()
           .setId(baiId)
           .setFileId(context.ensureFileId(baiId))
-          .setFileFormat(FileFormat.BAI)
           .setFileName(baiFileName)
+          .setFileFormat(FileFormat.BAI)
           .setFileSize(getFileSize(baiFile.get()))
           .setFileMd5sum(getChecksum(baiFile.get()));
     }
@@ -189,13 +184,16 @@ public class CGHubAnalysisDetailProcessor extends RepositoryFileProcessor {
     return analysisFile;
   }
 
-  private void assignStudy(Iterable<RepositoryFile> analysisFiles) {
-    eachFileDonor(analysisFiles, donor -> {
-      boolean pcawg = context.isPCAWGSubmittedDonorId(donor.getProjectCode(), donor.getSubmittedDonorId());
-      if (pcawg) {
-        donor.setStudy(Study.PCAWG);
-      }
-    });
+  //
+  // Utilities
+  //
+
+  private Optional<JsonNode> resolveBaiFile(JsonNode result) {
+    return resolveFiles(result, file -> isBaiFile(file)).findFirst();
+  }
+
+  private Stream<JsonNode> resolveFiles(JsonNode result, Predicate<? super JsonNode> filter) {
+    return stream(getFiles(result)).filter(filter);
   }
 
   private static RepositoryProject resolveProject(JsonNode result) {

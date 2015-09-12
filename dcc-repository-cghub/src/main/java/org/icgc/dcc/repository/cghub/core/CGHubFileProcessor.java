@@ -99,6 +99,9 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   private Iterable<RepositoryFile> processResult(JsonNode result) {
     val baiFile = resolveBaiFile(result);
 
+    // TODO: Consider relaxing this to include FASTQ/A files. Talk with JJ about what we ones we want to keep
+    // (interesting files).
+    // May need to see if we can identify FASTQ based on file name, other fields, etc.
     return resolveFiles(result, file -> isBamFile(file))
         .map(file -> createAnalysisFile(result, file, baiFile))
         .collect(toImmutableList());
@@ -205,7 +208,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   private static String resolveDataType(JsonNode result) {
     val analyteCode = getAnalyteCode(result);
     if (DNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
-      return DataType.DNA_SEQ;
+      return DataType.ALIGNED_READS;
     } else if (RNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
       return DataType.RNA_SEQ;
     }

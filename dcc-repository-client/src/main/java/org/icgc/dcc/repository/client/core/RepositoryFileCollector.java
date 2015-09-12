@@ -18,7 +18,6 @@
 package org.icgc.dcc.repository.client.core;
 
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -67,7 +66,7 @@ public class RepositoryFileCollector {
   }
 
   private Iterable<RepositorySourceFileReader> createReaders() {
-    return stream(RepositorySource.values())
+    return RepositorySource.all().stream()
         .map(source -> new RepositorySourceFileReader(context.getMongoUri(), source))
         .collect(toImmutableList());
   }

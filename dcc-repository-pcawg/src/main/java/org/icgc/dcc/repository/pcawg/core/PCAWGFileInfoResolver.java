@@ -30,32 +30,47 @@ import lombok.experimental.UtilityClass;
 public class PCAWGFileInfoResolver {
 
   public DataCategorization resolveDataCategorization(@NonNull String analysisType, @NonNull String fileName) {
+    // TODO: Talk to JJ on these ifs. May need to adjust logic
+    val category = new DataCategorization();
+
     if (isRNASeq(analysisType)) {
-      return new DataCategorization()
+      category
           .setDataType(DataType.RNA_SEQ)
           .setExperimentalStrategy(ExperimentalStrategy.RNA_SEQ);
     } else if (isDNASeq(analysisType)) {
-      return new DataCategorization()
-          .setDataType(DataType.DNA_SEQ)
+      category
+          .setDataType(DataType.ALIGNED_READS)
           .setExperimentalStrategy(ExperimentalStrategy.WGS);
     } else if (isSangerVariantCalling(analysisType)) {
-      val dataType = resolveSangerVariantCallingDataType(fileName);
-      return new DataCategorization()
-          .setDataType(dataType)
+      category
+          .setDataType(resolveSangerVariantCallingDataType(fileName))
           .setExperimentalStrategy(ExperimentalStrategy.WGS);
-    } else {
-      return new DataCategorization();
     }
+
+    return category;
   }
 
   public String resolveFileFormat(@NonNull String analysisType, @NonNull String fileName) {
-    if (isRNASeq(analysisType)) {
+    if (isRNASeq(analysisType) || isDNASeq(analysisType)) {
+      // TODO: Verify with JJ that this should be BAM for DNA-Seq
       return FileFormat.BAM;
-    } else if (isDNASeq(analysisType)) {
-      return FileFormat.DNA_SEQ;
     } else if (isSangerVariantCalling(analysisType)) {
       val dataType = resolveSangerVariantCallingDataType(fileName);
       return dataType == null ? null : FileFormat.VCF;
+    } else {
+      return null;
+    }
+  }
+
+  private static String resolveSangerVariantCallingDataType(String fileName) {
+    if (fileName.endsWith(".somatic.snv_mnv.vcf.gz")) {
+      return DataType.SSM;
+    } else if (fileName.endsWith(".somatic.cnv.vcf.gz")) {
+      return DataType.CNSM;
+    } else if (fileName.endsWith(".somatic.sv.vcf.gz")) {
+      return DataType.STSM;
+    } else if (fileName.endsWith(".somatic.indel.vcf.gz")) {
+      return DataType.SSM;
     } else {
       return null;
     }
@@ -71,20 +86,6 @@ public class PCAWGFileInfoResolver {
 
   private static boolean isSangerVariantCalling(String analysisType) {
     return analysisType.matches("wgs\\.tumor_specimens\\.sanger_variant_calling");
-  }
-
-  private static String resolveSangerVariantCallingDataType(String fileName) {
-    if (fileName.endsWith(".somatic.snv_mnv.vcf.gz")) {
-      return DataType.SSM;
-    } else if (fileName.endsWith(".somatic.cnv.vcf.gz")) {
-      return DataType.CNSM;
-    } else if (fileName.endsWith(".somatic.sv.vcf.gz")) {
-      return DataType.STSM;
-    } else if (fileName.endsWith(".somatic.indel.vcf.gz")) {
-      return DataType.SSM;
-    } else {
-      return null;
-    }
   }
 
 }

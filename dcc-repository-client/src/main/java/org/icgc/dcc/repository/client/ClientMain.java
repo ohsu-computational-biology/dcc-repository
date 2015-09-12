@@ -61,7 +61,6 @@ public class ClientMain {
    * @param args command line arguments
    */
   public static void main(String... args) {
-
     val options = new Options();
     val cli = new JCommander(options);
     cli.setAcceptUnknownOptions(true);

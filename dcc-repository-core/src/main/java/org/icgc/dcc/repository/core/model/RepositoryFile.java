@@ -193,7 +193,7 @@ public class RepositoryFile {
     public String BAM = "BAM";
     public String BAI = "BAI";
     public String XML = "XML";
-    public String DNA_SEQ = "DNA-Seq";
+    public String DNA_SEQ = "DNA-Seq"; // TODO: This should be removed and replaced with BAM
     public String VCF = "VCF";
 
   }
@@ -211,7 +211,7 @@ public class RepositoryFile {
 
     public String CLINICAL = "Clinical";
     public String RNA_SEQ = "RNA-Seq";
-    public String DNA_SEQ = "DNA-Seq";
+    public String ALIGNED_READS = "Aligned Reads";
 
     public String SSM = "SSM";
     public String CNSM = "CNSM";

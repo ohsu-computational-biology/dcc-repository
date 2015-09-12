@@ -18,14 +18,16 @@
 package org.icgc.dcc.repository.client.core;
 
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.repository.core.util.RepositoryFiles.inPCAWGOrder;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -61,27 +63,67 @@ public class RepositoryFileCombiner {
   }
 
   private RepositoryFile combineFiles(Set<RepositoryFile> files) {
-    // Round up all file copies
-    val fileCopies = resolveFileCopies(files);
+    // TODO: Add checks for all root fields and very least add reporting for inconsistent fields, if not fail processing
+    val prioritizedFiles = prioritize(files);
 
-    // Designate one file as the representative for the group
-    val representative = calculateRepresentative(files);
+    val combinedFile = new RepositoryFile();
 
-    // Combine all file copies
-    representative.setFileCopies(fileCopies);
+    //
+    // Select One
+    //
 
-    return representative;
+    val ids = get(prioritizedFiles, RepositoryFile::getId);
+    combinedFile.setId(selectOne(ids));
+
+    val fileIds = get(prioritizedFiles, RepositoryFile::getFileId);
+    combinedFile.setFileId(selectOne(fileIds));
+
+    val studies = get(prioritizedFiles, RepositoryFile::getStudy);
+    combinedFile.setStudy(selectOne(studies));
+
+    val accesses = get(prioritizedFiles, RepositoryFile::getAccess);
+    combinedFile.setAccess(selectOne(accesses));
+
+    val dataBundles = get(prioritizedFiles, RepositoryFile::getDataBundle);
+    combinedFile.setDataBundle(selectOne(dataBundles));
+
+    val analysisMethods = get(prioritizedFiles, RepositoryFile::getAnalysisMethod);
+    combinedFile.setAnalysisMethod(selectOne(analysisMethods));
+
+    val dataCategorizations = get(prioritizedFiles, RepositoryFile::getDataCategorization);
+    combinedFile.setDataCategorization(selectOne(dataCategorizations));
+
+    val referenceGenomes = get(prioritizedFiles, RepositoryFile::getReferenceGenome);
+    combinedFile.setReferenceGenome(selectOne(referenceGenomes));
+
+    //
+    // Combine All
+    //
+
+    val fileCopies = getAll(prioritizedFiles, RepositoryFile::getFileCopies);
+    combinedFile.setFileCopies(fileCopies);
+
+    val donors = getAll(prioritizedFiles, RepositoryFile::getDonors);
+    combinedFile.setDonors(donors);
+
+    return combinedFile;
   }
 
-  private List<FileCopy> resolveFileCopies(Set<RepositoryFile> files) {
-    return files.stream()
-        .flatMap(file -> file.getFileCopies().stream())
-        .collect(toImmutableList());
-  }
-
-  private RepositoryFile calculateRepresentative(Set<RepositoryFile> files) {
+  private static Set<RepositoryFile> prioritize(Set<RepositoryFile> files) {
     // Prioritize PCAWG ahead of others since it carries the most information
-    return files.stream().sorted(inPCAWGOrder()).findFirst().get();
+    return files.stream().sorted(inPCAWGOrder()).collect(toImmutableSet());
+  }
+
+  private static <T> List<T> get(Collection<RepositoryFile> files, Function<RepositoryFile, T> getter) {
+    return files.stream().map(getter).collect(toImmutableList());
+  }
+
+  private static <T> List<T> getAll(Collection<RepositoryFile> files, Function<RepositoryFile, List<T>> getter) {
+    return files.stream().flatMap(file -> getter.apply(file).stream()).collect(toImmutableList());
+  }
+
+  private static <T> T selectOne(Collection<T> values) {
+    return values.stream().filter(value -> value != null).findFirst().orElse(null);
   }
 
 }

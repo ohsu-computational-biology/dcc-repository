@@ -64,12 +64,12 @@ public class AWSImporter extends GenericRepositorySourceFileImporter {
     return new AWSS3TransferJobReader().read();
   }
 
-  private Iterable<RepositoryFile> processFiles(List<ObjectNode> completedJobs, List<S3ObjectSummary> objectSummaries) {
-    return new AWSFileProcessor(context).processCompletedJobs(completedJobs, objectSummaries);
-  }
-
   private List<S3ObjectSummary> readObjectSummaries() {
     return new AWSS3BucketReader().readSummaries();
+  }
+
+  private Iterable<RepositoryFile> processFiles(List<ObjectNode> completedJobs, List<S3ObjectSummary> objectSummaries) {
+    return new AWSFileProcessor(context).processCompletedJobs(completedJobs, objectSummaries);
   }
 
 }

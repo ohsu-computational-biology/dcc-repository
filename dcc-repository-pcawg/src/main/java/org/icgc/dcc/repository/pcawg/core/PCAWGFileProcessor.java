@@ -166,7 +166,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
         .setDataBundleId(gnosId);
 
     donorFile.getAnalysisMethod()
-        .setAnalysisType(null) // TODO: Fix
+        .setAnalysisType(null) // TODO: Fix -> parameterize based on other field values
         .setSoftware(null); // TODO: Fix
 
     donorFile

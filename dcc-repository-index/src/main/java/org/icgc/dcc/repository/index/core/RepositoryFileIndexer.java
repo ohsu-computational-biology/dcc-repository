@@ -23,12 +23,12 @@ import static com.google.common.base.Throwables.propagate;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.REPO_INDEX_ALIAS;
-import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.compareIndexDateDescending;
-import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.getCurrentIndexName;
-import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.getSettings;
-import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.getTypeMapping;
-import static org.icgc.dcc.repository.index.core.RepositoryFileIndex.isRepoIndexName;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.REPO_INDEX_ALIAS;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.compareIndexDateDescending;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.getCurrentIndexName;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.getSettings;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.getTypeMapping;
+import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.isRepoIndexName;
 import static org.icgc.dcc.repository.index.util.TransportClientFactory.newTransportClient;
 
 import java.io.Closeable;
@@ -37,15 +37,12 @@ import java.util.Arrays;
 import java.util.Set;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.elasticsearch.action.bulk.BulkProcessor.Listener;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.unit.ByteSizeValue;
 import org.icgc.dcc.repository.index.document.DonorTextDocumentProcessor;
 import org.icgc.dcc.repository.index.document.FileCentricDocumentProcessor;
 import org.icgc.dcc.repository.index.document.FileTextDocumentProcessor;
 import org.icgc.dcc.repository.index.model.DocumentType;
+import org.icgc.dcc.repository.index.util.LoggingBulkListener;
 
 import com.mongodb.MongoClientURI;
 
@@ -176,29 +173,7 @@ public class RepositoryFileIndexer implements Closeable {
   }
 
   private BulkProcessor createBulkProcessor() {
-    return BulkProcessor.builder(client, new Listener() {
-
-      @Override
-      public void beforeBulk(long executionId, BulkRequest request) {
-        log.info("[{}] executing [{}]/[{}]", executionId, request.numberOfActions(),
-            new ByteSizeValue(request.estimatedSizeInBytes()));
-      }
-
-      @Override
-      public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-        log.info("'{}' executed  [{}]/[{}], took {}", executionId, request.numberOfActions(), new ByteSizeValue(
-            request.estimatedSizeInBytes()), response.getTook());
-
-        checkState(!response.hasFailures(), "'%s' failed to execute bulk request: %s", executionId,
-            response.buildFailureMessage());
-      }
-
-      @Override
-      public void afterBulk(long executionId, BulkRequest request, Throwable e) {
-        log.info("'{}' failed to execute bulk request", e, executionId);
-      }
-
-    }).build();
+    return BulkProcessor.builder(client, new LoggingBulkListener()).build();
   }
 
   @SneakyThrows

@@ -19,9 +19,9 @@ package org.icgc.dcc.repository.cghub.core;
 
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.cghub.core.CGHubDataTypeResolver.resolveDataType;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAliquotId;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalysisId;
-import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalyteCode;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getChecksum;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getDiseaseAbbr;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getFileName;
@@ -39,7 +39,6 @@ import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCo
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getCGHubServer;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -47,7 +46,6 @@ import java.util.stream.Stream;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
@@ -56,7 +54,6 @@ import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
@@ -64,12 +61,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CGHubFileProcessor extends RepositoryFileProcessor {
-
-  /**
-   * Constants.
-   */
-  private static final List<String> DNA_SEQ_ANALYTE_CODES = ImmutableList.of("D", "G", "W", "X");
-  private static final List<String> RNA_SEQ_ANALYTE_CODES = ImmutableList.of("R", "T", "H");
 
   /**
    * Metadata.
@@ -203,17 +194,6 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
     val diseaseCode = getDiseaseAbbr(result);
 
     return getDiseaseCodeProject(diseaseCode).orNull();
-  }
-
-  private static String resolveDataType(JsonNode result) {
-    val analyteCode = getAnalyteCode(result);
-    if (DNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
-      return DataType.ALIGNED_READS;
-    } else if (RNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
-      return DataType.RNA_SEQ;
-    }
-
-    return null;
   }
 
   private static long resolveLastModified(JsonNode result) {

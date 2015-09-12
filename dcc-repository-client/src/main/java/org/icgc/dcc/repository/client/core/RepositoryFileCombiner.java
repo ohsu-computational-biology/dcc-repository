@@ -73,28 +73,28 @@ public class RepositoryFileCombiner {
     //
 
     val ids = get(prioritizedFiles, RepositoryFile::getId);
-    combinedFile.setId(selectOne(ids));
+    combinedFile.setId(combineField(ids));
 
     val fileIds = get(prioritizedFiles, RepositoryFile::getFileId);
-    combinedFile.setFileId(selectOne(fileIds));
+    combinedFile.setFileId(combineField(fileIds));
 
     val studies = get(prioritizedFiles, RepositoryFile::getStudy);
-    combinedFile.setStudy(selectOne(studies));
+    combinedFile.setStudy(combineField(studies));
 
     val accesses = get(prioritizedFiles, RepositoryFile::getAccess);
-    combinedFile.setAccess(selectOne(accesses));
+    combinedFile.setAccess(combineField(accesses));
 
     val dataBundles = get(prioritizedFiles, RepositoryFile::getDataBundle);
-    combinedFile.setDataBundle(selectOne(dataBundles));
+    combinedFile.setDataBundle(combineField(dataBundles));
 
     val analysisMethods = get(prioritizedFiles, RepositoryFile::getAnalysisMethod);
-    combinedFile.setAnalysisMethod(selectOne(analysisMethods));
+    combinedFile.setAnalysisMethod(combineField(analysisMethods));
 
     val dataCategorizations = get(prioritizedFiles, RepositoryFile::getDataCategorization);
-    combinedFile.setDataCategorization(selectOne(dataCategorizations));
+    combinedFile.setDataCategorization(combineField(dataCategorizations));
 
     val referenceGenomes = get(prioritizedFiles, RepositoryFile::getReferenceGenome);
-    combinedFile.setReferenceGenome(selectOne(referenceGenomes));
+    combinedFile.setReferenceGenome(combineField(referenceGenomes));
 
     //
     // Combine All
@@ -109,6 +109,11 @@ public class RepositoryFileCombiner {
     return combinedFile;
   }
 
+  private static <T> T combineField(Collection<T> values) {
+    // Try to find first non-null
+    return values.stream().filter(value -> value != null).findFirst().orElse(null);
+  }
+
   private static Set<RepositoryFile> prioritize(Set<RepositoryFile> files) {
     // Prioritize PCAWG ahead of others since it carries the most information
     return files.stream().sorted(inPCAWGOrder()).collect(toImmutableSet());
@@ -120,10 +125,6 @@ public class RepositoryFileCombiner {
 
   private static <T> List<T> getAll(Collection<RepositoryFile> files, Function<RepositoryFile, List<T>> getter) {
     return files.stream().flatMap(file -> getter.apply(file).stream()).collect(toImmutableList());
-  }
-
-  private static <T> T selectOne(Collection<T> values) {
-    return values.stream().filter(value -> value != null).findFirst().orElse(null);
   }
 
 }

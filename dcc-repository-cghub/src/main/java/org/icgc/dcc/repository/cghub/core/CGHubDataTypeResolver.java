@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,26 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.cli;
+package org.icgc.dcc.repository.cghub.core;
 
-import org.icgc.dcc.repository.core.model.RepositorySource;
+import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalyteCode;
 
-import com.beust.jcommander.IStringConverter;
-import com.beust.jcommander.ParameterException;
+import java.util.List;
+
+import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableList;
 
 import lombok.val;
+import lombok.experimental.UtilityClass;
 
-public class RepositorySourceConverter implements IStringConverter<RepositorySource> {
+@UtilityClass
+public class CGHubDataTypeResolver {
 
-  @Override
-  public RepositorySource convert(String value) {
-    for (val source : RepositorySource.values()) {
-      if (source.getId().equalsIgnoreCase(value.toString())) {
-        return source;
-      }
+  /**
+   * Constants.
+   */
+  private static final List<String> DNA_SEQ_ANALYTE_CODES = ImmutableList.of("D", "G", "W", "X");
+  private static final List<String> RNA_SEQ_ANALYTE_CODES = ImmutableList.of("R", "T", "H");
+
+  public String resolveDataType(JsonNode result) {
+    val analyteCode = getAnalyteCode(result);
+    if (DNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
+      return DataType.ALIGNED_READS;
+    } else if (RNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
+      return DataType.RNA_SEQ;
     }
 
-    throw new ParameterException("Unexpected repository source value: " + value);
+    return null;
   }
-
 }

@@ -108,7 +108,7 @@ public class ClientMain {
     val importer = new RepositoryImporter(context);
 
     // Business method
-    importer.execute(options.sources);
+    importer.execute();
   }
 
   private static void usage(JCommander cli) {

@@ -221,12 +221,12 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return donorFile;
   }
 
-  private Optional<JsonNode> resolveBaiFile(JsonNode workflow, String fileName) {
+  private static Optional<JsonNode> resolveBaiFile(JsonNode workflow, String fileName) {
     val baiFileName = fileName + ".bai";
     return resolveFiles(workflow, file -> baiFileName.equals(resolveFileName(file))).findFirst();
   }
 
-  private Stream<JsonNode> resolveFiles(JsonNode workflow, Predicate<? super JsonNode> filter) {
+  private static Stream<JsonNode> resolveFiles(JsonNode workflow, Predicate<? super JsonNode> filter) {
     return stream(getFiles(workflow)).filter(filter);
   }
 

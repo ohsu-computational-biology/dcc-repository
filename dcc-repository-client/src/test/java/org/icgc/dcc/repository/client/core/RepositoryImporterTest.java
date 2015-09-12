@@ -23,6 +23,7 @@ import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalR
 
 import java.io.IOException;
 
+import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -39,12 +40,12 @@ public class RepositoryImporterTest {
 
   @Test
   public void testExecuteSomeFast() throws IOException {
-    val importer = createImporter();
-    importer.execute(PCAWG, AWS);
+    val importer = createImporter(AWS, PCAWG);
+    importer.execute();
   }
 
-  private static RepositoryImporter createImporter() {
-    val context = newLocalRepositoryFileContext();
+  private static RepositoryImporter createImporter(RepositorySource... sources) {
+    val context = newLocalRepositoryFileContext(sources);
     return new RepositoryImporter(context);
   }
 

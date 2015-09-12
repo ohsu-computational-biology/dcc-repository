@@ -91,14 +91,7 @@ public abstract class AbstractJongoComponent implements Closeable {
   }
 
   protected int eachDocument(@NonNull RepositoryFileCollection fileCollection, @NonNull Consumer<ObjectNode> handler) {
-    int documentCount = 0;
-    for (val document : readDocuments(fileCollection)) {
-      handler.accept(document);
-
-      documentCount++;
-    }
-
-    return documentCount;
+    return eachDocument(fileCollection.getId(), handler);
   }
 
   protected int eachDocument(@NonNull String collectionName, @NonNull Consumer<ObjectNode> handler) {

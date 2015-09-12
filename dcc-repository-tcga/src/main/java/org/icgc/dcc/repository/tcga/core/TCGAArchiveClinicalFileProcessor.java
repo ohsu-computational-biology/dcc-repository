@@ -17,18 +17,21 @@
  */
 package org.icgc.dcc.repository.tcga.core;
 
+import static java.util.stream.Collectors.toMap;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.icgc.dcc.repository.tcga.model.TCGAArchiveClinicalFile;
+import org.icgc.dcc.repository.tcga.model.TCGAArchiveManifestEntry;
 import org.icgc.dcc.repository.tcga.model.TCGAArchivePageEntry;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchiveManifestReader;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchivePageReader;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import lombok.NonNull;
 import lombok.val;
@@ -73,14 +76,10 @@ public class TCGAArchiveClinicalFileProcessor {
     return entry.getLastModified().getEpochSecond();
   }
 
-  private Map<String, String> resolveArchiveFileMD5Sums(String archiveFolderUrl) {
-    val md5s = ImmutableMap.<String, String> builder();
+  private static Map<String, String> resolveArchiveFileMD5Sums(String archiveFolderUrl) {
     val entries = TCGAArchiveManifestReader.readEntries(archiveFolderUrl);
-    for (val entry : entries) {
-      md5s.put(entry.getFileName(), entry.getMd5());
-    }
-
-    return md5s.build();
+    val md5ByFileName = toMap(TCGAArchiveManifestEntry::getFileName, TCGAArchiveManifestEntry::getMd5);
+    return stream(entries).collect(md5ByFileName);
   }
 
   private static String resolveArchiveFolderUrl(String archiveUrl) {

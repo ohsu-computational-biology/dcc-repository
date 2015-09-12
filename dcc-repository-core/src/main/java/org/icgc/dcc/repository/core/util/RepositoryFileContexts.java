@@ -19,9 +19,12 @@ package org.icgc.dcc.repository.core.util;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import java.util.Set;
+
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
 import org.icgc.dcc.repository.core.RepositoryIdResolver;
+import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -30,10 +33,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = PRIVATE)
 public final class RepositoryFileContexts {
 
-  public static RepositoryFileContext newLocalRepositoryFileContext() {
+  public static RepositoryFileContext newLocalRepositoryFileContext(RepositorySource... sources) {
+    return newLocalRepositoryFileContext(
+        sources.length == 0 ? RepositorySource.all() : ImmutableSet.copyOf(sources));
+  }
+
+  public static RepositoryFileContext newLocalRepositoryFileContext(Set<RepositorySource> sources) {
     return RepositoryFileContextBuilder
         .builder()
         .realIds(false)
+        .sources(sources)
         .pcawgIdResolver(newEmptyIdResovler())
         .build();
   }

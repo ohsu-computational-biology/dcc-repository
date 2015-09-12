@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,26 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.cli;
+package org.icgc.dcc.repository.index.util;
 
-import org.icgc.dcc.repository.core.model.RepositorySource;
+import static com.google.common.base.Preconditions.checkState;
 
-import com.beust.jcommander.IStringConverter;
-import com.beust.jcommander.ParameterException;
+import org.elasticsearch.action.bulk.BulkProcessor.Listener;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.common.unit.ByteSizeValue;
 
-import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-public class RepositorySourceConverter implements IStringConverter<RepositorySource> {
+@Slf4j
+public class LoggingBulkListener implements Listener {
 
   @Override
-  public RepositorySource convert(String value) {
-    for (val source : RepositorySource.values()) {
-      if (source.getId().equalsIgnoreCase(value.toString())) {
-        return source;
-      }
-    }
+  public void beforeBulk(long executionId, BulkRequest request) {
+    log.info("[{}] executing [{}]/[{}]", executionId, request.numberOfActions(),
+        new ByteSizeValue(request.estimatedSizeInBytes()));
+  }
 
-    throw new ParameterException("Unexpected repository source value: " + value);
+  @Override
+  public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
+    log.info("'{}' executed  [{}]/[{}], took {}", executionId, request.numberOfActions(), new ByteSizeValue(
+        request.estimatedSizeInBytes()), response.getTook());
+
+    checkState(!response.hasFailures(), "'%s' failed to execute bulk request: %s", executionId,
+        response.buildFailureMessage());
+  }
+
+  @Override
+  public void afterBulk(long executionId, BulkRequest request, Throwable e) {
+    log.info("'{}' failed to execute bulk request", e, executionId);
   }
 
 }

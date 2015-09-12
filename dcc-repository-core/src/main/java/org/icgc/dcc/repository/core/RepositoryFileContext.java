@@ -19,6 +19,7 @@ package org.icgc.dcc.repository.core;
 
 import static lombok.AccessLevel.PACKAGE;
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.repository.core.util.RepositoryFiles.qualifyDonorId;
 
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +33,9 @@ import com.mongodb.MongoClientURI;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor(access = PACKAGE)
 public class RepositoryFileContext {
 
@@ -71,6 +74,14 @@ public class RepositoryFileContext {
    */
   @Getter(lazy = true, value = PRIVATE)
   private final Set<String> pcawgSubmittedDonorIds = pcawgIdResolver.resolveIds();
+
+  public void reportError(String error) {
+    log.error("Error: {}", error);
+  }
+
+  public void reportWarning(String warning) {
+    log.error("Warning: {}", warning);
+  }
 
   @NonNull
   public String getPrimarySite(String projectCode) {
@@ -135,6 +146,7 @@ public class RepositoryFileContext {
 
   @NonNull
   public String getFileId(String submittedFileId) {
+    // TODO: Add support for caching in dcc-id-client
     return idClient.getFileId(submittedFileId).orElse(null);
   }
 
@@ -148,8 +160,8 @@ public class RepositoryFileContext {
     return tcgaClient.getBarcodes(tcgaUuids);
   }
 
-  public static String qualifyDonorId(String projectCode, String submittedDonorId) {
-    return projectCode + ":" + submittedDonorId;
+  public boolean isActive(@NonNull RepositorySource source) {
+    return sources.contains(source);
   }
 
 }

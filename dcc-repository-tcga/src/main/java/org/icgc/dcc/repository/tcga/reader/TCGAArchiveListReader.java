@@ -27,11 +27,11 @@ import java.util.List;
 
 import org.icgc.dcc.repository.tcga.model.TCGAArchiveListEntry;
 
-import lombok.SneakyThrows;
-import lombok.val;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+
+import lombok.SneakyThrows;
+import lombok.val;
 
 public class TCGAArchiveListReader {
 
@@ -56,6 +56,7 @@ public class TCGAArchiveListReader {
 
   @SneakyThrows
   private static Iterable<String> readLines() {
+    // Skip header
     val headerLineCount = 1;
     return skip(Resources.readLines(TCGA_ARCHIVE_LISTING, UTF_8), headerLineCount);
   }

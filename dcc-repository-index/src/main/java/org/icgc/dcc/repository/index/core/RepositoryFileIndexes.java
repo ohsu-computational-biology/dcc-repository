@@ -39,7 +39,7 @@ import lombok.val;
 /**
  * Repository file index specific conventions, metadata and utilities.
  */
-public class RepositoryFileIndex {
+public class RepositoryFileIndexes {
 
   /**
    * Index naming.

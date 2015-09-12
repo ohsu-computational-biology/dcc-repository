@@ -17,7 +17,9 @@
  */
 package org.icgc.dcc.repository.aws.reader;
 
-import org.icgc.dcc.repository.aws.reader.AWSS3TransferJobReader;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getFiles;
+import static org.icgc.dcc.repository.aws.util.AWSS3TransferJobs.getObjectId;
+
 import org.junit.Test;
 
 import lombok.val;
@@ -32,8 +34,8 @@ public class AWSS3TransferJobReaderTest {
 
     for (val job : reader.read()) {
       log.info("Job: {}", job);
-      for (val file : job.withArray("files")) {
-        val objectId = file.get("object_id").textValue();
+      for (val file : getFiles(job)) {
+        val objectId = getObjectId(file);
         log.info("  objectId: {}", objectId);
       }
     }

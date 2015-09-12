@@ -19,7 +19,6 @@ package org.icgc.dcc.repository.client.core;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Stopwatch.createStarted;
-import static com.google.common.collect.Iterables.contains;
 import static org.apache.commons.lang.StringUtils.repeat;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 
@@ -32,7 +31,6 @@ import org.icgc.dcc.repository.cghub.CGHubImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.writer.RepositoryFileWriter;
 import org.icgc.dcc.repository.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.pcawg.PCAWGImporter;
@@ -65,17 +63,8 @@ public class RepositoryImporter {
   @NonNull
   private final RepositoryFileContext context;
 
+  @NonNull
   public void execute() {
-    execute(RepositorySource.values());
-  }
-
-  @NonNull
-  public void execute(RepositorySource... activeSources) {
-    execute(ImmutableList.copyOf(activeSources));
-  }
-
-  @NonNull
-  public void execute(Iterable<RepositorySource> activeSources) {
     val watch = createStarted();
 
     val exceptions = Lists.<Exception> newArrayList();
@@ -125,7 +114,7 @@ public class RepositoryImporter {
 
     val exceptions = ImmutableList.<Exception> builder();
     for (val importer : importers) {
-      boolean active = contains(context.getSources(), importer.getSource());
+      boolean active = context.isActive(importer.getSource());
       if (active) {
         try {
           logBanner("Importing '" + importer.getSource() + "' sourced files");

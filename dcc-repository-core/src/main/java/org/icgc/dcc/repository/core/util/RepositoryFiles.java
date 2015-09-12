@@ -43,4 +43,8 @@ public final class RepositoryFiles {
     return fileCopy.getRepoOrg().equals(PCAWG.getId());
   }
 
+  public static String qualifyDonorId(String projectCode, String submittedDonorId) {
+    return projectCode + ":" + submittedDonorId;
+  }
+
 }

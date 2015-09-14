@@ -35,6 +35,7 @@ import org.icgc.dcc.repository.core.writer.RepositoryFileWriter;
 import org.icgc.dcc.repository.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.pcawg.PCAWGImporter;
 import org.icgc.dcc.repository.tcga.TCGAImporter;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see https://wiki.oicr.on.ca/display/DCCSOFT/UI+-+The+new+ICGC+DCC+data+repository+-+Simplified+version+Phase+1
  */
 @Slf4j
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor = @__(@Autowired) )
 public class RepositoryImporter {
 
   /**

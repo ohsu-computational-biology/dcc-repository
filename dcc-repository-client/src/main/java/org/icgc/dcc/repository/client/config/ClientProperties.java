@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,23 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.cli;
+package org.icgc.dcc.repository.client.config;
 
-import java.util.Set;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-import org.icgc.dcc.repository.core.model.RepositorySource;
+import lombok.Data;
 
-import com.beust.jcommander.Parameter;
+@Data
+@Component
+@ConfigurationProperties
+public class ClientProperties {
 
-import lombok.ToString;
+  /**
+   * IDs.
+   */
+  String identifierServiceUri;
+  String authToken;
 
-/**
- * Command line options.
- */
-@ToString
-public class Options {
+  /**
+   * Reference.
+   */
+  String geneMongoUri;
 
-  @Parameter(names = { "--sources" }, converter = RepositorySourceConverter.class, description = "Source to import. Comma seperated list of: 'aws', 'pcawg', 'tcga', 'cghub'. By default all sources will be imported.")
-  public Set<RepositorySource> sources = RepositorySource.all();
+  /**
+   * Output
+   */
+  String repoMongoUri;
+  String esUri;
 
 }

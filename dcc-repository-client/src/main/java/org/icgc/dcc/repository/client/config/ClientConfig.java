@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,23 +15,55 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.cli;
+package org.icgc.dcc.repository.client.config;
 
-import java.util.Set;
+import org.icgc.dcc.repository.client.cli.Options;
+import org.icgc.dcc.repository.client.core.RepositoryImporter;
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
+import org.icgc.dcc.repository.pcawg.core.PCAWGDonorIdResolver;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import org.icgc.dcc.repository.core.model.RepositorySource;
+import com.mongodb.MongoClientURI;
 
-import com.beust.jcommander.Parameter;
+import lombok.val;
 
-import lombok.ToString;
+@Configuration
+public class ClientConfig {
 
-/**
- * Command line options.
- */
-@ToString
-public class Options {
+  @Bean
+  public RepositoryImporter importer(RepositoryFileContext context) {
+    return new RepositoryImporter(context);
+  }
 
-  @Parameter(names = { "--sources" }, converter = RepositorySourceConverter.class, description = "Source to import. Comma seperated list of: 'aws', 'pcawg', 'tcga', 'cghub'. By default all sources will be imported.")
-  public Set<RepositorySource> sources = RepositorySource.all();
+  @Bean
+  public RepositoryFileContext context(Options options, ClientProperties properties) {
+    new ClientBanner(options, properties).log();
+
+    val context = RepositoryFileContextBuilder.builder();
+
+    // Inputs
+    context
+        .sources(options.sources);
+
+    // IDs
+    context
+        .idUrl(properties.getIdentifierServiceUri())
+        .authToken(properties.getAuthToken())
+        .realIds(true);
+
+    // Reference
+    context
+        .pcawgIdResolver(new PCAWGDonorIdResolver())
+        .geneMongoUri(new MongoClientURI(properties.getGeneMongoUri()));
+
+    // Outputs
+    context
+        .repoMongoUri(new MongoClientURI(properties.getRepoMongoUri()))
+        .esUri(properties.getEsUri());
+
+    return context.build();
+  }
 
 }

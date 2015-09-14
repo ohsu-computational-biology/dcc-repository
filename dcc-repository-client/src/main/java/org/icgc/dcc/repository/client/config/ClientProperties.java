@@ -17,31 +17,85 @@
  */
 package org.icgc.dcc.repository.client.config;
 
+import static org.icgc.dcc.repository.core.model.RepositorySource.all;
+
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
+
+import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+
 import lombok.Data;
+import lombok.val;
 
 @Data
 @Component
 @ConfigurationProperties
 public class ClientProperties {
 
-  /**
-   * IDs.
-   */
-  String identifierServiceUri;
-  String authToken;
+  RepositoryProperties repository;
+  ImportsProperties imports;
+  IdProperties id;
 
-  /**
-   * Reference.
-   */
-  String geneMongoUri;
+  @PostConstruct
+  public void validate() {
+    validate(repository.getMongoUri());
+    validate(imports.getMongoUri());
+  }
 
-  /**
-   * Output
-   */
-  String repoMongoUri;
-  String esUri;
+  private void validate(MongoClientURI mongoUri) {
+    try {
+      val mongo = new MongoClient(mongoUri);
+      try {
+        // Test connectivity
+        val socket = mongo.getMongoOptions().socketFactory.createSocket();
+        socket.connect(mongo.getAddress().getSocketAddress());
+
+        // All good
+        socket.close();
+      } catch (IOException ex) {
+        new RuntimeException(mongoUri + " is not accessible", ex);
+      } finally {
+        mongo.close();
+      }
+    } catch (UnknownHostException e) {
+      new RuntimeException(mongoUri + " host IP address could not be determined.", e);
+    }
+  }
+
+  @Data
+  public static class RepositoryProperties {
+
+    Set<RepositorySource> sources;
+    MongoClientURI mongoUri;
+    String esUri;
+
+    public Set<RepositorySource> getSources() {
+      return sources == null || sources.isEmpty() ? all() : sources;
+    }
+
+  }
+
+  @Data
+  public static class ImportsProperties {
+
+    MongoClientURI mongoUri;
+
+  }
+
+  @Data
+  public static class IdProperties {
+
+    String serviceUrl;
+    String authToken;
+
+  }
 
 }

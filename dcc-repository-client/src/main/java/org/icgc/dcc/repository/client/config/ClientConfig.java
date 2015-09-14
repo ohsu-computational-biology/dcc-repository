@@ -17,15 +17,13 @@
  */
 package org.icgc.dcc.repository.client.config;
 
-import org.icgc.dcc.repository.client.cli.Options;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
 import org.icgc.dcc.repository.pcawg.core.PCAWGDonorIdResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.mongodb.MongoClientURI;
+import org.springframework.context.annotation.DependsOn;
 
 import lombok.val;
 
@@ -38,30 +36,29 @@ public class ClientConfig {
   }
 
   @Bean
-  public RepositoryFileContext context(Options options, ClientProperties properties) {
-    new ClientBanner(options, properties).log();
-
+  @DependsOn("clientBanner")
+  public RepositoryFileContext context(ClientProperties properties) {
     val context = RepositoryFileContextBuilder.builder();
 
     // Inputs
     context
-        .sources(options.sources);
+        .sources(properties.getRepository().getSources());
 
     // IDs
     context
-        .idUrl(properties.getIdentifierServiceUri())
-        .authToken(properties.getAuthToken())
+        .idUrl(properties.getId().getServiceUrl())
+        .authToken(properties.getId().getAuthToken())
         .realIds(true);
 
     // Reference
     context
         .pcawgIdResolver(new PCAWGDonorIdResolver())
-        .geneMongoUri(new MongoClientURI(properties.getGeneMongoUri()));
+        .geneMongoUri(properties.getImports().getMongoUri());
 
     // Outputs
     context
-        .repoMongoUri(new MongoClientURI(properties.getRepoMongoUri()))
-        .esUri(properties.getEsUri());
+        .repoMongoUri(properties.getRepository().getMongoUri())
+        .esUri(properties.getRepository().getEsUri());
 
     return context.build();
   }

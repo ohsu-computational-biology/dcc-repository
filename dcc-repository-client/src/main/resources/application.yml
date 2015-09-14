@@ -3,6 +3,7 @@
 #
 
  # TODO: see dcc-metadata-server for similar properites
+ 
 ###################################################################################################
 # Profile Activation
 ###################################################################################################
@@ -18,6 +19,8 @@ spring:
 # Common
 ###################################################################################################
 
+# Empty
+
 ---
 
 ###################################################################################################
@@ -27,16 +30,18 @@ spring:
 # Spring
 spring:
   profiles: development
-   
-# Gene MongoDB URI
-geneMongoUri: "mongodb://localhost/dcc-genome"
 
-# Repository MongoDB URI
-repoMongoUri: "mongodb://localhost/dcc-repository"
+# Repository
+repository:
+  sources: # All 
+  esUri: es://localhost:9300
+  mongoUri: mongodb://localhost/dcc-repository
 
-# Elasticsearch URI
-esUri: "es://localhost:9300"
+# Imports
+imports:
+  mongoUri: mongodb://localhost/dcc-genome
 
-# ID Service URL
-identifierServiceUri: "https://localhost:8443"
-   
+# ID
+id:
+  serviceUrl: https://localhost:8443
+  authToken:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,47 +15,39 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.cli;
+package org.icgc.dcc.repository.client.util;
 
-import static java.lang.String.format;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
+
+import com.mongodb.MongoClientURI;
 
 import lombok.val;
 
-import com.beust.jcommander.IValueValidator;
-import com.beust.jcommander.ParameterException;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-
-public class MongoValidator implements IValueValidator<String> {
+@Component
+public class MongoClientURIValidator implements Validator {
 
   @Override
-  public void validate(String name, String uri) throws ParameterException {
-    val mongoUri = new MongoClientURI(uri);
-    try {
-      val mongo = new MongoClient(mongoUri);
-      try {
-        // Test connectivity
-        val socket = mongo.getMongoOptions().socketFactory.createSocket();
-        socket.connect(mongo.getAddress().getSocketAddress());
-
-        // All good
-        socket.close();
-      } catch (IOException ex) {
-        parameterException(name, mongoUri, "is not accessible");
-      } finally {
-        mongo.close();
-      }
-    } catch (UnknownHostException e) {
-      parameterException(name, mongoUri, "host IP address could not be determined.");
-    }
+  public boolean supports(Class<?> clazz) {
+    return MongoClientURI.class.isAssignableFrom(clazz);
   }
 
-  private static void parameterException(String name, MongoClientURI mongoUri, String message)
-      throws ParameterException {
-    throw new ParameterException(format("Invalid option: %s: %s %s", name, mongoUri, message));
+  @Override
+  public void validate(Object target, Errors errors) {
+    val mongoUri = (MongoClientURI) target;
+
+    val database = mongoUri.getDatabase();
+    if (!isNullOrEmpty(database)) {
+      errors.reject("uri must not contain a database name");
+    }
+
+    val collection = mongoUri.getCollection();
+    if (!isNullOrEmpty(collection)) {
+      errors.reject("uri must not contain a collection name");
+    }
   }
 
 }

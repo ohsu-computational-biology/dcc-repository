@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.client.config;
 
+import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Strings.padEnd;
 import static org.apache.commons.lang.StringUtils.repeat;
@@ -24,7 +25,16 @@ import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 import java.util.Map;
 
-import org.icgc.dcc.repository.client.cli.Options;
+import javax.annotation.PostConstruct;
+
+import org.elasticsearch.common.collect.ImmutableSet;
+import org.elasticsearch.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.SimpleCommandLinePropertySource;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,14 +45,19 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
+@Component
+@RequiredArgsConstructor(onConstructor = @__(@Autowired) )
 public class ClientBanner {
 
-  @NonNull
-  private final Options options;
+  /**
+   * Dependencies.
+   */
   @NonNull
   private final ClientProperties properties;
+  @NonNull
+  private final StandardEnvironment env;
 
+  @PostConstruct
   public void log() {
     log.info("{}", line());
     log.info("Version: {}", getVersion());
@@ -50,7 +65,7 @@ public class ClientBanner {
     log.info("SCM:");
     log(getScmInfo());
     log(properties);
-    log(options);
+    log(env);
     log.info("{}\n\n", line());
   }
 
@@ -71,8 +86,32 @@ public class ClientBanner {
     }
   }
 
+  private static void log(StandardEnvironment env) {
+    log.info("{}:", env);
+    for (val source : env.getPropertySources()) {
+      log.info("         {}:", source.getName());
+      if (source instanceof SimpleCommandLinePropertySource) {
+        val simple = (SimpleCommandLinePropertySource) source;
+        for (val propertyName : simple.getPropertyNames()) {
+          log.info("            - {}: {}", propertyName, simple.getProperty(propertyName));
+        }
+      } else if (source instanceof MapPropertySource) {
+        val map = (MapPropertySource) source;
+        for (val propertyName : Sets.newTreeSet(ImmutableSet.copyOf(map.getPropertyNames()))) {
+          log.info("            - {}: {}", propertyName, map.getProperty(propertyName));
+        }
+      } else if (source instanceof EnumerablePropertySource) {
+        val enumerable = (EnumerablePropertySource<?>) source;
+        for (val propertyName : enumerable.getPropertyNames()) {
+          log.info("            - {}: {}", propertyName, enumerable.getProperty(propertyName));
+        }
+      }
+    }
+  }
+
   private static Map<String, Object> convert(Object values) {
-    return new ObjectMapper().convertValue(values, new TypeReference<Map<String, Object>>() {});
+    return new ObjectMapper().configure(FAIL_ON_EMPTY_BEANS, false).convertValue(values,
+        new TypeReference<Map<String, Object>>() {});
   }
 
   private static String line() {

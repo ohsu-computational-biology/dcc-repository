@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,23 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.cli;
+package org.icgc.dcc.repository.client.util;
 
-import java.util.Set;
+import static lombok.AccessLevel.PRIVATE;
 
-import org.icgc.dcc.repository.core.model.RepositorySource;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 
-import com.beust.jcommander.Parameter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-import lombok.ToString;
+@RequiredArgsConstructor(access = PRIVATE)
+public class SingletonBeansInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-/**
- * Command line options.
- */
-@ToString
-public class Options {
+  /**
+   * Beans.
+   */
+  @NonNull
+  private final Object[] singletonBeans;
 
-  @Parameter(names = { "--sources" }, converter = RepositorySourceConverter.class, description = "Source to import. Comma seperated list of: 'aws', 'pcawg', 'tcga', 'cghub'. By default all sources will be imported.")
-  public Set<RepositorySource> sources = RepositorySource.all();
+  public static SingletonBeansInitializer singletonBeans(Object... singletonBeans) {
+    return new SingletonBeansInitializer(singletonBeans);
+  }
+
+  @Override
+  public void initialize(ConfigurableApplicationContext applicationContext) {
+    for (val singletonBean : singletonBeans) {
+      registerBean(applicationContext, singletonBean);
+    }
+  }
+
+  private void registerBean(ConfigurableApplicationContext applicationContext, Object singletonBean) {
+    val beanName = singletonBean.getClass().getCanonicalName();
+
+    val factory = applicationContext.getBeanFactory();
+    factory.registerSingleton(beanName, singletonBean);
+  }
 
 }

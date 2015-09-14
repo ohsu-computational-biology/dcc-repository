@@ -17,15 +17,9 @@
  */
 package org.icgc.dcc.repository.client;
 
-import static org.icgc.dcc.repository.client.cli.SingletonBeansInitializer.singletonBeans;
-
-import org.icgc.dcc.repository.client.cli.Options;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -50,19 +44,9 @@ public class ClientMain {
    * @param args command line arguments
    */
   public static void main(String... args) {
-    val options = new Options();
-    val cli = new JCommander(options);
-    cli.setAcceptUnknownOptions(true);
-    cli.setProgramName(APPLICATION_NAME);
-
     try {
-      cli.parse(args);
-      run(options, cli, args);
+      run(args);
       System.exit(SUCCESS_STATUS_CODE);
-    } catch (ParameterException e) {
-      System.err.println("Missing parameters: " + e.getMessage());
-      usage(cli);
-      System.exit(FAILURE_STATUS_CODE);
     } catch (Exception e) {
       log.error("Unknown error: ", e);
       System.err.println("An an error occurred while processing. Please check the log for detailed error messages: "
@@ -71,18 +55,14 @@ public class ClientMain {
     }
   }
 
-  private static void run(Options options, JCommander cli, String... args) {
+  private static void run(String... args) {
     val importer = new SpringApplicationBuilder()
         .sources(ClientMain.class)
-        .initializers(singletonBeans(cli, options))
         .run(args)
         .getBean(RepositoryImporter.class);
 
+    // Main point of execution
     importer.execute();
-  }
-
-  private static void usage(JCommander cli) {
-    cli.usage();
   }
 
 }

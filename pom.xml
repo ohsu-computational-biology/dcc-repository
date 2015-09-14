@@ -42,11 +42,6 @@
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId>dcc-etl-core</artifactId>
-        <version>${dcc-etl.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>${project.groupId}</groupId>
         <artifactId>dcc-id-client</artifactId>
         <version>${dcc-id.version}</version>
       </dependency>
@@ -114,8 +109,7 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.13.0</dcc-common.version>
-    <dcc-etl.version>3.8.14.1</dcc-etl.version>
-    <dcc-id.version>0.0.6</dcc-id.version>
+    <dcc-id.version>0.0.7</dcc-id.version>
 
     <!-- Versions - Utilities -->
     <commons-lang3.version>3.3.2</commons-lang3.version>

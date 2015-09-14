@@ -27,9 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
 public class CGHubDataTypeResolver {
 
   /**
@@ -38,7 +36,7 @@ public class CGHubDataTypeResolver {
   private static final List<String> DNA_SEQ_ANALYTE_CODES = ImmutableList.of("D", "G", "W", "X");
   private static final List<String> RNA_SEQ_ANALYTE_CODES = ImmutableList.of("R", "T", "H");
 
-  public String resolveDataType(JsonNode result) {
+  public static String resolveDataType(JsonNode result) {
     val analyteCode = getAnalyteCode(result);
     if (DNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
       return DataType.ALIGNED_READS;
@@ -48,4 +46,5 @@ public class CGHubDataTypeResolver {
 
     return null;
   }
+
 }

@@ -18,7 +18,6 @@
 package org.icgc.dcc.repository.aws.core;
 
 import static java.lang.String.format;
-import static org.elasticsearch.common.collect.Maps.uniqueIndex;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
@@ -48,6 +47,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 import lombok.NonNull;
 import lombok.val;
@@ -166,7 +166,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
   }
 
   private static Map<String, S3ObjectSummary> indexObjectSummaries(Iterable<S3ObjectSummary> objectSummaries) {
-    return uniqueIndex(objectSummaries, objectSummary -> getS3ObjectId(objectSummary));
+    return Maps.uniqueIndex(objectSummaries, objectSummary -> getS3ObjectId(objectSummary));
   }
 
   private static String getS3ObjectId(S3ObjectSummary objectSummary) {

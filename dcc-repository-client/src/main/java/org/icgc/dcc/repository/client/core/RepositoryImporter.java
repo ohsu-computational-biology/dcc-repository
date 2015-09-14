@@ -19,7 +19,7 @@ package org.icgc.dcc.repository.client.core;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Stopwatch.createStarted;
-import static org.apache.commons.lang.StringUtils.repeat;
+import static com.google.common.base.Strings.repeat;
 import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 
 import java.util.List;

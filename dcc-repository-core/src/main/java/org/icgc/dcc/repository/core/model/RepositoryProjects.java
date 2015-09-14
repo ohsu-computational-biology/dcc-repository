@@ -30,7 +30,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class RepositoryProjects {
@@ -128,17 +127,14 @@ public final class RepositoryProjects {
       );
   // @formatter:on
 
-  @NonNull
   public static Iterable<RepositoryProject> getProjects() {
     return PROJECTS;
   }
 
-  @NonNull
   public static Optional<RepositoryProject> getProjectCodeProject(String projectCode) {
     return tryFind(getProjects(), project -> projectCode.equals(project.getProjectCode()));
   }
 
-  @NonNull
   public static Optional<RepositoryProject> getDiseaseCodeProject(String diseaseCode) {
     return tryFind(getProjects(), project -> diseaseCode.equals(project.getDiseaseCode()));
   }

@@ -20,7 +20,7 @@ package org.icgc.dcc.repository.client.config;
 import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
 import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Strings.padEnd;
-import static org.apache.commons.lang.StringUtils.repeat;
+import static com.google.common.base.Strings.repeat;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 import java.util.Map;

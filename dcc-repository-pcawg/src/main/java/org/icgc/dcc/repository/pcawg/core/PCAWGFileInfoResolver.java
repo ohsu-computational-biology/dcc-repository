@@ -24,12 +24,10 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 
 import lombok.NonNull;
 import lombok.val;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
 public class PCAWGFileInfoResolver {
 
-  public DataCategorization resolveDataCategorization(@NonNull String analysisType, @NonNull String fileName) {
+  public static DataCategorization resolveDataCategorization(@NonNull String analysisType, @NonNull String fileName) {
     // TODO: Talk to JJ on these ifs. May need to adjust logic
     val category = new DataCategorization();
 
@@ -50,7 +48,7 @@ public class PCAWGFileInfoResolver {
     return category;
   }
 
-  public String resolveFileFormat(@NonNull String analysisType, @NonNull String fileName) {
+  public static String resolveFileFormat(@NonNull String analysisType, @NonNull String fileName) {
     if (isRNASeq(analysisType) || isDNASeq(analysisType)) {
       // TODO: Verify with JJ that this should be BAM for DNA-Seq
       return FileFormat.BAM;

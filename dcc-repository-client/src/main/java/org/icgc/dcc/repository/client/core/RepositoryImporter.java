@@ -75,8 +75,12 @@ public class RepositoryImporter {
       // Write
       //
 
-      // Always continue if an exception
-      exceptions.addAll(writeSourceFiles());
+      if (context.isSkipImport()) {
+        log.warn("*** Skipping import!");
+      } else {
+        // Always continue if an exception
+        exceptions.addAll(writeSourceFiles());
+      }
 
       //
       // Read

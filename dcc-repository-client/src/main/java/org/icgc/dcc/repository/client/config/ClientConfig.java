@@ -42,6 +42,7 @@ public class ClientConfig {
 
     // Inputs
     context
+        .skipImport(properties.getRepository().isSkipImport())
         .sources(properties.getRepository().getSources());
 
     // IDs

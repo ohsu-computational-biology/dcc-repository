@@ -71,6 +71,9 @@ public final class RepositoryFileContextBuilder {
   private Set<RepositorySource> sources = RepositorySource.all();
   @Setter
   @Accessors(chain = true, fluent = true)
+  private boolean skipImport = false;
+  @Setter
+  @Accessors(chain = true, fluent = true)
   private boolean realIds = false;
   @Setter
   @Accessors(chain = true, fluent = true)
@@ -89,7 +92,8 @@ public final class RepositoryFileContextBuilder {
     val idClient = createIdClient();
     val tcgaClient = createTCGAClient();
 
-    return new RepositoryFileContext(repoMongoUri, esUri, sources, primarySites, idClient, tcgaClient, pcawgIdResolver);
+    return new RepositoryFileContext(repoMongoUri, esUri, skipImport, sources, primarySites, idClient, tcgaClient,
+        pcawgIdResolver);
   }
 
   private IdClient createIdClient() {

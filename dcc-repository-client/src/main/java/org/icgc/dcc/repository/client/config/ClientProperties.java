@@ -73,6 +73,7 @@ public class ClientProperties {
   @Data
   public static class RepositoryProperties {
 
+    boolean skipImport;
     Set<RepositorySource> sources;
     MongoClientURI mongoUri;
     String esUri;

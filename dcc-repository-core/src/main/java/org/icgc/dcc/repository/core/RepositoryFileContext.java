@@ -48,10 +48,12 @@ public class RepositoryFileContext {
   @Getter
   @NonNull
   private final String esUri;
-  private final boolean readOnly = false;
+  @Getter
+  private final boolean skipImport;
   @Getter
   @NonNull
   private final Set<RepositorySource> sources;
+  private final boolean readOnly = false;
 
   /**
    * Metadata.

@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.repository.client.core;
 
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.icgc.dcc.repository.core.util.RepositoryFiles.inPCAWGOrder;
 
 import java.util.Collection;
@@ -116,15 +116,15 @@ public class RepositoryFileCombiner {
 
   private static Set<RepositoryFile> prioritize(Set<RepositoryFile> files) {
     // Prioritize PCAWG ahead of others since it carries the most information
-    return files.stream().sorted(inPCAWGOrder()).collect(toImmutableSet());
+    return files.stream().sorted(inPCAWGOrder()).collect(toSet());
   }
 
   private static <T> List<T> get(Collection<RepositoryFile> files, Function<RepositoryFile, T> getter) {
-    return files.stream().map(getter).collect(toImmutableList());
+    return files.stream().map(getter).collect(toList());
   }
 
   private static <T> List<T> getAll(Collection<RepositoryFile> files, Function<RepositoryFile, List<T>> getter) {
-    return files.stream().flatMap(file -> getter.apply(file).stream()).collect(toImmutableList());
+    return files.stream().flatMap(file -> getter.apply(file).stream()).collect(toList());
   }
 
 }

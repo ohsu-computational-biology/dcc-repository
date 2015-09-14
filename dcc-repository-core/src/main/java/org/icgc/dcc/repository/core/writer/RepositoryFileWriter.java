@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.core.writer;
 
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositoryFileCollection.FILE;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
@@ -63,17 +64,21 @@ public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<Repositor
     clearFiles();
 
     log.info("Writing '{}' documents...", collection.getName());
+    int writeCount = 0;
     for (val file : files) {
-      saveFile(file);
+      writeCount += saveFile(file);
     }
+
+    log.info("Wrote '{}' '{}' documents", formatCount(writeCount), collection.getName());
   }
 
   public void clearFiles() {
     clearDocuments(fileCollection);
   }
 
-  protected void saveFile(RepositoryFile file) {
-    collection.save(file);
+  protected int saveFile(RepositoryFile file) {
+    val result = collection.save(file);
+    return result.getN();
   }
 
 }

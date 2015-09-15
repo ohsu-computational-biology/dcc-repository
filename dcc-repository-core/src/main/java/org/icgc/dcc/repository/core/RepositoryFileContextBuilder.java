@@ -20,10 +20,12 @@ package org.icgc.dcc.repository.core;
 import static java.lang.String.format;
 import static lombok.AccessLevel.PRIVATE;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
 import org.icgc.dcc.common.core.tcga.TCGAClient;
+import org.icgc.dcc.common.core.util.URIs;
 import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.http.HttpIdClient;
 import org.icgc.dcc.id.client.util.CachingIdClient;
@@ -62,7 +64,7 @@ public final class RepositoryFileContextBuilder {
   private MongoClientURI repoMongoUri = getLocalMongoClientUri("dcc-repository");
   @Setter
   @Accessors(chain = true, fluent = true)
-  private String esUri = "es://localhost:9300";
+  private URI esUri = URIs.getUri("es://localhost:9300");
   @Setter
   @Accessors(chain = true, fluent = true)
   private String idUrl = DEFAULT_ID_SERVICE_URL;

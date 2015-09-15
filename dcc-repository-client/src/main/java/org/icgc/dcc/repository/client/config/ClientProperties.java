@@ -19,64 +19,41 @@ package org.icgc.dcc.repository.client.config;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.all;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
+import java.net.URI;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
+import javax.validation.Valid;
 
+import org.icgc.dcc.repository.client.util.MongoURI;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 
 import lombok.Data;
-import lombok.val;
 
 @Data
 @Component
 @ConfigurationProperties
 public class ClientProperties {
 
+  @Valid
   RepositoryProperties repository;
+  @Valid
   ImportsProperties imports;
+  @Valid
   IdProperties id;
-
-  @PostConstruct
-  public void validate() {
-    validate(repository.getMongoUri());
-    validate(imports.getMongoUri());
-  }
-
-  private void validate(MongoClientURI mongoUri) {
-    try {
-      val mongo = new MongoClient(mongoUri);
-      try {
-        // Test connectivity
-        val socket = mongo.getMongoOptions().socketFactory.createSocket();
-        socket.connect(mongo.getAddress().getSocketAddress());
-
-        // All good
-        socket.close();
-      } catch (IOException ex) {
-        new RuntimeException(mongoUri + " is not accessible", ex);
-      } finally {
-        mongo.close();
-      }
-    } catch (UnknownHostException e) {
-      new RuntimeException(mongoUri + " host IP address could not be determined.", e);
-    }
-  }
 
   @Data
   public static class RepositoryProperties {
 
     boolean skipImport;
     Set<RepositorySource> sources;
+
+    @MongoURI
     MongoClientURI mongoUri;
-    String esUri;
+    URI esUri;
 
     public Set<RepositorySource> getSources() {
       return sources == null || sources.isEmpty() ? all() : sources;
@@ -87,6 +64,7 @@ public class ClientProperties {
   @Data
   public static class ImportsProperties {
 
+    @MongoURI
     MongoClientURI mongoUri;
 
   }

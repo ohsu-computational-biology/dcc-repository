@@ -26,6 +26,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getPCAWGServer;
+import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveAnalysisMethod;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveDataCategorization;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveFileFormat;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_LIBRARY_STRATEGY_NAMES;
@@ -165,9 +166,8 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     donorFile.getDataBundle()
         .setDataBundleId(gnosId);
 
-    donorFile.getAnalysisMethod()
-        .setAnalysisType(null) // TODO: Fix -> parameterize based on other field values
-        .setSoftware(null); // TODO: Fix
+    donorFile
+        .setAnalysisMethod(resolveAnalysisMethod(analysisType));
 
     donorFile
         .setDataCategorization(resolveDataCategorization(analysisType, fileName));

@@ -17,15 +17,29 @@
  */
 package org.icgc.dcc.repository.pcawg.core;
 
+import org.icgc.dcc.repository.core.model.RepositoryFile.AnalysisMethod;
+import org.icgc.dcc.repository.core.model.RepositoryFile.AnalysisType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.DataCategorization;
 import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.ExperimentalStrategy;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
+import org.icgc.dcc.repository.core.model.RepositoryFile.Software;
 
 import lombok.NonNull;
 import lombok.val;
 
 public class PCAWGFileInfoResolver {
+
+  public static AnalysisMethod resolveAnalysisMethod(@NonNull String analysisType) {
+    val analysisMethod = new AnalysisMethod();
+    if (isDNASeq(analysisType)) {
+      analysisMethod
+          .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
+          .setSoftware(Software.BWA_MEM);
+    }
+
+    return analysisMethod;
+  }
 
   public static DataCategorization resolveDataCategorization(@NonNull String analysisType, @NonNull String fileName) {
     // TODO: Talk to JJ on these ifs. May need to adjust logic

@@ -21,6 +21,7 @@ import static lombok.AccessLevel.PACKAGE;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.repository.core.util.RepositoryFiles.qualifyDonorId;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class RepositoryFileContext {
   private final MongoClientURI mongoUri;
   @Getter
   @NonNull
-  private final String esUri;
+  private final URI esUri;
   @Getter
   private final boolean skipImport;
   @Getter
@@ -148,7 +149,6 @@ public class RepositoryFileContext {
 
   @NonNull
   public String getFileId(String submittedFileId) {
-    // TODO: Add support for caching in dcc-id-client
     return idClient.getFileId(submittedFileId).orElse(null);
   }
 

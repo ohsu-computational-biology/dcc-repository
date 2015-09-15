@@ -33,6 +33,7 @@ import static org.icgc.dcc.repository.index.util.TransportClientFactory.newTrans
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -69,7 +70,7 @@ public class RepositoryFileIndexer implements Closeable {
   @NonNull
   private final TransportClient client;
 
-  public RepositoryFileIndexer(@NonNull MongoClientURI mongoUri, @NonNull String esUri) {
+  public RepositoryFileIndexer(@NonNull MongoClientURI mongoUri, @NonNull URI esUri) {
     this.mongoUri = mongoUri;
     this.indexName = getCurrentIndexName();
     this.client = newTransportClient(esUri);

@@ -201,11 +201,15 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   }
 
   private static boolean isBamFile(JsonNode file) {
-    return getFileName(file).endsWith(".bam");
+    return hasFileExtension(file, ".bam");
   }
 
   private static boolean isBaiFile(JsonNode file) {
-    return getFileName(file).endsWith(".bai");
+    return hasFileExtension(file, ".bai");
+  }
+
+  private static boolean hasFileExtension(JsonNode file, String fileType) {
+    return getFileName(file).endsWith(fileType);
   }
 
 }

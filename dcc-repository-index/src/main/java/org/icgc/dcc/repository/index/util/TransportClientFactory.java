@@ -21,18 +21,17 @@ import static lombok.AccessLevel.PRIVATE;
 
 import java.net.URI;
 
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.logging.slf4j.Slf4jESLoggerFactory;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.ImmutableSettings.Builder;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor(access = PRIVATE)
@@ -52,28 +51,16 @@ public final class TransportClientFactory {
     // ((Logger) LoggerFactory.getLogger("org.elasticsearch.client.transport")).setLevel(Level.TRACE);
   }
 
-  public static TransportClient newTransportClient(@NonNull String esUri) {
+  public static TransportClient newTransportClient(@NonNull URI esUri) {
     return newTransportClient(esUri, DEFAULT_CLIENT_TRANSPORT_SNIFF);
   }
 
   @SuppressWarnings("resource")
-  public static TransportClient newTransportClient(@NonNull String esUri, boolean sniff) {
-    val host = getHost(esUri);
-    val port = getPort(esUri);
-    val address = new InetSocketTransportAddress(host, port);
+  public static TransportClient newTransportClient(@NonNull URI esUri, boolean sniff) {
+    val address = new InetSocketTransportAddress(esUri.getHost(), esUri.getPort());
 
-    log.info("Creating ES transport client from URI '{}': host = '{}', port = {}", new Object[] { esUri, host, port });
+    log.info("Creating ES transport client from URI '{}': address = {}", new Object[] { esUri, address });
     return new TransportClient(createSettings(sniff)).addTransportAddress(address);
-  }
-
-  @SneakyThrows
-  private static String getHost(String esUri) {
-    return new URI(esUri).getHost();
-  }
-
-  @SneakyThrows
-  private static int getPort(String esUri) {
-    return new URI(esUri).getPort();
   }
 
   /**
@@ -84,16 +71,16 @@ public final class TransportClientFactory {
   private static Builder createSettings(boolean sniff) {
     return ImmutableSettings.settingsBuilder()
 
-        // Increase the ping timeout from the 5s (default) to something larger to prevent transient
-        // NoNodeAvailableExceptions
+    // Increase the ping timeout from the 5s (default) to something larger to prevent transient
+    // NoNodeAvailableExceptions
         .put("client.transport.ping_timeout", "20s")
 
-        // The time to wait for a ping response from a node. Defaults to 5s.
+    // The time to wait for a ping response from a node. Defaults to 5s.
         .put("client.transport.nodes_sampler_interval", "10s")
 
-        // Enable / disable the client to sniff the rest of the cluster, and add those into its list of machines to use.
-        // In this case, note that the IP addresses used will be the ones that the other nodes were started with (the
-        // "publish" address)
+    // Enable / disable the client to sniff the rest of the cluster, and add those into its list of machines to use.
+    // In this case, note that the IP addresses used will be the ones that the other nodes were started with (the
+    // "publish" address)
         .put("client.transport.sniff", sniff);
   }
 

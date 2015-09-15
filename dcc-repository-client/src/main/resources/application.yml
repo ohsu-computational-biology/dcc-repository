@@ -20,6 +20,9 @@ spring:
 ###################################################################################################
 
 # Empty
+repository:
+  skipImport: false
+  sources: # All 
 
 ---
 
@@ -33,7 +36,6 @@ spring:
 
 # Repository
 repository:
-  sources: # All 
   esUri: es://localhost:9300
   mongoUri: mongodb://localhost/dcc-repository
 
@@ -44,4 +46,3 @@ imports:
 # ID
 id:
   serviceUrl: https://localhost:8443
-  authToken:

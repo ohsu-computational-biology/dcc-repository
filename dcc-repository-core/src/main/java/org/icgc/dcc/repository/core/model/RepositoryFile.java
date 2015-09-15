@@ -173,57 +173,75 @@ public class RepositoryFile {
 
   }
 
+  //
+  // Controlled vocabulary
+  //
+
   @UtilityClass
   public class Study {
 
-    public String PCAWG = "PCAWG";
+    public final String PCAWG = "PCAWG";
 
   }
 
   @UtilityClass
   public class Program {
 
-    public String TCGA = "TCGA";
+    public final String TCGA = "TCGA";
+
+  }
+
+  @UtilityClass
+  public class AnalysisType {
+
+    public final String REFERENCE_ALIGNMENT = "Reference alignment"; // Using 'Variant calling' for ssm, cnsm, stsm etc
+
+  }
+
+  @UtilityClass
+  public class Software {
+
+    public final String BWA_MEM = "BWA MEM";
 
   }
 
   @UtilityClass
   public class FileFormat {
 
-    public String BAM = "BAM";
-    public String BAI = "BAI";
-    public String XML = "XML";
-    public String DNA_SEQ = "DNA-Seq"; // TODO: This should be removed and replaced with BAM
-    public String VCF = "VCF";
+    public final String BAM = "BAM";
+    public final String BAI = "BAI";
+    public final String XML = "XML";
+    public final String DNA_SEQ = "DNA-Seq"; // TODO: This should be removed and replaced with BAM
+    public final String VCF = "VCF";
 
   }
 
   @UtilityClass
   public class FileAccess {
 
-    public String CONTROLLED = "controlled";
-    public String OPEN = "open";
+    public final String CONTROLLED = "controlled";
+    public final String OPEN = "open";
 
   }
 
   @UtilityClass
   public class DataType {
 
-    public String CLINICAL = "Clinical";
-    public String RNA_SEQ = "RNA-Seq";
-    public String ALIGNED_READS = "Aligned Reads";
+    public final String CLINICAL = "Clinical";
+    public final String RNA_SEQ = "RNA-Seq";
+    public final String ALIGNED_READS = "Aligned Reads";
 
-    public String SSM = "SSM";
-    public String CNSM = "CNSM";
-    public String STSM = "StSM";
+    public final String SSM = "SSM";
+    public final String CNSM = "CNSM";
+    public final String STSM = "StSM";
 
   }
 
   @UtilityClass
   public class ExperimentalStrategy {
 
-    public String WGS = "WGS";
-    public String RNA_SEQ = "RNA-Seq";
+    public final String WGS = "WGS";
+    public final String RNA_SEQ = "RNA-Seq";
 
   }
 

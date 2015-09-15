@@ -83,8 +83,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
     val objectFiles = ImmutableList.<RepositoryFile> builder();
     for (val completedJob : completedJobs) {
 
-      // TODO: Need to support VCF eventually
-      for (val file : resolveBamFiles(completedJob)) {
+      for (val file : resolveIncludedFiles(completedJob)) {
         val objectId = getObjectId(file);
         val objectSummary = objectSummaryIndex.get(objectId);
         val objectFile = createObjectFile(completedJob, file, objectSummary);
@@ -120,7 +119,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
 
     val fileCopy = objectFile.addFileCopy()
         .setFileName(id)
-        .setFileFormat(FileFormat.BAM) // TODO: Need to support VCF eventually
+        .setFileFormat(resolveFileFormat(file))
         .setFileSize(objectSummary.getSize())
         .setFileMd5sum(getFileMd5sum(file))
         .setLastModified(objectSummary.getLastModified().getTime())
@@ -148,12 +147,25 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
     return objectFile;
   }
 
-  private static Iterable<JsonNode> resolveBamFiles(ObjectNode job) {
-    return resolveFiles(job, file -> isBamFile(file)).collect(toImmutableList());
+  private static Iterable<JsonNode> resolveIncludedFiles(ObjectNode job) {
+    return resolveFiles(job, file -> isBamFile(file) || isVcfFile(file)).collect(toImmutableList());
+  }
+
+  private static String resolveFileFormat(JsonNode file) {
+    // TODO: Verify if this is the correct way to classify.
+    return isBamFile(file) ? FileFormat.BAM : FileFormat.VCF;
   }
 
   private static boolean isBamFile(JsonNode file) {
-    return getFileName(file).endsWith(".bam");
+    return hasFileExtension(file, ".bam");
+  }
+
+  private static boolean isVcfFile(JsonNode file) {
+    return hasFileExtension(file, ".vcf");
+  }
+
+  private static boolean hasFileExtension(JsonNode file, String fileType) {
+    return getFileName(file).toLowerCase().endsWith(fileType.toLowerCase());
   }
 
   private static Optional<JsonNode> resolveBaiFile(ObjectNode job, String fileName) {

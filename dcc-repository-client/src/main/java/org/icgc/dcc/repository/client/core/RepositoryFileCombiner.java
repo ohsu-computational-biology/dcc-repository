@@ -48,6 +48,7 @@ public class RepositoryFileCombiner {
 
           @Override
           public RepositoryFile next() {
+            // Main call
             return combineFiles(delegate.next());
           }
 

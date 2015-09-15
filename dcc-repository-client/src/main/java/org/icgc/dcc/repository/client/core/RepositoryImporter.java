@@ -39,13 +39,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import lombok.Cleanup;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -59,6 +62,21 @@ import lombok.extern.slf4j.Slf4j;
 public class RepositoryImporter {
 
   /**
+   * Import steps
+   */
+  public enum Step {
+
+    IMPORT,
+    MERGE,
+    INDEX;
+
+    @Getter(lazy = true)
+    @Accessors(fluent = true)
+    private static final Set<Step> all = ImmutableSet.copyOf(values());
+
+  }
+
+  /**
    * Dependencies.
    */
   @NonNull
@@ -66,45 +84,59 @@ public class RepositoryImporter {
 
   @NonNull
   public void execute() {
+    execute(Step.all());
+  }
+
+  @NonNull
+  public void execute(Step... steps) {
+    execute(ImmutableSet.copyOf(steps));
+  }
+
+  @NonNull
+  public void execute(@NonNull Set<Step> steps) {
     val watch = createStarted();
 
     val exceptions = Lists.<Exception> newArrayList();
     try {
 
       //
-      // Write
+      // Import
       //
 
-      if (context.isSkipImport()) {
+      if (!steps.contains(Step.IMPORT)) {
         log.warn("*** Skipping import!");
       } else {
-        // Always continue if an exception
+        // Write and always continue if an exception
         exceptions.addAll(writeSourceFiles());
       }
 
       //
-      // Read
+      // Merge
       //
 
-      val files = collectFiles();
+      if (!steps.contains(Step.MERGE)) {
+        log.warn("*** Skipping merge!");
+      } else {
+        // Collect
+        val files = collectFiles();
 
-      //
-      // Aggregate
-      //
+        // Aggregate
+        val combinedFiles = combineFiles(files);
 
-      val combinedFiles = combineFiles(files);
-
-      //
-      // Write
-      //
-
-      writeFiles(combinedFiles);
+        // Write
+        writeFiles(combinedFiles);
+      }
 
       //
       // Index
       //
 
-      indexFiles();
+      if (!steps.contains(Step.INDEX)) {
+        log.warn("*** Skipping merge!");
+      } else {
+        // Index
+        indexFiles();
+      }
     } catch (Exception e) {
       exceptions.add(e);
     } finally {
@@ -119,7 +151,7 @@ public class RepositoryImporter {
 
     val exceptions = ImmutableList.<Exception> builder();
     for (val importer : importers) {
-      boolean active = context.isActive(importer.getSource());
+      boolean active = context.isSourceActive(importer.getSource());
       if (active) {
         try {
           logBanner("Importing '" + importer.getSource() + "' sourced files");

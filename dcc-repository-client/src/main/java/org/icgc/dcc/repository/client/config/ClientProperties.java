@@ -17,13 +17,14 @@
  */
 package org.icgc.dcc.repository.client.config;
 
-import static org.icgc.dcc.repository.core.model.RepositorySource.all;
-
 import java.net.URI;
 import java.util.Set;
 
 import javax.validation.Valid;
 
+import org.hibernate.validator.constraints.URL;
+import org.icgc.dcc.repository.client.core.RepositoryImporter;
+import org.icgc.dcc.repository.client.core.RepositoryImporter.Step;
 import org.icgc.dcc.repository.client.util.MongoURI;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -49,14 +50,19 @@ public class ClientProperties {
   public static class RepositoryProperties {
 
     boolean skipImport;
+    Set<RepositoryImporter.Step> steps;
     Set<RepositorySource> sources;
 
     @MongoURI
     MongoClientURI mongoUri;
     URI esUri;
 
+    public Set<RepositoryImporter.Step> getSteps() {
+      return steps == null || steps.isEmpty() ? Step.all() : steps;
+    }
+
     public Set<RepositorySource> getSources() {
-      return sources == null || sources.isEmpty() ? all() : sources;
+      return sources == null || sources.isEmpty() ? RepositorySource.all() : sources;
     }
 
   }
@@ -72,6 +78,7 @@ public class ClientProperties {
   @Data
   public static class IdProperties {
 
+    @URL
     String serviceUrl;
     String authToken;
 

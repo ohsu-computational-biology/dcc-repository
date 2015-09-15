@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.reader.RepositorySourceFileReader;
 
 import com.google.common.collect.HashMultimap;
@@ -66,7 +65,7 @@ public class RepositoryFileCollector {
   }
 
   private Iterable<RepositorySourceFileReader> createReaders() {
-    return RepositorySource.all().stream()
+    return context.getSources().stream()
         .map(source -> new RepositorySourceFileReader(context.getMongoUri(), source))
         .collect(toImmutableList());
   }

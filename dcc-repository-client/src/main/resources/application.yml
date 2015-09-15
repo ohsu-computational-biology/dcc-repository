@@ -21,8 +21,8 @@ spring:
 
 # Empty
 repository:
-  skipImport: false
-  sources: # All 
+  sources: # All
+  steps: # All
 
 ---
 

@@ -162,7 +162,7 @@ public class RepositoryFileContext {
     return tcgaClient.getBarcodes(tcgaUuids);
   }
 
-  public boolean isActive(@NonNull RepositorySource source) {
+  public boolean isSourceActive(@NonNull RepositorySource source) {
     return sources.contains(source);
   }
 

@@ -17,9 +17,14 @@
  */
 package org.icgc.dcc.repository.client;
 
+import static java.lang.System.err;
+import static java.lang.System.exit;
+
+import org.icgc.dcc.repository.client.config.ClientProperties;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -46,23 +51,28 @@ public class ClientMain {
   public static void main(String... args) {
     try {
       run(args);
-      System.exit(SUCCESS_STATUS_CODE);
+      exit(SUCCESS_STATUS_CODE);
     } catch (Exception e) {
       log.error("Unknown error: ", e);
-      System.err.println("An an error occurred while processing. Please check the log for detailed error messages: "
-          + e.getMessage());
-      System.exit(FAILURE_STATUS_CODE);
+      err.println(
+          "An an error occurred while processing. Please check the log for detailed error messages: " + e.getMessage());
+      exit(FAILURE_STATUS_CODE);
     }
   }
 
   private static void run(String... args) {
-    val importer = new SpringApplicationBuilder()
-        .sources(ClientMain.class)
-        .run(args)
-        .getBean(RepositoryImporter.class);
+    val applicationContext = createApplicationContext(args);
+    val properties = applicationContext.getBean(ClientProperties.class);
+    val importer = applicationContext.getBean(RepositoryImporter.class);
 
     // Main point of execution
-    importer.execute();
+    importer.execute(properties.getRepository().getSteps());
+  }
+
+  private static ConfigurableApplicationContext createApplicationContext(String... args) {
+    return new SpringApplicationBuilder()
+        .sources(ClientMain.class)
+        .run(args);
   }
 
 }

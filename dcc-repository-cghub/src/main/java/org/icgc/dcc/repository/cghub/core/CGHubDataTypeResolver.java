@@ -39,7 +39,7 @@ public class CGHubDataTypeResolver {
   public static String resolveDataType(JsonNode result) {
     val analyteCode = getAnalyteCode(result);
     if (DNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
-      return DataType.ALIGNED_READS;
+      return DataType.DNA_SEQ;
     } else if (RNA_SEQ_ANALYTE_CODES.contains(analyteCode)) {
       return DataType.RNA_SEQ;
     }

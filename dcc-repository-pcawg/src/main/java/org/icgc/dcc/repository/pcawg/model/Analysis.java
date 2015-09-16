@@ -15,39 +15,33 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.core;
+package org.icgc.dcc.repository.pcawg.model;
 
-import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
-import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
 
-import java.io.IOException;
+@Value
+@Builder
+public class Analysis {
 
-import org.icgc.dcc.common.core.mail.Mailer;
-import org.icgc.dcc.repository.core.model.RepositorySource;
-import org.junit.Ignore;
-import org.junit.Test;
+  @NonNull
+  String libraryStrategyName;
+  @NonNull
+  String workflowType;
+  @NonNull
+  String specimenClass;
 
-import lombok.val;
-
-@Ignore("For development only")
-public class RepositoryImporterTest {
-
-  @Test
-  public void testExecuteAll() throws IOException {
-    val importer = createImporter();
-    importer.execute();
+  public boolean isRNAAlignment() {
+    return "rna_seq".equals(libraryStrategyName) && ("star".equals(workflowType) || "tophat".equals(workflowType));
   }
 
-  @Test
-  public void testExecuteSomeFast() throws IOException {
-    val importer = createImporter(AWS, PCAWG);
-    importer.execute();
+  public boolean isBWAAlignment() {
+    return "wgs".equals(libraryStrategyName) && "bwa_alignment".equals(workflowType);
   }
 
-  private static RepositoryImporter createImporter(RepositorySource... sources) {
-    val context = newLocalRepositoryFileContext(sources);
-    return new RepositoryImporter(context, Mailer.builder().enabled(false).build());
+  public boolean isSangerVariantCalling() {
+    return "wgs".equals(libraryStrategyName) && "sanger_variant_calling".equals(workflowType);
   }
 
 }

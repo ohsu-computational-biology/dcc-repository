@@ -49,7 +49,7 @@ public class ClientProperties {
   @Data
   public static class RepositoryProperties {
 
-    boolean skipImport;
+    boolean email;
     Set<RepositoryImporter.Step> steps;
     Set<RepositorySource> sources;
 

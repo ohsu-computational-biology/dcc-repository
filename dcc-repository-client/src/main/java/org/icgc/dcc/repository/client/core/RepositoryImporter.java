@@ -81,6 +81,8 @@ public class RepositoryImporter {
    */
   @NonNull
   private final RepositoryFileContext context;
+  @NonNull
+  private final Mailer mailer;
 
   @NonNull
   public void execute() {
@@ -208,7 +210,7 @@ public class RepositoryImporter {
 
     val subject = "DCC Repository Importer - " + (success ? "SUCCESS" : "ERROR");
     val body = "Finished in " + watch + "\n\n" + NEWLINE.join(exceptions);
-    new Mailer().sendMail(subject, body);
+    mailer.sendMail(subject, body);
   }
 
   private static List<RepositorySourceFileImporter> createImporters(RepositoryFileContext context) {

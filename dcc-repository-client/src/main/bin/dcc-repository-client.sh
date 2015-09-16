@@ -3,7 +3,7 @@
 # Copyright 2015(c) The Ontario Institute for Cancer Research. All rights reserved.
 #
 # Description:
-#   Runs dcc-etl-repo
+#   Runs dcc-import-client
 #
 # Usage:
 #   ./dcc-repository-client.sh <arguments>

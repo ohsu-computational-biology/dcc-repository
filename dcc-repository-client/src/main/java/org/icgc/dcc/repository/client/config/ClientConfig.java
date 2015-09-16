@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.client.config;
 
+import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
@@ -31,8 +32,14 @@ import lombok.val;
 public class ClientConfig {
 
   @Bean
-  public RepositoryImporter importer(RepositoryFileContext context) {
-    return new RepositoryImporter(context);
+  public RepositoryImporter importer(RepositoryFileContext context, Mailer mailer) {
+    return new RepositoryImporter(context, mailer);
+  }
+
+  @Bean
+  public Mailer mailer(ClientProperties properties) {
+    val enabled = properties.getRepository().isEmail();
+    return Mailer.builder().enabled(enabled).build();
   }
 
   @Bean
@@ -42,7 +49,6 @@ public class ClientConfig {
 
     // Inputs
     context
-        .skipImport(properties.getRepository().isSkipImport())
         .sources(properties.getRepository().getSources());
 
     // IDs

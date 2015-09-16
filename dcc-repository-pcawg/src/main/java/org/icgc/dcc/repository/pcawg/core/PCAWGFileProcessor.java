@@ -60,8 +60,10 @@ import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
+import org.icgc.dcc.repository.core.model.RepositoryFile.ReferenceGenome;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryServers;
+import org.icgc.dcc.repository.pcawg.model.Analysis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -73,6 +75,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PCAWGFileProcessor extends RepositoryFileProcessor {
+
+  /**
+   * Constants.
+   */
+  private static final ReferenceGenome REFERENCE_GENOME = new ReferenceGenome()
+      .setDownloadUrl("ftp://ftp.sanger.ac.uk/pub/project/PanCancer/genome.fa.gz")
+      .setGenomeBuild("GRCh37")
+      .setReferenceName("hs37d5");
 
   public PCAWGFileProcessor(RepositoryFileContext context) {
     super(context);
@@ -115,10 +125,13 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
         for (val specimen : specimens.isArray() ? specimens : singleton(specimens)) {
           for (val workflowType : PCAWG_WORKFLOW_TYPES) {
             val workflow = specimen.path(workflowType);
-            val analysisType = resolveAnalysisType(libraryStrategyName, specimenClass, workflowType);
+            val analysis = Analysis.builder()
+                .libraryStrategyName(libraryStrategyName)
+                .specimenClass(specimenClass)
+                .workflowType(workflowType).build();
 
             for (val workflowFile : getFiles(workflow)) {
-              val donorFile = createDonorFile(projectCode, submittedDonorId, analysisType, workflow, workflowFile);
+              val donorFile = createDonorFile(projectCode, submittedDonorId, analysis, workflow, workflowFile);
               donorFiles.add(donorFile);
             }
           }
@@ -129,7 +142,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return donorFiles.build();
   }
 
-  private RepositoryFile createDonorFile(String projectCode, String submittedDonorId, String analysisType,
+  private RepositoryFile createDonorFile(String projectCode, String submittedDonorId, Analysis analysis,
       JsonNode workflow, JsonNode workflowFile) {
 
     //
@@ -146,12 +159,17 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
     val fileName = resolveFileName(workflowFile);
     val fileSize = resolveFileSize(workflowFile);
-    val fileFormat = resolveFileFormat(analysisType, fileName);
+    val fileFormat = resolveFileFormat(analysis, fileName);
     val id = resolveId(gnosId, fileName);
 
     val pcawgServers = resolvePCAWGServers(workflow);
 
     val baiFile = resolveBaiFile(workflow, fileName);
+    val tbiFile = resolveTbiFile(workflow, fileName);
+
+    if (baiFile.isPresent() && tbiFile.isPresent()) {
+      log.warn("Both '{}' and '{}' files are present at the same time!", baiFile.get(), tbiFile.get());
+    }
 
     //
     // Create
@@ -167,10 +185,13 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
         .setDataBundleId(gnosId);
 
     donorFile
-        .setAnalysisMethod(resolveAnalysisMethod(analysisType));
+        .setAnalysisMethod(resolveAnalysisMethod(analysis));
 
     donorFile
-        .setDataCategorization(resolveDataCategorization(analysisType, fileName));
+        .setDataCategorization(resolveDataCategorization(analysis, fileName));
+
+    donorFile
+        .setReferenceGenome(REFERENCE_GENOME);
 
     for (val pcawgServer : pcawgServers) {
       val fileCopy = donorFile.addFileCopy()
@@ -199,6 +220,17 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
             .setFileSize(getFileSize(baiFile.get()))
             .setFileMd5sum(resolveMd5sum(baiFile.get()));
       }
+      if (tbiFile.isPresent()) {
+        val tbiFileName = getFileName(tbiFile.get());
+        val tbiId = resolveId(gnosId, tbiFileName);
+        fileCopy.getIndexFile()
+            .setId(tbiId)
+            .setFileId(context.ensureFileId(tbiId))
+            .setFileName(tbiFileName)
+            .setFileFormat(FileFormat.TBI)
+            .setFileSize(getFileSize(tbiFile.get()))
+            .setFileMd5sum(resolveMd5sum(tbiFile.get()));
+      }
     }
 
     donorFile.addDonor()
@@ -226,6 +258,11 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return resolveFiles(workflow, file -> baiFileName.equals(resolveFileName(file))).findFirst();
   }
 
+  private static Optional<JsonNode> resolveTbiFile(JsonNode workflow, String fileName) {
+    val tbiFileName = fileName + ".tbi";
+    return resolveFiles(workflow, file -> tbiFileName.equals(resolveFileName(file))).findFirst();
+  }
+
   private static Stream<JsonNode> resolveFiles(JsonNode workflow, Predicate<? super JsonNode> filter) {
     return stream(getFiles(workflow)).filter(filter);
   }
@@ -234,10 +271,6 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return stream(getGnosRepo(workflow))
         .map(genosRepo -> getPCAWGServer(genosRepo.asText()))
         .collect(toImmutableList());
-  }
-
-  private static String resolveAnalysisType(String libraryStrategyName, String specimenClass, String workflowType) {
-    return libraryStrategyName + "." + specimenClass + "." + workflowType;
   }
 
   private static String resolveFileName(JsonNode workflowFile) {

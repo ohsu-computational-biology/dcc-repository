@@ -106,6 +106,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
     val id = getObjectId(file);
     val gnosId = getGnosId(job);
     val fileName = getFileName(file);
+    val xmlFile = resolveXmlFile(job, gnosId);
     val baiFile = resolveBaiFile(job, fileName);
 
     //
@@ -129,8 +130,13 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         .setRepoCode(server.getCode())
         .setRepoCountry(server.getCountry())
         .setRepoBaseUrl(server.getBaseUrl())
-        .setRepoDataPath(server.getType().getDataPath())
-        .setRepoMetadataPath(server.getType().getMetadataPath());
+        .setRepoDataPath(server.getType().getDataPath() + "/" + id);
+
+    if (xmlFile.isPresent()) {
+      val xmlId = getObjectId(xmlFile.get());
+      fileCopy
+          .setRepoMetadataPath(server.getType().getMetadataPath() + "/" + xmlId);
+    }
 
     if (baiFile.isPresent()) {
       val baiFileName = getFileName(baiFile.get());
@@ -152,7 +158,6 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
   }
 
   private static String resolveFileFormat(JsonNode file) {
-    // TODO: Verify if this is the correct way to classify.
     return isBamFile(file) ? FileFormat.BAM : FileFormat.VCF;
   }
 
@@ -161,7 +166,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
   }
 
   private static boolean isVcfFile(JsonNode file) {
-    return hasFileExtension(file, ".vcf");
+    return hasFileExtension(file, ".vcf.gz");
   }
 
   private static boolean hasFileExtension(JsonNode file, String fileType) {
@@ -171,6 +176,11 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
   private static Optional<JsonNode> resolveBaiFile(ObjectNode job, String fileName) {
     val baiFileName = fileName + ".bai";
     return resolveFiles(job, file -> baiFileName.equals(getFileName(file))).findFirst();
+  }
+
+  private static Optional<JsonNode> resolveXmlFile(ObjectNode job, String gnosId) {
+    val xmlFileName = gnosId + ".xml";
+    return resolveFiles(job, file -> xmlFileName.equals(getFileName(file))).findFirst();
   }
 
   private static Stream<JsonNode> resolveFiles(ObjectNode job, Predicate<? super JsonNode> filter) {

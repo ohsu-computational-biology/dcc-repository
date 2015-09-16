@@ -1,8 +1,6 @@
 #
 # DCC Repository Client - Defaults
 #
-
- # TODO: see dcc-metadata-server for similar properites
  
 ###################################################################################################
 # Profile Activation
@@ -21,6 +19,7 @@ spring:
 
 # Empty
 repository:
+  mail: true
   sources: # All
   steps: # All
 
@@ -36,6 +35,7 @@ spring:
 
 # Repository
 repository:
+  mail: false
   esUri: es://localhost:9300
   mongoUri: mongodb://localhost/dcc-repository
 
@@ -46,3 +46,4 @@ imports:
 # ID
 id:
   serviceUrl: https://localhost:8443
+

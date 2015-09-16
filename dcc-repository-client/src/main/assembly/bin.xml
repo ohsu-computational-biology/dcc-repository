@@ -25,7 +25,7 @@
       <directory>src/main/resources</directory>
       <outputDirectory>conf</outputDirectory>
       <includes>
-        <include>application.yaml</include>
+        <include>application.yml</include>
       </includes>
     </fileSet>    
     <fileSet>

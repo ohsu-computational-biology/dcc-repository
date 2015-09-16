@@ -114,7 +114,7 @@ public class RepositoryFile {
     IndexFile indexFile = new IndexFile();
 
     String repoType;
-    String repoOrg; // TODO: Verify if this should be included
+    String repoOrg;
     String repoName;
     String repoCode;
     String repoCountry;
@@ -195,6 +195,7 @@ public class RepositoryFile {
   public class AnalysisType {
 
     public final String REFERENCE_ALIGNMENT = "Reference alignment"; // Using 'Variant calling' for ssm, cnsm, stsm etc
+    public final String VARIANT_CALLING = "Variant calling";
 
   }
 
@@ -202,6 +203,7 @@ public class RepositoryFile {
   public class Software {
 
     public final String BWA_MEM = "BWA MEM";
+    public final String SANGER_VAR = "Sanger variant call pipeline";
 
   }
 
@@ -210,8 +212,8 @@ public class RepositoryFile {
 
     public final String BAM = "BAM";
     public final String BAI = "BAI";
+    public final String TBI = "TBI";
     public final String XML = "XML";
-    public final String DNA_SEQ = "DNA-Seq"; // TODO: This should be removed and replaced with BAM
     public final String VCF = "VCF";
 
   }
@@ -228,8 +230,11 @@ public class RepositoryFile {
   public class DataType {
 
     public final String CLINICAL = "Clinical";
-    public final String RNA_SEQ = "RNA-Seq";
     public final String ALIGNED_READS = "Aligned Reads";
+
+    // These are for TCGA because we cannot determine aligned status from file
+    public final String DNA_SEQ = "DNA-Seq";
+    public final String RNA_SEQ = "RNA-Seq";
 
     public final String SSM = "SSM";
     public final String CNSM = "CNSM";

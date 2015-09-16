@@ -24,36 +24,46 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.ExperimentalStrategy;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Software;
+import org.icgc.dcc.repository.pcawg.model.Analysis;
 
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PCAWGFileInfoResolver {
 
-  public static AnalysisMethod resolveAnalysisMethod(@NonNull String analysisType) {
+  public static AnalysisMethod resolveAnalysisMethod(@NonNull Analysis analysis) {
     val analysisMethod = new AnalysisMethod();
-    if (isDNASeq(analysisType)) {
+    if (analysis.isRNAAlignment()) {
+      analysisMethod
+          .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
+          .setSoftware(analysis.getLibraryStrategyName());
+    } else if (analysis.isBWAAlignment()) {
       analysisMethod
           .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
           .setSoftware(Software.BWA_MEM);
+    } else if (analysis.isSangerVariantCalling()) {
+      analysisMethod
+          .setAnalysisType(AnalysisType.VARIANT_CALLING)
+          .setSoftware(Software.SANGER_VAR);
     }
 
     return analysisMethod;
   }
 
-  public static DataCategorization resolveDataCategorization(@NonNull String analysisType, @NonNull String fileName) {
-    // TODO: Talk to JJ on these ifs. May need to adjust logic
+  public static DataCategorization resolveDataCategorization(@NonNull Analysis analysis, @NonNull String fileName) {
     val category = new DataCategorization();
 
-    if (isRNASeq(analysisType)) {
+    if (analysis.isRNAAlignment()) {
       category
-          .setDataType(DataType.RNA_SEQ)
+          .setDataType(DataType.ALIGNED_READS)
           .setExperimentalStrategy(ExperimentalStrategy.RNA_SEQ);
-    } else if (isDNASeq(analysisType)) {
+    } else if (analysis.isBWAAlignment()) {
       category
           .setDataType(DataType.ALIGNED_READS)
           .setExperimentalStrategy(ExperimentalStrategy.WGS);
-    } else if (isSangerVariantCalling(analysisType)) {
+    } else if (analysis.isSangerVariantCalling()) {
       category
           .setDataType(resolveSangerVariantCallingDataType(fileName))
           .setExperimentalStrategy(ExperimentalStrategy.WGS);
@@ -62,11 +72,14 @@ public class PCAWGFileInfoResolver {
     return category;
   }
 
-  public static String resolveFileFormat(@NonNull String analysisType, @NonNull String fileName) {
-    if (isRNASeq(analysisType) || isDNASeq(analysisType)) {
-      // TODO: Verify with JJ that this should be BAM for DNA-Seq
+  public static String resolveFileFormat(@NonNull Analysis analysis, @NonNull String fileName) {
+    if (analysis.isRNAAlignment() || analysis.isBWAAlignment()) {
+      val extension = ".bam";
+      if (!fileName.endsWith(extension)) {
+        log.warn("File with name '{}' and {} does not end in '{}'!", fileName, analysis, extension);
+      }
       return FileFormat.BAM;
-    } else if (isSangerVariantCalling(analysisType)) {
+    } else if (analysis.isSangerVariantCalling()) {
       val dataType = resolveSangerVariantCallingDataType(fileName);
       return dataType == null ? null : FileFormat.VCF;
     } else {
@@ -86,18 +99,6 @@ public class PCAWGFileInfoResolver {
     } else {
       return null;
     }
-  }
-
-  private static boolean isRNASeq(String analysisType) {
-    return analysisType.matches("rna_seq\\..*\\.(star|tophat)");
-  }
-
-  private static boolean isDNASeq(String analysisType) {
-    return analysisType.matches("wgs\\..*\\.bwa_alignment");
-  }
-
-  private static boolean isSangerVariantCalling(String analysisType) {
-    return analysisType.matches("wgs\\.tumor_specimens\\.sanger_variant_calling");
   }
 
 }

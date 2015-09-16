@@ -27,17 +27,18 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
-import org.elasticsearch.common.collect.ImmutableSet;
-import org.elasticsearch.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.SimpleCommandLinePropertySource;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +90,11 @@ public class ClientBanner {
   private static void log(StandardEnvironment env) {
     log.info("{}:", env);
     for (val source : env.getPropertySources()) {
+      if (source instanceof SystemEnvironmentPropertySource) {
+        // Skip because this will cause issues with terminal display
+        continue;
+      }
+
       log.info("         {}:", source.getName());
       if (source instanceof SimpleCommandLinePropertySource) {
         val simple = (SimpleCommandLinePropertySource) source;

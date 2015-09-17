@@ -15,80 +15,47 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.config;
+package org.icgc.dcc.repository.client.core;
 
-import java.net.URI;
-import java.util.Set;
+import org.icgc.dcc.common.core.mail.Mailer;
+import org.icgc.dcc.repository.client.core.RepositoryImporter.ReportMessage;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import javax.validation.Valid;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
-import org.hibernate.validator.constraints.URL;
-import org.icgc.dcc.repository.client.core.RepositoryImporter;
-import org.icgc.dcc.repository.client.core.RepositoryImporter.Step;
-import org.icgc.dcc.repository.client.util.MongoURI;
-import org.icgc.dcc.repository.core.model.RepositorySource;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import lombok.val;
 
-import com.mongodb.MongoClientURI;
+@Ignore("For development only")
+public class ReportMessageTest {
 
-import lombok.Data;
+  @Test
+  public void testSuccessMessage() {
+    val watch = Stopwatch.createStarted();
+    val exceptions = ImmutableList.<Exception> of();
+    val message = new ReportMessage(watch, exceptions);
 
-@Data
-@Component
-@ConfigurationProperties
-public class ClientProperties {
-
-  @Valid
-  RepositoryProperties repository;
-  @Valid
-  ImportsProperties imports;
-  @Valid
-  IdProperties id;
-  MailProperties mail;
-
-  @Data
-  public static class RepositoryProperties {
-
-    Set<RepositoryImporter.Step> steps;
-    Set<RepositorySource> sources;
-
-    @MongoURI
-    MongoClientURI mongoUri;
-    URI esUri;
-
-    public Set<RepositoryImporter.Step> getSteps() {
-      return steps == null || steps.isEmpty() ? Step.all() : steps;
-    }
-
-    public Set<RepositorySource> getSources() {
-      return sources == null || sources.isEmpty() ? RepositorySource.all() : sources;
-    }
-
+    send(message);
   }
 
-  @Data
-  public static class ImportsProperties {
+  @Test
+  public void testErrorMessage() {
+    val watch = Stopwatch.createStarted();
+    val exceptions = ImmutableList.<Exception> of(
+        new RuntimeException("This is message 1"),
+        new RuntimeException("This is message 2"));
+    val message = new ReportMessage(watch, exceptions);
 
-    @MongoURI
-    MongoClientURI mongoUri;
-
+    send(message);
   }
 
-  @Data
-  public static class IdProperties {
+  private void send(ReportMessage message) {
+    val userName = System.getProperty("user.name");
+    val email = userName + "@oicr.on.ca";
 
-    @URL
-    String serviceUrl;
-    String authToken;
-
-  }
-
-  @Data
-  public static class MailProperties {
-
-    boolean enabled;
-
+    val mailer = Mailer.builder().enabled(true).recipient(email).build();
+    mailer.sendMail(message.getSubject(), message.getBody());
   }
 
 }

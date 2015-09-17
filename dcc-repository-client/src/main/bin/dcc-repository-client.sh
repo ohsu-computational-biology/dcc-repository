@@ -9,6 +9,9 @@
 #   ./dcc-repository-client.sh <arguments>
 #
 
+# Prevent this var causing issues with Spring Boot's environment binding
+unset MAIL;
+
 base_dir=$(dirname $0)/..
 java_opts="-Xmx4g"
 

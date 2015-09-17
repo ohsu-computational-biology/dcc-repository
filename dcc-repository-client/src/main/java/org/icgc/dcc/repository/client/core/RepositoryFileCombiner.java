@@ -27,13 +27,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor
 public class RepositoryFileCombiner {
+
+  /**
+   * Dependencies.
+   */
+  @NonNull
+  private final RepositoryFileContext context;
 
   public Iterable<RepositoryFile> combineFiles(Iterable<Set<RepositoryFile>> files) {
     log.info("Lazily combining files...");
@@ -74,27 +84,35 @@ public class RepositoryFileCombiner {
     //
 
     val ids = get(prioritizedFiles, RepositoryFile::getId);
+    analyzeField(files, "id", ids);
     combinedFile.setId(combineField(ids));
 
     val fileIds = get(prioritizedFiles, RepositoryFile::getFileId);
+    analyzeField(files, "fileId", fileIds);
     combinedFile.setFileId(combineField(fileIds));
 
     val studies = get(prioritizedFiles, RepositoryFile::getStudy);
+    analyzeField(files, "study", studies);
     combinedFile.setStudy(combineField(studies));
 
     val accesses = get(prioritizedFiles, RepositoryFile::getAccess);
+    analyzeField(files, "access", accesses);
     combinedFile.setAccess(combineField(accesses));
 
     val dataBundles = get(prioritizedFiles, RepositoryFile::getDataBundle);
+    analyzeField(files, "dataBundle", dataBundles);
     combinedFile.setDataBundle(combineField(dataBundles));
 
     val analysisMethods = get(prioritizedFiles, RepositoryFile::getAnalysisMethod);
+    analyzeField(files, "analysisMethod", analysisMethods);
     combinedFile.setAnalysisMethod(combineField(analysisMethods));
 
     val dataCategorizations = get(prioritizedFiles, RepositoryFile::getDataCategorization);
+    analyzeField(files, "dataCategorization", dataCategorizations);
     combinedFile.setDataCategorization(combineField(dataCategorizations));
 
     val referenceGenomes = get(prioritizedFiles, RepositoryFile::getReferenceGenome);
+    analyzeField(files, "referenceGenome", referenceGenomes);
     combinedFile.setReferenceGenome(combineField(referenceGenomes));
 
     //
@@ -108,6 +126,14 @@ public class RepositoryFileCombiner {
     combinedFile.setDonors(donors);
 
     return combinedFile;
+  }
+
+  private <T> void analyzeField(Set<RepositoryFile> files, String fieldName, Collection<T> values) {
+    val uniqueCount = values.stream().filter(value -> value != null).distinct().count();
+    if (uniqueCount > 1) {
+      context.reportWarning("Found %s distinct values in %s for field '%s' of files %s",
+          uniqueCount, values, fieldName, files);
+    }
   }
 
   private static <T> T combineField(Collection<T> values) {

@@ -78,12 +78,12 @@ public class RepositoryFileContext {
   @Getter(lazy = true, value = PRIVATE)
   private final Set<String> pcawgSubmittedDonorIds = pcawgIdResolver.resolveIds();
 
-  public void reportError(String error) {
-    log.error("Error: {}", error);
+  public void reportError(String error, Object... args) {
+    log.error("Error: {}", String.format(error, args));
   }
 
-  public void reportWarning(String warning) {
-    log.error("Warning: {}", warning);
+  public void reportWarning(String warning, Object... args) {
+    log.error("Warning: {}", String.format(warning, args));
   }
 
   @NonNull

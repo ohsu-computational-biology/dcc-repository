@@ -45,11 +45,12 @@ public class ClientProperties {
   ImportsProperties imports;
   @Valid
   IdProperties id;
+  @Valid
+  MailProperties mail;
 
   @Data
   public static class RepositoryProperties {
 
-    boolean email;
     Set<RepositoryImporter.Step> steps;
     Set<RepositorySource> sources;
 
@@ -81,6 +82,13 @@ public class ClientProperties {
     @URL
     String serviceUrl;
     String authToken;
+
+  }
+
+  @Data
+  public static class MailProperties {
+
+    boolean enabled;
 
   }
 

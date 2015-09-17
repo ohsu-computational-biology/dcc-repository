@@ -38,7 +38,7 @@ public class ClientConfig {
 
   @Bean
   public Mailer mailer(ClientProperties properties) {
-    val enabled = properties.getRepository().isEmail();
+    val enabled = properties.getMail().isEnabled();
     return Mailer.builder().enabled(enabled).build();
   }
 

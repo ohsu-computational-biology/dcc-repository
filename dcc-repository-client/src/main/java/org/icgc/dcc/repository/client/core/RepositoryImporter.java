@@ -20,11 +20,11 @@ package org.icgc.dcc.repository.client.core;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.base.Strings.repeat;
-import static org.icgc.dcc.common.core.util.Joiners.NEWLINE;
 
 import java.util.List;
 import java.util.Set;
 
+import org.elasticsearch.common.base.Throwables;
 import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.repository.aws.AWSImporter;
 import org.icgc.dcc.repository.cghub.CGHubImporter;
@@ -54,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Importer for the ICGC "Data Repository" feature which imports file metadata from various external data sources.
  * 
+ * @see https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories
  * @see https://wiki.oicr.on.ca/display/DCCSOFT/JSON+structure+for+ICGC+data+repository
  * @see https://wiki.oicr.on.ca/display/DCCSOFT/UI+-+The+new+ICGC+DCC+data+repository+-+Simplified+version+Phase+1
  */
@@ -176,7 +177,7 @@ public class RepositoryImporter {
 
   private Iterable<RepositoryFile> combineFiles(Iterable<Set<RepositoryFile>> files) {
     logBanner("Combining files");
-    val combiner = new RepositoryFileCombiner();
+    val combiner = new RepositoryFileCombiner(context);
     return combiner.combineFiles(files);
   }
 
@@ -208,9 +209,8 @@ public class RepositoryImporter {
       }
     }
 
-    val subject = "DCC Repository Importer - " + (success ? "SUCCESS" : "ERROR");
-    val body = "Finished in " + watch + "\n\n" + NEWLINE.join(exceptions);
-    mailer.sendMail(subject, body);
+    val message = new ReportMessage(watch, exceptions);
+    mailer.sendMail(message.getSubject(), message.getBody());
   }
 
   private static List<RepositorySourceFileImporter> createImporters(RepositoryFileContext context) {
@@ -226,6 +226,38 @@ public class RepositoryImporter {
     log.info(repeat("-", 80));
     log.info(message);
     log.info(repeat("-", 80));
+  }
+
+  /**
+   * Report email send to recipients.
+   */
+  @RequiredArgsConstructor
+  private static class ReportMessage {
+
+    private final Stopwatch watch;
+    private final List<Exception> exceptions;
+
+    public String getSubject() {
+      return "DCC Repository Importer - " + (isSuccess() ? "SUCCESS" : "ERROR");
+    }
+
+    public String getBody() {
+      val body = new StringBuilder();
+      body.append("Finished in ").append(watch);
+      body.append("\n\n");
+      for (val exception : exceptions) {
+        body.append(exception.getMessage()).append("\n");
+        body.append(Throwables.getStackTraceAsString(exception));
+        body.append("\n\n");
+      }
+
+      return body.toString();
+    }
+
+    private boolean isSuccess() {
+      return exceptions.isEmpty();
+    }
+
   }
 
 }

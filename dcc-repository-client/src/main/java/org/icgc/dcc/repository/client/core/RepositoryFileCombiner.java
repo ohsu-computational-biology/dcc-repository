@@ -92,7 +92,6 @@ public class RepositoryFileCombiner {
     combinedFile.setFileId(combineField(fileIds));
 
     val studies = get(prioritizedFiles, RepositoryFile::getStudy);
-    analyzeField(files, "study", studies);
     combinedFile.setStudy(combineField(studies));
 
     val accesses = get(prioritizedFiles, RepositoryFile::getAccess);
@@ -100,19 +99,15 @@ public class RepositoryFileCombiner {
     combinedFile.setAccess(combineField(accesses));
 
     val dataBundles = get(prioritizedFiles, RepositoryFile::getDataBundle);
-    analyzeField(files, "dataBundle", dataBundles);
     combinedFile.setDataBundle(combineField(dataBundles));
 
     val analysisMethods = get(prioritizedFiles, RepositoryFile::getAnalysisMethod);
-    analyzeField(files, "analysisMethod", analysisMethods);
     combinedFile.setAnalysisMethod(combineField(analysisMethods));
 
     val dataCategorizations = get(prioritizedFiles, RepositoryFile::getDataCategorization);
-    analyzeField(files, "dataCategorization", dataCategorizations);
     combinedFile.setDataCategorization(combineField(dataCategorizations));
 
     val referenceGenomes = get(prioritizedFiles, RepositoryFile::getReferenceGenome);
-    analyzeField(files, "referenceGenome", referenceGenomes);
     combinedFile.setReferenceGenome(combineField(referenceGenomes));
 
     //

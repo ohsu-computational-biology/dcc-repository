@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.icgc.dcc.common.core.mail.Mailer;
+import org.icgc.dcc.common.core.report.BufferedReport;
+import org.icgc.dcc.common.core.report.ReportEmail;
 import org.icgc.dcc.repository.aws.AWSImporter;
 import org.icgc.dcc.repository.cghub.CGHubImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -37,7 +39,6 @@ import org.icgc.dcc.repository.tcga.TCGAImporter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -209,8 +210,15 @@ public class RepositoryImporter {
       }
     }
 
-    val message = new ReportMessage(watch, exceptions);
-    mailer.sendMail(message.getSubject(), message.getBody());
+    val report = new BufferedReport();
+    report.addTimer(watch);
+
+    for (val exception : exceptions) {
+      report.addException(exception);
+    }
+
+    val message = new ReportEmail("DCC Repository Importer", report);
+    mailer.sendMail(message);
   }
 
   private static List<RepositorySourceFileImporter> createImporters(RepositoryFileContext context) {
@@ -226,68 +234,6 @@ public class RepositoryImporter {
     log.info(repeat("-", 80));
     log.info(message);
     log.info(repeat("-", 80));
-  }
-
-  /**
-   * Report email send to recipients.
-   */
-  @RequiredArgsConstructor
-  static class ReportMessage {
-
-    private final Stopwatch watch;
-    private final List<Exception> exceptions;
-
-    public String getSubject() {
-      return "DCC Repository Importer - " + getStatus();
-    }
-
-    public String getBody() {
-      val body = new StringBuilder();
-      body.append("<html>");
-      body.append("<body>");
-      body.append("<h1 style='color: " + getColor() + "; border: 3px solid " + getColor()
-          + "; border-left: none; border-right: none; padding: 5px 0;'>");
-      body.append(getStatus());
-      body.append("</h1>");
-      body.append("Finished in ").append("<b>").append(watch).append("</b>");
-      body.append("<br>");
-
-      if (!isSuccess()) {
-        body.append("<h2>Exceptions</h2>");
-        body.append("<ol>");
-        for (val exception : exceptions) {
-          body.append("<h3>Message</h3>");
-          body.append("<pre>");
-          body.append(exception.getMessage());
-          body.append("</pre>");
-          body.append("<h3>Stack Trace</h3>");
-          body.append("<pre>");
-          body.append(Throwables.getStackTraceAsString(exception));
-          body.append("</pre>");
-          body.append(
-              "<div style='border-top: 1px dotted " + getColor() + "; margin-top 4px; margin-bottom: 5px;'></div>");
-        }
-        body.append("</ol>");
-      }
-
-      body.append("</body>");
-      body.append("</html>");
-
-      return body.toString();
-    }
-
-    private String getColor() {
-      return isSuccess() ? "#1a9900" : "red";
-    }
-
-    private String getStatus() {
-      return isSuccess() ? "SUCCESS" : "ERROR";
-    }
-
-    private boolean isSuccess() {
-      return exceptions.isEmpty();
-    }
-
   }
 
 }

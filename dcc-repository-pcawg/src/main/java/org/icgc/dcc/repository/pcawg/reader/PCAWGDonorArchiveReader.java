@@ -8,18 +8,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
+
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,8 +32,10 @@ public class PCAWGDonorArchiveReader {
    */
   public static final URL ALTERNATE_PCAWG_DONOR_ARCHIVE_URL =
       getUrl(PCAWG_ARCHIVE_BASE_URL + "/gnos_metadata/latest/reports/sanger_variant_called_donors.jsonl");
-  public static final URL DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
+  public static final URL PREVIOUS_DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
       getUrl(PCAWG_ARCHIVE_BASE_URL + "/gnos_metadata/latest/reports/donors_with_bwa_alignment.jsonl");
+  public static final URL DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
+      getUrl(PCAWG_ARCHIVE_BASE_URL + "/_tmp/release_aug2015.v2.jsonl");
 
   /**
    * Constants.

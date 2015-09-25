@@ -92,25 +92,17 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     log.info("Creating donor files...");
     val donorFiles = createDonorFiles(donors);
 
-    log.info("Filtering donor files...");
-    val filteredFiles = filterFiles(donorFiles);
-
     log.info("Translating TCGC UUIDs...");
-    translateTCGAUUIDs(filteredFiles);
+    translateTCGAUUIDs(donorFiles);
 
     log.info("Assigning ICGC IDs...");
-    assignIds(filteredFiles);
+    assignIds(donorFiles);
 
-    return filteredFiles;
+    return donorFiles;
   }
 
   private Iterable<RepositoryFile> createDonorFiles(Iterable<ObjectNode> donors) {
     return stream(donors).flatMap(donor -> stream(processDonor(donor))).collect(toImmutableList());
-  }
-
-  private Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> donorFiles) {
-    // Only include files with a data type
-    return stream(donorFiles).filter(hasDataType()).collect(toImmutableList());
   }
 
   private Iterable<RepositoryFile> processDonor(@NonNull ObjectNode donor) {
@@ -130,7 +122,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
                 .specimenClass(specimenClass)
                 .workflowType(workflowType).build();
 
-            for (val workflowFile : getFiles(workflow)) {
+            for (val workflowFile : resolveIncludedFiles(workflow)) {
               val donorFile = createDonorFile(projectCode, submittedDonorId, analysis, workflow, workflowFile);
               donorFiles.add(donorFile);
             }
@@ -253,6 +245,11 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return donorFile;
   }
 
+  private static Iterable<JsonNode> resolveIncludedFiles(JsonNode workflow) {
+    return resolveFiles(workflow, file -> isBamFile(file) || isVcfFile(file) || isXmlFile(file))
+        .collect(toImmutableList());
+  }
+
   private static Optional<JsonNode> resolveBaiFile(JsonNode workflow, String fileName) {
     val baiFileName = fileName + ".bai";
     return resolveFiles(workflow, file -> baiFileName.equals(resolveFileName(file))).findFirst();
@@ -291,6 +288,22 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val dateTime = ISO_OFFSET_DATE_TIME.parse(text, Instant::from);
 
     return dateTime.getEpochSecond();
+  }
+
+  private static boolean isBamFile(JsonNode file) {
+    return hasFileExtension(file, ".bam");
+  }
+
+  private static boolean isVcfFile(JsonNode file) {
+    return hasFileExtension(file, ".vcf.gz");
+  }
+
+  private static boolean isXmlFile(JsonNode file) {
+    return hasFileExtension(file, ".xml");
+  }
+
+  private static boolean hasFileExtension(JsonNode file, String fileType) {
+    return getFileName(file).toLowerCase().endsWith(fileType.toLowerCase());
   }
 
 }

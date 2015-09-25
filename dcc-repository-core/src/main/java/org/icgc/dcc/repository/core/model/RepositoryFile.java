@@ -151,6 +151,8 @@ public class RepositoryFile {
     String specimenType;
     String sampleId;
 
+    String matchedControlSampleId;
+
     String submittedDonorId;
     String submittedSpecimenId;
     String submittedSampleId;

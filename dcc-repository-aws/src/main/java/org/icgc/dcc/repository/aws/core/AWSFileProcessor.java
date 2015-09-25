@@ -119,7 +119,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         .setAccess(FileAccess.CONTROLLED);
 
     val fileCopy = objectFile.addFileCopy()
-        .setFileName(id)
+        .setFileName(fileName)
         .setFileFormat(resolveFileFormat(file))
         .setFileSize(objectSummary.getSize())
         .setFileMd5sum(getFileMd5sum(file))

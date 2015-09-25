@@ -36,6 +36,7 @@ import org.eclipse.jgit.api.errors.TransportException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -67,13 +68,18 @@ public class AWSS3TransferJobReader {
   @SneakyThrows
   public List<ObjectNode> read() {
     val repoDir = cloneRepo();
-    val completedDir = getCompletedDir(repoDir);
+    val completedDirs = getCompletedDirs(repoDir);
 
-    log.info("Resolving job files from completed dir '{}'...", completedDir.getCanonicalPath());
-    val jobFiles = resolveJobFiles(completedDir);
+    val jobs = ImmutableList.<ObjectNode> builder();
+    for (val completedDir : completedDirs) {
+      log.info("Resolving job files from completed dir '{}'...", completedDir.getCanonicalPath());
+      val jobFiles = resolveJobFiles(completedDir);
 
-    log.info("Reading {} completed jobs from {}...", formatCount(jobFiles.size()), completedDir);
-    return readFiles(jobFiles);
+      log.info("Reading {} completed jobs from {}...", formatCount(jobFiles.size()), completedDir);
+      jobs.addAll(readFiles(jobFiles));
+    }
+
+    return jobs.build();
   }
 
   private List<ObjectNode> readFiles(List<Path> files) throws IOException, JsonProcessingException {
@@ -103,9 +109,10 @@ public class AWSS3TransferJobReader {
     return Files.list(completedDir.toPath()).filter(isJsonFile()).collect(toImmutableList());
   }
 
-  private static File getCompletedDir(File repoDir) {
-    val jobsDir = new File(repoDir, "s3-transfer-jobs");
-    return new File(jobsDir, "completed-jobs");
+  private static List<File> getCompletedDirs(File repoDir) {
+    return ImmutableList.of(
+        new File(new File(repoDir, "s3-transfer-jobs-prod1"), "completed-jobs"),
+        new File(new File(repoDir, "s3-transfer-jobs-prod2"), "completed-jobs"));
   }
 
   private static Predicate<? super Path> isJsonFile() {

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.icgc.dcc</groupId>
     <artifactId>dcc-parent</artifactId>
-    <version>19</version>
+    <version>21</version>
   </parent>
 
   <artifactId>dcc-repository</artifactId>
@@ -108,8 +108,8 @@
 
   <properties>
     <!-- Versions - DCC -->
-    <dcc-common.version>3.8.14.1</dcc-common.version>
-    <dcc-id.version>0.0.7</dcc-id.version>
+    <dcc-common.version>3.8.15.0</dcc-common.version>
+    <dcc-id.version>0.0.14</dcc-id.version>
 
     <!-- Versions - Utilities -->
     <commons-lang3.version>3.3.2</commons-lang3.version>

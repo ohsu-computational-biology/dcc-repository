@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2015 The Ontario Institute for Cancer Research. All rights reserved.                             
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,23 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.cghub;
-
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+package org.icgc.dcc.repository.cghub.reader;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-@Ignore("For development only")
-public class CGHubImporterTest {
+@Ignore("For DCC-3950")
+public class CGHubAnalysisDetailReaderTest {
 
+  /**
+   * See https://jira.oicr.on.ca/browse/DCC-3950
+   */
   @Test
-  public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val cghubImporter = new CGHubImporter(context);
-    cghubImporter.execute();
+  public void testRead() {
+    val details = new CGHubAnalysisDetailReader().readDetails();
+
+    System.out.printf("analysis_id\tlibrary_strategy\tfilename%n");
+    for (val record : details) {
+      for (val result : record.path("result_set").path("results")) {
+        for (val file : result.path("files")) {
+          System.out.printf("%s\t%s\t%s%n",
+              result.path("analysis_id").asText(),
+              result.path("library_strategy").asText(),
+              file.get("filename").asText());
+        }
+      }
+    }
   }
 
 }

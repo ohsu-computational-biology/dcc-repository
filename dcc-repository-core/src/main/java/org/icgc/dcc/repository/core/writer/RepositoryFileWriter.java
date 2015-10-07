@@ -63,7 +63,7 @@ public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<Repositor
     log.info("Clearing '{}' documents...", collection.getName());
     clearFiles();
 
-    log.info("Writing '{}' documents...", collection.getName());
+    log.info("Writing '{}' '{}' documents...", formatCount(files), collection.getName());
     int writeCount = 0;
     for (val file : files) {
       writeCount += saveFile(file);

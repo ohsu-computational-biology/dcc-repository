@@ -132,8 +132,8 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
     //
 
     val tcgaParticipantBarcode = archiveClinicalFile.getDonorId();
-    val repoEntityId = resolveRepoEntityId(archiveClinicalFile);
-    val id = resolveId(tcgaServer.getType().getDataPath(), repoEntityId);
+    val entityPath = resolveEntityPath(archiveClinicalFile);
+    val id = resolveId(tcgaServer.getType().getDataPath(), entityPath);
 
     //
     // Create
@@ -162,7 +162,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setRepoCode(tcgaServer.getCode())
         .setRepoCountry(tcgaServer.getCountry())
         .setRepoBaseUrl(tcgaServer.getBaseUrl())
-        .setRepoDataPath(tcgaServer.getType().getDataPath())
+        .setRepoDataPath(resolveDataPath(archiveClinicalFile, entityPath))
         .setRepoMetadataPath(tcgaServer.getType().getMetadataPath());
 
     clinicalFile.addDonor()
@@ -205,7 +205,11 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
     }
   }
 
-  private String resolveRepoEntityId(TCGAArchiveClinicalFile archiveClinicalFile) {
+  private String resolveDataPath(TCGAArchiveClinicalFile archiveClinicalFile, final java.lang.String repoEntityId) {
+    return repoEntityId.replace(archiveClinicalFile.getFileName(), "");
+  }
+
+  private String resolveEntityPath(TCGAArchiveClinicalFile archiveClinicalFile) {
     val url = archiveClinicalFile.getUrl();
     return url.replace(tcgaServer.getBaseUrl(), "/").replace(tcgaServer.getType().getDataPath(), "");
   }

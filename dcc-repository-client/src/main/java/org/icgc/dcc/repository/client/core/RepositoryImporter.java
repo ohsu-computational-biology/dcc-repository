@@ -127,8 +127,11 @@ public class RepositoryImporter {
         // Aggregate
         val combinedFiles = combineFiles(files);
 
+        // Aggregate
+        val filteredFiles = filterFiles(combinedFiles);
+
         // Write
-        writeFiles(combinedFiles);
+        writeFiles(filteredFiles);
       }
 
       //
@@ -180,6 +183,12 @@ public class RepositoryImporter {
     logBanner("Combining files");
     val combiner = new RepositoryFileCombiner(context);
     return combiner.combineFiles(files);
+  }
+
+  private Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> files) {
+    logBanner("Filtering files");
+    val filter = new RepositoryFileFilter(context);
+    return filter.filterFiles(files);
   }
 
   @SneakyThrows

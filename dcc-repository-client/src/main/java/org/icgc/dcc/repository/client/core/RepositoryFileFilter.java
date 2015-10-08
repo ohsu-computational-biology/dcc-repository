@@ -15,71 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.writer;
+package org.icgc.dcc.repository.client.core;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.repository.core.model.RepositoryFileCollection.FILE;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.AWS_VIRGINIA;
 
+import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
-import org.icgc.dcc.repository.core.util.AbstractJongoWriter;
-import org.jongo.MongoCollection;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 
-import com.mongodb.MongoClientURI;
-
-import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<RepositoryFile>> {
-
-  /**
-   * Configuration.
-   */
-  @Getter
-  @NonNull
-  private final RepositoryFileCollection fileCollection;
+@RequiredArgsConstructor
+public class RepositoryFileFilter {
 
   /**
    * Dependencies.
    */
   @NonNull
-  private final MongoCollection collection;
+  private final RepositoryFileContext context;
 
-  public RepositoryFileWriter(@NonNull MongoClientURI mongoUri) {
-    this(mongoUri, FILE);
+  public Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> files) {
+    return stream(files).filter(this::isIncluded).collect(toImmutableList());
   }
 
-  public RepositoryFileWriter(@NonNull MongoClientURI mongoUri, @NonNull RepositoryFileCollection fileCollection) {
-    super(mongoUri);
-    this.fileCollection = fileCollection;
-    this.collection = getCollection(fileCollection);
-  }
+  private boolean isIncluded(RepositoryFile file) {
+    val repoCodes = file.getFileCopies().stream().map(FileCopy::getRepoCode).collect(toImmutableSet());
 
-  @Override
-  public void write(@NonNull Iterable<RepositoryFile> files) {
-    log.info("Clearing '{}' documents...", collection.getName());
-    clearFiles();
-
-    log.info("Writing '{}' '{}' documents...", formatCount(files), collection.getName());
-    int writeCount = 0;
-    for (val file : files) {
-      saveFile(file);
-
-      writeCount++;
-    }
-
-    log.info("Wrote '{}' '{}' documents", formatCount(writeCount), collection.getName());
-  }
-
-  public void clearFiles() {
-    clearDocuments(fileCollection);
-  }
-
-  protected void saveFile(RepositoryFile file) {
-    collection.save(file);
+    // Not released via PCAWG yet ignore
+    val awsOnly = repoCodes.size() == 1 && repoCodes.contains(AWS_VIRGINIA);
+    return !awsOnly;
   }
 
 }

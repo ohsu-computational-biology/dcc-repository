@@ -38,20 +38,26 @@ public class FileTextDocumentProcessor extends DocumentProcessor {
 
   @Override
   public int process() {
-    return eachFile(file -> {
-      String id = getId(file);
-      ObjectNode fileText = createFileText(file, id);
+    return eachFile(this::addDocument);
+  }
 
-      addDocument(id, fileText);
-    });
+  private void addDocument(ObjectNode file) {
+    val id = getId(file);
+    val fileText = createFileText(file, id);
+
+    addDocument(id, fileText);
   }
 
   private ObjectNode createFileText(ObjectNode file, String id) {
     val fileText = createDocument();
     fileText.put("type", "file");
+
     fileText.put("id", id);
+    fileText.put("file_id", file.path("file_id").textValue());
     fileText.putPOJO("file_name", arrayTextValues(file, "file_copies", "file_name"));
+    fileText.put("data_type", file.path("data_categorization").path("data_type").textValue());
     fileText.putPOJO("donor_id", arrayTextValues(file, "donors", "donor_id"));
+    fileText.putPOJO("project_code", arrayTextValues(file, "donors", "project_code"));
 
     return fileText;
   }

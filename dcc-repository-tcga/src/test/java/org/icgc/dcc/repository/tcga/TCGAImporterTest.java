@@ -21,7 +21,6 @@ import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalR
 
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
@@ -29,7 +28,7 @@ import lombok.val;
 public class TCGAImporterTest {
 
   @Test
-  @Ignore("For development only")
+  // @Ignore("For development only")
   public void testExecute() throws IOException {
     val context = newLocalRepositoryFileContext();
     val tcgaImporter = new TCGAImporter(context);

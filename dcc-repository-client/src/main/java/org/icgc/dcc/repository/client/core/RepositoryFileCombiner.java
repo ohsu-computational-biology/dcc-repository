@@ -18,7 +18,6 @@
 package org.icgc.dcc.repository.client.core;
 
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.icgc.dcc.repository.core.util.RepositoryFiles.inPCAWGOrder;
 
 import java.util.Collection;
@@ -26,9 +25,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+
+import com.google.common.collect.Sets;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -138,7 +140,8 @@ public class RepositoryFileCombiner {
 
   private static Set<RepositoryFile> prioritize(Set<RepositoryFile> files) {
     // Prioritize PCAWG ahead of others since it carries the most information
-    return files.stream().sorted(inPCAWGOrder()).collect(toSet());
+    val list = files.stream().sorted(inPCAWGOrder()).collect(Collectors.toList());
+    return Sets.newLinkedHashSet(list);
   }
 
   private static <T> List<T> get(Collection<RepositoryFile> files, Function<RepositoryFile, T> getter) {

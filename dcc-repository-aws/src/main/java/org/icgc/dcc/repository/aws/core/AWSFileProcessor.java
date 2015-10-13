@@ -123,7 +123,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         .setFileFormat(resolveFileFormat(file))
         .setFileSize(objectSummary.getSize())
         .setFileMd5sum(getFileMd5sum(file))
-        .setLastModified(objectSummary.getLastModified().getTime())
+        .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
         .setRepoType(server.getType().getId())
         .setRepoOrg(server.getSource().getId())
         .setRepoName(server.getName())

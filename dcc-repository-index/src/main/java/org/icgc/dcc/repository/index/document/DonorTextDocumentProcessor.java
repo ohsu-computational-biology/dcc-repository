@@ -106,6 +106,7 @@ public class DonorTextDocumentProcessor extends DocumentProcessor {
   private ObjectNode createFileDonor(FileDonorSummary summary, String donorId) {
     val fileDonor = createDocument();
     fileDonor.put("id", donorId);
+    fileDonor.put("type", "donor");
     fileDonor.put("donor_id", donorId);
 
     val submittedDonorId = summary.submittedDonorIds().get(donorId);

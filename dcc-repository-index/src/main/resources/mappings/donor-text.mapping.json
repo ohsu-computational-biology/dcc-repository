@@ -40,7 +40,7 @@
                }
             }
          },
-         "file_id":{
+         "object_id":{
             "type":"multi_field",
             "fields":{
                "raw":{

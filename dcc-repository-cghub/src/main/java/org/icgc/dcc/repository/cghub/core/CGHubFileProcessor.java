@@ -113,15 +113,15 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
 
     val analysisId = getAnalysisId(result);
     val fileName = getFileName(file);
-    val id = resolveId(analysisId, fileName);
+    val objectId = resolveObjectId(analysisId, fileName);
 
     //
     // Create
     //
 
     val analysisFile = new RepositoryFile()
-        .setId(id)
-        .setFileId(context.ensureFileId(id))
+        .setId(context.ensureFileId(objectId))
+        .setObjectId(objectId)
         .setStudy(null) // N/A
         .setAccess(FileAccess.CONTROLLED);
 
@@ -149,7 +149,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
 
     if (baiFile.isPresent()) {
       val baiFileName = getFileName(baiFile.get());
-      val baiId = resolveId(analysisId, baiFileName);
+      val baiId = resolveObjectId(analysisId, baiFileName);
       fileCopy.getIndexFile()
           .setId(baiId)
           .setFileId(context.ensureFileId(baiId))

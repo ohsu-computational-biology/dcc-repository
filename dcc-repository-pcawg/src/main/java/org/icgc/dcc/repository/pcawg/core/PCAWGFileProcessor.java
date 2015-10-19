@@ -152,7 +152,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val fileName = resolveFileName(workflowFile);
     val fileSize = resolveFileSize(workflowFile);
     val fileFormat = resolveFileFormat(analysis, fileName);
-    val id = resolveId(gnosId, fileName);
+    val objectId = resolveObjectId(gnosId, fileName);
 
     val pcawgServers = resolvePCAWGServers(workflow);
 
@@ -168,8 +168,8 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     //
 
     val donorFile = new RepositoryFile()
-        .setId(id)
-        .setFileId(context.ensureFileId(id))
+        .setId(context.ensureFileId(objectId))
+        .setObjectId(objectId)
         .setStudy(ImmutableList.of(Study.PCAWG))
         .setAccess(FileAccess.CONTROLLED);
 
@@ -203,7 +203,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
       if (baiFile.isPresent()) {
         val baiFileName = getFileName(baiFile.get());
-        val baiId = resolveId(gnosId, baiFileName);
+        val baiId = resolveObjectId(gnosId, baiFileName);
         fileCopy.getIndexFile()
             .setId(baiId)
             .setFileId(context.ensureFileId(baiId))
@@ -214,7 +214,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
       }
       if (tbiFile.isPresent()) {
         val tbiFileName = getFileName(tbiFile.get());
-        val tbiId = resolveId(gnosId, tbiFileName);
+        val tbiId = resolveObjectId(gnosId, tbiFileName);
         fileCopy.getIndexFile()
             .setId(tbiId)
             .setFileId(context.ensureFileId(tbiId))

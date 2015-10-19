@@ -139,12 +139,12 @@ public class RepositoryFileContext {
   }
 
   @NonNull
-  public String ensureFileId(String submittedFileId) {
+  public String ensureFileId(String objectId) {
     if (readOnly) {
-      return getFileId(submittedFileId);
+      return getFileId(objectId);
     }
 
-    return idClient.createFileId(submittedFileId);
+    return idClient.createFileId(objectId);
   }
 
   @NonNull

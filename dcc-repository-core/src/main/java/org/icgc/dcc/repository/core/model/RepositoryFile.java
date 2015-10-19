@@ -36,7 +36,7 @@ import lombok.experimental.UtilityClass;
 public class RepositoryFile {
 
   String id;
-  String fileId;
+  String objectId;
   List<String> study = Lists.newArrayList();
   String access;
 

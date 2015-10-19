@@ -150,7 +150,7 @@ public abstract class RepositoryFileProcessor {
     return donorFile -> !isNullOrEmpty(donorFile.getDataCategorization().getDataType());
   }
 
-  protected static String resolveId(String... parts) {
+  protected static String resolveObjectId(String... parts) {
     return UUID5.fromUTF8(UUID5.getNamespace(), Joiner.on('/').join(parts)).toString();
   }
 

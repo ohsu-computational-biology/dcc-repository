@@ -89,9 +89,9 @@ public class RepositoryFileCombiner {
     analyzeField(files, "id", ids);
     combinedFile.setId(combineField(ids));
 
-    val fileIds = get(prioritizedFiles, RepositoryFile::getFileId);
-    analyzeField(files, "fileId", fileIds);
-    combinedFile.setFileId(combineField(fileIds));
+    val objectIds = get(prioritizedFiles, RepositoryFile::getObjectId);
+    analyzeField(files, "objectId", objectIds);
+    combinedFile.setObjectId(combineField(objectIds));
 
     val studies = get(prioritizedFiles, RepositoryFile::getStudy);
     combinedFile.setStudy(combineField(studies));

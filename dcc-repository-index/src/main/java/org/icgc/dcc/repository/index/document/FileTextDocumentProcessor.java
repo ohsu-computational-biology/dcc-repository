@@ -53,7 +53,7 @@ public class FileTextDocumentProcessor extends DocumentProcessor {
     fileText.put("type", "file");
 
     fileText.put("id", id);
-    fileText.put("file_id", file.path("file_id").textValue());
+    fileText.put("object_id", file.path("object_id").textValue());
     fileText.putPOJO("file_name", arrayTextValues(file, "file_copies", "file_name"));
     fileText.put("data_type", file.path("data_categorization").path("data_type").textValue());
     fileText.putPOJO("donor_id", arrayTextValues(file, "donors", "donor_id"));

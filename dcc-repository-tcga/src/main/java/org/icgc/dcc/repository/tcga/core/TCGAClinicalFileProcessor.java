@@ -135,15 +135,15 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
     val fileName = archiveClinicalFile.getFileName();
     val entityPath = resolveEntityPath(archiveClinicalFile);
     val dataPath = resolveDataPath(archiveClinicalFile);
-    val id = resolveId(tcgaServer.getType().getDataPath(), entityPath);
+    val objectId = resolveObjectId(tcgaServer.getType().getDataPath(), entityPath);
 
     //
     // Create
     //
 
     val clinicalFile = new RepositoryFile()
-        .setId(id)
-        .setFileId(context.ensureFileId(id))
+        .setId(context.ensureFileId(objectId))
+        .setObjectId(objectId)
         .setStudy(null) // N/A
         .setAccess(FileAccess.OPEN);
 

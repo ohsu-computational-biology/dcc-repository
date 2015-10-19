@@ -103,7 +103,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
     // Prepare
     //
 
-    val id = getObjectId(file);
+    val objectId = getObjectId(file);
     val gnosId = getGnosId(job);
     val fileName = getFileName(file);
     val xmlFile = resolveXmlFile(job, gnosId);
@@ -114,8 +114,8 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
     //
 
     val objectFile = new RepositoryFile()
-        .setId(id)
-        .setFileId(context.ensureFileId(id))
+        .setId(context.ensureFileId(objectId))
+        .setObjectId(objectId)
         .setAccess(FileAccess.CONTROLLED);
 
     val fileCopy = objectFile.addFileCopy()
@@ -130,7 +130,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
         .setRepoCode(server.getCode())
         .setRepoCountry(server.getCountry())
         .setRepoBaseUrl(server.getBaseUrl())
-        .setRepoDataPath(server.getType().getDataPath() + "/" + id);
+        .setRepoDataPath(server.getType().getDataPath() + "/" + objectId);
 
     if (xmlFile.isPresent()) {
       val xmlId = getObjectId(xmlFile.get());
@@ -140,7 +140,7 @@ public class AWSFileProcessor extends RepositoryFileProcessor {
 
     if (baiFile.isPresent()) {
       val baiFileName = getFileName(baiFile.get());
-      val baiId = resolveId(gnosId, baiFileName);
+      val baiId = resolveObjectId(gnosId, baiFileName);
       fileCopy.getIndexFile()
           .setId(baiId)
           .setFileId(context.ensureFileId(baiId))

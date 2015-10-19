@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.repository.client.core;
 
+import static com.google.common.collect.Iterables.size;
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
@@ -29,7 +31,9 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class RepositoryFileFilter {
 
@@ -40,7 +44,11 @@ public class RepositoryFileFilter {
   private final RepositoryFileContext context;
 
   public Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> files) {
-    return stream(files).filter(this::isIncluded).collect(toImmutableList());
+    log.info("Filtering files...");
+    val filteredFiles = stream(files).filter(this::isIncluded).collect(toImmutableList());
+    log.info("Filtered {} files", formatCount(size(files) - filteredFiles.size()));
+
+    return filteredFiles;
   }
 
   private boolean isIncluded(RepositoryFile file) {
@@ -48,6 +56,7 @@ public class RepositoryFileFilter {
 
     // Not released via PCAWG yet ignore
     val awsOnly = repoCodes.size() == 1 && repoCodes.contains(AWS_VIRGINIA);
+
     return !awsOnly;
   }
 

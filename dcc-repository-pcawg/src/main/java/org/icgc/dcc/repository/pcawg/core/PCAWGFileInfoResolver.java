@@ -38,7 +38,7 @@ public class PCAWGFileInfoResolver {
     if (analysis.isRNAAlignment()) {
       analysisMethod
           .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
-          .setSoftware(analysis.getLibraryStrategyName());
+          .setSoftware(analysis.getWorkflowType());
     } else if (analysis.isBWAAlignment()) {
       analysisMethod
           .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)

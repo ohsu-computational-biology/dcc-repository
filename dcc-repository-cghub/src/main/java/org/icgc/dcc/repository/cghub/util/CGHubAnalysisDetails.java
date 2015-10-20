@@ -47,6 +47,10 @@ public final class CGHubAnalysisDetails {
     return result.get("library_strategy").textValue();
   }
 
+  public static String getPlatform(@NonNull JsonNode result) {
+    return result.get("platform").textValue();
+  }
+
   public static String getAnalysisId(@NonNull JsonNode result) {
     return result.get("analysis_id").textValue();
   }

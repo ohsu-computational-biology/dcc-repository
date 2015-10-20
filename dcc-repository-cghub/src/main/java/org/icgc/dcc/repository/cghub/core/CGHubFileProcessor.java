@@ -19,7 +19,6 @@ package org.icgc.dcc.repository.cghub.core;
 
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.cghub.core.CGHubDataTypeResolver.resolveDataType;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAliquotId;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalysisId;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getChecksum;
@@ -33,6 +32,7 @@ import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getLegacyS
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getLegacySpecimenId;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getLibraryStrategy;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getParticipantId;
+import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getRefassemShortName;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getResults;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleId;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
@@ -46,6 +46,7 @@ import java.util.stream.Stream;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
@@ -90,10 +91,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   private Iterable<RepositoryFile> processResult(JsonNode result) {
     val baiFile = resolveBaiFile(result);
 
-    // TODO: Consider relaxing this to include FASTQ/A files. Talk with JJ about what we ones we want to keep
-    // (interesting files).
-    // May need to see if we can identify FASTQ based on file name, other fields, etc.
-    return resolveFiles(result, file -> isBamFile(file))
+    return resolveIncludedFiles(result)
         .map(file -> createAnalysisFile(result, file, baiFile))
         .collect(toImmutableList());
   }
@@ -112,6 +110,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
     val legacyDonorId = getLegacyDonorId(legacySampleId);
 
     val analysisId = getAnalysisId(result);
+    val refAssembly = getRefassemShortName(result);
     val fileName = getFileName(file);
     val objectId = resolveObjectId(analysisId, fileName);
 
@@ -129,12 +128,19 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
         .setDataBundleId(analysisId);
 
     analysisFile.getDataCategorization()
-        .setDataType(resolveDataType(result))
+        .setDataType(resolveDataType(refAssembly))
         .setExperimentalStrategy(getLibraryStrategy(result));
+
+    analysisFile.getAnalysisMethod()
+        .setAnalysisType(resolveAnalysisType(refAssembly));
+
+    analysisFile.getReferenceGenome()
+        .setReferenceName(resolveReferenceName(refAssembly))
+        .setGenomeBuild(resolveGenomeBuild(refAssembly));
 
     val fileCopy = analysisFile.addFileCopy()
         .setFileName(fileName)
-        .setFileFormat(FileFormat.BAM)
+        .setFileFormat(isBamFile(file) ? FileFormat.BAM : FileFormat.FASTQ)
         .setFileSize(getFileSize(file))
         .setFileMd5sum(getChecksum(file))
         .setLastModified(resolveLastModified(result))
@@ -182,6 +188,10 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   // Utilities
   //
 
+  private Stream<JsonNode> resolveIncludedFiles(JsonNode result) {
+    return resolveFiles(result, file -> isBamFile(file) || isFastqFile(file));
+  }
+
   private Optional<JsonNode> resolveBaiFile(JsonNode result) {
     return resolveFiles(result, file -> isBaiFile(file)).findFirst();
   }
@@ -200,12 +210,36 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
     return Instant.parse(getLastModified(result)).getEpochSecond();
   }
 
+  private static String resolveDataType(String refAssembly) {
+    return "unaligned".equals(refAssembly) ? DataType.UNALIGNED_READS : DataType.ALIGNED_READS;
+  }
+
+  private static String resolveAnalysisType(String refAssembly) {
+    return "unaligned".equals(refAssembly) ? null : "Reference alignment";
+  }
+
+  private static String resolveReferenceName(String refAssembly) {
+    return "unaligned".equals(refAssembly) ? null : refAssembly;
+  }
+
+  private static String resolveGenomeBuild(String refAssembly) {
+    return //
+    "unaligned".equals(refAssembly) ? null : //
+    refAssembly.startsWith("HG19") || refAssembly.startsWith("GRCh37") ? "GRCh37" : //
+    refAssembly.startsWith("HG18") || refAssembly.startsWith("GRCh36") ? "GRCh36" : //
+    null;
+  }
+
   private static boolean isBamFile(JsonNode file) {
     return hasFileExtension(file, ".bam");
   }
 
   private static boolean isBaiFile(JsonNode file) {
     return hasFileExtension(file, ".bai");
+  }
+
+  private static boolean isFastqFile(JsonNode file) {
+    return hasFileExtension(file, ".rnaseq_fastq.tar");
   }
 
   private static boolean hasFileExtension(JsonNode file, String fileType) {

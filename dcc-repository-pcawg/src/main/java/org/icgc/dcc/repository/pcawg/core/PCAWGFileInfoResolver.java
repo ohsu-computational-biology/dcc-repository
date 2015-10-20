@@ -38,7 +38,7 @@ public class PCAWGFileInfoResolver {
     if (analysis.isRNAAlignment()) {
       analysisMethod
           .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
-          .setSoftware(analysis.getWorkflowType());
+          .setSoftware(resolveRNAAlignmentSoftware(analysis));
     } else if (analysis.isBWAAlignment()) {
       analysisMethod
           .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
@@ -84,6 +84,17 @@ public class PCAWGFileInfoResolver {
       return dataType == null ? null : FileFormat.VCF;
     } else {
       return null;
+    }
+  }
+
+  private static String resolveRNAAlignmentSoftware(Analysis analysis) {
+    val workflowType = analysis.getWorkflowType();
+    if ("tophat".equals(workflowType)) {
+      return "TopHat2";
+    } else if ("star".equals(workflowType)) {
+      return "STAR";
+    } else {
+      return workflowType;
     }
   }
 

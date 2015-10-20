@@ -217,6 +217,7 @@ public class RepositoryFile {
     public final String TBI = "TBI";
     public final String XML = "XML";
     public final String VCF = "VCF";
+    public final String FASTQ = "FASTQ";
 
   }
 
@@ -233,6 +234,7 @@ public class RepositoryFile {
 
     public final String CLINICAL = "Clinical";
     public final String ALIGNED_READS = "Aligned Reads";
+    public final String UNALIGNED_READS = "Unaligned Reads";
 
     // These are for TCGA because we cannot determine aligned status from file
     public final String DNA_SEQ = "DNA-Seq";

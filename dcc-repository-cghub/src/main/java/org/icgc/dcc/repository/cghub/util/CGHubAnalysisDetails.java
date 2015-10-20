@@ -18,10 +18,11 @@
 package org.icgc.dcc.repository.cghub.util;
 
 import static lombok.AccessLevel.PRIVATE;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class CGHubAnalysisDetails {
@@ -48,6 +49,10 @@ public final class CGHubAnalysisDetails {
 
   public static String getAnalysisId(@NonNull JsonNode result) {
     return result.get("analysis_id").textValue();
+  }
+
+  public static String getRefassemShortName(@NonNull JsonNode result) {
+    return result.get("refassem_short_name").textValue();
   }
 
   public static long getFileSize(@NonNull JsonNode file) {

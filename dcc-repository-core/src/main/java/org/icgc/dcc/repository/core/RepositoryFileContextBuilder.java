@@ -22,14 +22,6 @@ import static lombok.AccessLevel.PRIVATE;
 
 import java.util.Map;
 
-import org.icgc.dcc.common.core.tcga.TCGAClient;
-import org.icgc.dcc.etl.core.id.CachingIdentifierClient;
-import org.icgc.dcc.etl.core.id.HashIdentifierClient;
-import org.icgc.dcc.etl.core.id.HttpIdentifierClient;
-import org.icgc.dcc.etl.core.id.IdentifierClient;
-
-import com.mongodb.MongoClientURI;
-
 import lombok.Cleanup;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -37,6 +29,12 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.experimental.Accessors;
+
+import org.icgc.dcc.common.core.tcga.TCGAClient;
+import org.icgc.dcc.id.client.core.IdClient;
+import org.icgc.dcc.id.client.core.IdClientFactory;
+
+import com.mongodb.MongoClientURI;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class RepositoryFileContextBuilder {
@@ -65,6 +63,9 @@ public final class RepositoryFileContextBuilder {
   private String idUrl = DEFAULT_ID_SERVICE_URL;
   @Setter
   @Accessors(chain = true, fluent = true)
+  private String authToken;
+  @Setter
+  @Accessors(chain = true, fluent = true)
   private boolean realIds = false;
   @Setter
   @Accessors(chain = true, fluent = true)
@@ -87,8 +88,13 @@ public final class RepositoryFileContextBuilder {
         awsIdResolver);
   }
 
-  private IdentifierClient createIdentifierClient() {
-    return realIds ? new CachingIdentifierClient(new HttpIdentifierClient(idUrl, "")) : new HashIdentifierClient();
+  private IdClient createIdentifierClient() {
+    val release = "RepoImport";
+    val clientFactory = realIds ?
+        new IdClientFactory(idUrl, release, authToken) :
+        new IdClientFactory(idUrl, release);
+
+    return clientFactory.create();
   }
 
   private static TCGAClient createTCGAClient() {

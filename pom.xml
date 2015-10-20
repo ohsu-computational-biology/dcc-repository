@@ -54,6 +54,11 @@
         <artifactId>dcc-repository-core</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-id-client</artifactId>
+        <version>${dcc-id.version}</version>
+      </dependency>
 
     </dependencies>
   </dependencyManagement>
@@ -113,7 +118,8 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.13.0</dcc-common.version>
-    <dcc-etl.version>3.8.11.4</dcc-etl.version>
+    <dcc-etl.version>3.8.14.6</dcc-etl.version>
+    <dcc-id.version>0.0.17</dcc-id.version>
 
     <!-- Versions - Utilities -->
     <commons-lang3.version>3.3.2</commons-lang3.version>

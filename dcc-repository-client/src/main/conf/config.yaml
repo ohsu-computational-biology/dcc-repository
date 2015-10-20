@@ -6,3 +6,7 @@ repoMongoUri: "mongodb://localhost/dcc-repo"
 
 # Elasticsearch URI
 esUri: "es://localhost:9300"
+
+# Id service settings
+identifierServiceUri: "http://hcache-dcc.oicr.on.ca:5391"
+authToken: "<>"

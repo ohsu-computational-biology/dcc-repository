@@ -23,14 +23,14 @@ import static lombok.AccessLevel.PRIVATE;
 import java.util.Map;
 import java.util.Set;
 
-import org.icgc.dcc.common.core.tcga.TCGAClient;
-import org.icgc.dcc.etl.core.id.IdentifierClient;
-
-import com.mongodb.MongoClientURI;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
+import org.icgc.dcc.common.core.tcga.TCGAClient;
+import org.icgc.dcc.id.client.core.IdClient;
+
+import com.mongodb.MongoClientURI;
 
 @RequiredArgsConstructor(access = PACKAGE)
 public class RepositoryFileContext {
@@ -56,7 +56,7 @@ public class RepositoryFileContext {
    * Dependencies.
    */
   @NonNull
-  private final IdentifierClient identifierClient;
+  private final IdClient identifierClient;
   @NonNull
   private final TCGAClient tcgaClient;
   @NonNull

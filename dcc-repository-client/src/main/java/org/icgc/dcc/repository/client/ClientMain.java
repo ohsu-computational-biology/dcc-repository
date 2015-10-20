@@ -105,6 +105,8 @@ public class ClientMain {
         .repoMongoUri(repoMongoUri)
         .esUri(esUri)
         .realIds(true)
+        .idUrl(config.getIdentifierServiceUri())
+        .authToken(config.getAuthToken())
         .awsIdResolver(new AWSIdResolver())
         .pcawgIdResolver(new PCAWGDonorIdResolver())
         .build();

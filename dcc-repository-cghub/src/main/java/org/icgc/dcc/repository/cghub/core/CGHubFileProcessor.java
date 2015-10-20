@@ -239,7 +239,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   }
 
   private static boolean isFastqFile(JsonNode file) {
-    return hasFileExtension(file, ".rnaseq_fastq.tar");
+    return hasFileExtension(file, "rnaseq_fastq.tar");
   }
 
   private static boolean hasFileExtension(JsonNode file, String fileType) {

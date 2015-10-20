@@ -225,8 +225,8 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   private static String resolveGenomeBuild(String refAssembly) {
     return //
     "unaligned".equals(refAssembly) ? null : //
-    refAssembly.startsWith("HG19") || refAssembly.startsWith("GRCh37") ? "GRCh37" : //
-    refAssembly.startsWith("HG18") || refAssembly.startsWith("GRCh36") ? "GRCh36" : //
+    refAssembly.startsWith("HG19") || refAssembly.startsWith("NCBI37") || refAssembly.startsWith("GRCh37") ? "GRCh37" : //
+    refAssembly.startsWith("HG18") || refAssembly.startsWith("NCBI36") || refAssembly.startsWith("GRCh36") ? "GRCh36" : //
     null;
   }
 

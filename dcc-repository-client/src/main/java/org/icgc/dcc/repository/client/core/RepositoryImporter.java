@@ -140,7 +140,7 @@ public class RepositoryImporter {
       //
 
       if (!steps.contains(Step.INDEX)) {
-        log.warn("*** Skipping merge!");
+        log.warn("*** Skipping index!");
       } else {
         // Index
         indexFiles();

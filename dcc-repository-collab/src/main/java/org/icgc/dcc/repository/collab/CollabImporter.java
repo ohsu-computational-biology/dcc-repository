@@ -15,57 +15,61 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.core;
+package org.icgc.dcc.repository.collab;
 
-import static com.google.common.collect.Iterables.size;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
-import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.AWS_VIRGINIA;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.COLLABORATORY;
+import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 
-import java.util.Collection;
+import java.util.List;
 
+import org.icgc.dcc.repository.collab.core.CollabFileProcessor;
+import org.icgc.dcc.repository.collab.reader.CollabS3BucketReader;
+import org.icgc.dcc.repository.collab.reader.CollabS3TransferJobReader;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
+
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
-public class RepositoryFileFilter {
+public class CollabImporter extends GenericRepositorySourceFileImporter {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final RepositoryFileContext context;
-
-  public Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> files) {
-    log.info("Filtering files...");
-    val filteredFiles = stream(files).filter(this::isIncluded).collect(toImmutableList());
-    log.info("Filtered {} files", formatCount(size(files) - filteredFiles.size()));
-
-    return filteredFiles;
+  public CollabImporter(@NonNull RepositoryFileContext context) {
+    super(COLLAB, context);
   }
 
-  private boolean isIncluded(RepositoryFile file) {
-    val repoCodes = file.getFileCopies().stream().map(FileCopy::getRepoCode).collect(toImmutableSet());
+  @Override
+  protected Iterable<RepositoryFile> readFiles() {
+    log.info("Reading completed transfer jobs...");
+    val completedJobs = readCompletedJobs();
+    log.info("Read {} completed transfer jobs", formatCount(completedJobs));
 
-    // Not released via PCAWG yet ignore
-    val awsOnly = only(repoCodes, AWS_VIRGINIA);
-    val collabOnly = only(repoCodes, COLLABORATORY);
+    log.info("Reading object summaries...");
+    val objectSummaries = readObjectSummaries();
+    log.info("Read {} object summaries", formatCount(objectSummaries));
 
-    return !(awsOnly || collabOnly);
+    log.info("Processing files...");
+    val files = processFiles(completedJobs, objectSummaries);
+    log.info("Processed {} files", formatCount(files));
+
+    return files;
   }
 
-  private boolean only(Collection<String> repoCodes, String repoCode) {
-    return repoCodes.size() == 1 && repoCodes.contains(repoCode);
+  private List<ObjectNode> readCompletedJobs() {
+    return new CollabS3TransferJobReader().read();
+  }
+
+  private List<S3ObjectSummary> readObjectSummaries() {
+    return new CollabS3BucketReader().readSummaries();
+  }
+
+  private Iterable<RepositoryFile> processFiles(List<ObjectNode> completedJobs, List<S3ObjectSummary> objectSummaries) {
+    return new CollabFileProcessor(context).processCompletedJobs(completedJobs, objectSummaries);
   }
 
 }

@@ -20,6 +20,7 @@
     <module>dcc-repository-client</module>
     <module>dcc-repository-aws</module>
     <module>dcc-repository-cghub</module>
+    <module>dcc-repository-collab</module>
     <module>dcc-repository-pcawg</module>
     <module>dcc-repository-tcga</module>
     <module>dcc-repository-index</module>

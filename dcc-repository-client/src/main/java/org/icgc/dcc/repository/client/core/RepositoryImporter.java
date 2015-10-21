@@ -29,6 +29,7 @@ import org.icgc.dcc.common.core.report.BufferedReport;
 import org.icgc.dcc.common.core.report.ReportEmail;
 import org.icgc.dcc.repository.aws.AWSImporter;
 import org.icgc.dcc.repository.cghub.CGHubImporter;
+import org.icgc.dcc.repository.collab.CollabImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
@@ -236,7 +237,8 @@ public class RepositoryImporter {
         new PCAWGImporter(context),
         new TCGAImporter(context),
         new CGHubImporter(context),
-        new AWSImporter(context));
+        new AWSImporter(context),
+        new CollabImporter(context));
   }
 
   private static void logBanner(String message) {

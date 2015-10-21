@@ -15,36 +15,32 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.collab.reader;
 
-import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getFiles;
+import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getObjectId;
 
-import java.util.Set;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import com.google.common.collect.ImmutableSet;
+@Slf4j
+public class CollabS3TransferJobReaderTest {
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
+  @Test
+  @Ignore("For development only")
+  public void testRead() {
+    val reader = new CollabS3TransferJobReader();
 
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositorySource implements Identifiable {
-
-  CGHUB("CGHub"),
-  TCGA("TCGA"),
-  PCAWG("PCAWG"),
-  AWS("AWS"),
-  COLLAB("Collaboratory");
-
-  @Getter
-  @NonNull
-  private final String id;
-
-  @Getter(lazy = true)
-  @Accessors(fluent = true)
-  private static final Set<RepositorySource> all = ImmutableSet.copyOf(values());
+    for (val job : reader.read()) {
+      log.info("Job: {}", job);
+      for (val file : getFiles(job)) {
+        val objectId = getObjectId(file);
+        log.info("  objectId: {}", objectId);
+      }
+    }
+  }
 
 }

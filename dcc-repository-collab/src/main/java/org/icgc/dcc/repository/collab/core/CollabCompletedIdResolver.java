@@ -15,57 +15,38 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.client.core;
+package org.icgc.dcc.repository.collab.core;
 
-import static com.google.common.collect.Iterables.size;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
-import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.AWS_VIRGINIA;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.COLLABORATORY;
+import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getFiles;
+import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getObjectId;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
-import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.collab.reader.CollabS3TransferJobReader;
+import org.icgc.dcc.repository.core.RepositoryIdResolver;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@RequiredArgsConstructor
-public class RepositoryFileFilter {
+public class CollabCompletedIdResolver implements RepositoryIdResolver {
 
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final RepositoryFileContext context;
+  @Override
+  public Set<String> resolveIds() {
+    val jobs = readJobs();
 
-  public Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> files) {
-    log.info("Filtering files...");
-    val filteredFiles = stream(files).filter(this::isIncluded).collect(toImmutableList());
-    log.info("Filtered {} files", formatCount(size(files) - filteredFiles.size()));
-
-    return filteredFiles;
+    return jobs.stream()
+        .flatMap(job -> stream(getFiles(job)))
+        .map(file -> getObjectId(file))
+        .collect(toImmutableSet());
   }
 
-  private boolean isIncluded(RepositoryFile file) {
-    val repoCodes = file.getFileCopies().stream().map(FileCopy::getRepoCode).collect(toImmutableSet());
-
-    // Not released via PCAWG yet ignore
-    val awsOnly = only(repoCodes, AWS_VIRGINIA);
-    val collabOnly = only(repoCodes, COLLABORATORY);
-
-    return !(awsOnly || collabOnly);
-  }
-
-  private boolean only(Collection<String> repoCodes, String repoCode) {
-    return repoCodes.size() == 1 && repoCodes.contains(repoCode);
+  private List<ObjectNode> readJobs() {
+    val reader = new CollabS3TransferJobReader();
+    return reader.read();
   }
 
 }

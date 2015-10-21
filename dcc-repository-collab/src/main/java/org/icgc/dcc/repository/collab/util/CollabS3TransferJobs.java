@@ -15,36 +15,42 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.collab.util;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import java.util.Set;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.icgc.dcc.common.core.model.Identifiable;
-
-import com.google.common.collect.ImmutableSet;
-
-import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositorySource implements Identifiable {
+@NoArgsConstructor(access = PRIVATE)
+public final class CollabS3TransferJobs {
 
-  CGHUB("CGHub"),
-  TCGA("TCGA"),
-  PCAWG("PCAWG"),
-  AWS("AWS"),
-  COLLAB("Collaboratory");
+  public static ArrayNode getFiles(@NonNull ObjectNode job) {
+    return job.withArray("files");
+  }
 
-  @Getter
-  @NonNull
-  private final String id;
+  public static String getGnosId(@NonNull ObjectNode job) {
+    return job.get("gnos_id").textValue();
+  }
 
-  @Getter(lazy = true)
-  @Accessors(fluent = true)
-  private static final Set<RepositorySource> all = ImmutableSet.copyOf(values());
+  public static String getObjectId(@NonNull JsonNode file) {
+    return file.get("object_id").textValue();
+  }
+
+  public static String getFileName(@NonNull JsonNode file) {
+    return file.get("file_name").textValue();
+  }
+
+  public static long getFileSize(@NonNull JsonNode file) {
+    return file.get("file_size").longValue();
+  }
+
+  public static String getFileMd5sum(@NonNull JsonNode file) {
+    return file.get("file_md5sum").textValue();
+  }
 
 }

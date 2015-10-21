@@ -33,7 +33,8 @@ public enum RepositoryFileCollection implements Identifiable {
   CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
   TCGA_FILE("TCGAFile", RepositorySource.TCGA),
   PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
-  AWS_FILE("AWSFile", RepositorySource.AWS);
+  AWS_FILE("AWSFile", RepositorySource.AWS),
+  COLLAB_FILE("CollabFile", RepositorySource.COLLAB);
 
   @Getter
   @NonNull

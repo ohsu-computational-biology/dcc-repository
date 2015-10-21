@@ -111,7 +111,8 @@ public class CollabS3TransferJobReader {
 
   private static List<File> getCompletedDirs(File repoDir) {
     return ImmutableList.of(
-        new File(new File(repoDir, "ceph-transfer-jobs-prod1"), "completed-jobs"));
+        new File(new File(repoDir, "ceph-transfer-jobs-prod1"), "completed-jobs"),
+        new File(new File(repoDir, "ceph-transfer-jobs-prod2"), "completed-jobs"));
   }
 
   private static Predicate<? super Path> isJsonFile() {

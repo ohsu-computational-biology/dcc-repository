@@ -18,10 +18,13 @@
   <modules>
     <module>dcc-repository-core</module>
     <module>dcc-repository-client</module>
-    <module>dcc-repository-aws</module>
-    <module>dcc-repository-cghub</module>
-    <module>dcc-repository-collab</module>
+
     <module>dcc-repository-pcawg</module>
+    <module>dcc-repository-cloud</module>
+    <module>dcc-repository-aws</module>
+    <module>dcc-repository-collab</module>
+
+    <module>dcc-repository-cghub</module>
     <module>dcc-repository-tcga</module>
     <module>dcc-repository-index</module>
   </modules>
@@ -35,17 +38,22 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- DCC -->
+    
+      <!-- DCC - Common -->
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-common-core</artifactId>
         <version>${dcc-common.version}</version>
       </dependency>
+      
+      <!-- DCC - ID -->
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-id-client</artifactId>
         <version>${dcc-id.version}</version>
       </dependency>
+      
+      <!-- DCC - Repository -->
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-repository-core</artifactId>

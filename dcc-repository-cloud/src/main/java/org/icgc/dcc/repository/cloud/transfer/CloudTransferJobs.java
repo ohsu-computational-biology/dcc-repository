@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.collab.util;
+package org.icgc.dcc.repository.cloud.transfer;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class CollabS3TransferJobs {
+public final class CloudTransferJobs {
 
   public static ArrayNode getFiles(@NonNull ObjectNode job) {
     return job.withArray("files");

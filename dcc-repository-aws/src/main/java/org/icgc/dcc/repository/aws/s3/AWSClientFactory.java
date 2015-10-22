@@ -15,32 +15,15 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.collab.reader;
+package org.icgc.dcc.repository.aws.s3;
 
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getFiles;
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getObjectId;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 
-import org.junit.Ignore;
-import org.junit.Test;
+public class AWSClientFactory {
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public class CollabS3TransferJobReaderTest {
-
-  @Test
-  @Ignore("For development only")
-  public void testRead() {
-    val reader = new CollabS3TransferJobReader();
-
-    for (val job : reader.read()) {
-      log.info("Job: {}", job);
-      for (val file : getFiles(job)) {
-        val objectId = getObjectId(file);
-        log.info("  objectId: {}", objectId);
-      }
-    }
+  public static AmazonS3 createS3Client() {
+    return new AmazonS3Client();
   }
 
 }

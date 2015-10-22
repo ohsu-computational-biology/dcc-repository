@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.aws.reader;
+package org.icgc.dcc.repository.cloud.transfer;
 
 import static com.google.common.io.Files.createTempDir;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
@@ -32,6 +32,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
+import org.icgc.dcc.common.core.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,29 +47,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class AWSS3TransferJobReader {
+public class CloudTransferJobReader {
 
   /**
    * Constants.
    */
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final String DEFAULT_GIT_ORG_URL = "https://github.com/ICGC-TCGA-PanCancer";
-  private static final String DEFAULT_GIT_REPO_URL = DEFAULT_GIT_ORG_URL + "/s3-transfer-operations.git";
 
   /**
    * Configuration.
    */
   @NonNull
   private final String repoUrl;
-
-  public AWSS3TransferJobReader() {
-    this(DEFAULT_GIT_REPO_URL);
-  }
+  @NonNull
+  private final List<String> paths;
 
   @SneakyThrows
-  public List<ObjectNode> read() {
+  public List<ObjectNode> readJobs() {
     val repoDir = cloneRepo();
-    val completedDirs = getCompletedDirs(repoDir);
+    val completedDirs = resolveCompletedDirs(repoDir);
 
     val jobs = ImmutableList.<ObjectNode> builder();
     for (val completedDir : completedDirs) {
@@ -109,10 +106,8 @@ public class AWSS3TransferJobReader {
     return Files.list(completedDir.toPath()).filter(isJsonFile()).collect(toImmutableList());
   }
 
-  private static List<File> getCompletedDirs(File repoDir) {
-    return ImmutableList.of(
-        new File(new File(repoDir, "s3-transfer-jobs-prod1"), "completed-jobs"),
-        new File(new File(repoDir, "s3-transfer-jobs-prod2"), "completed-jobs"));
+  private List<File> resolveCompletedDirs(File repoDir) {
+    return paths.stream().map(path -> new File(repoDir, path)).collect(Collectors.toImmutableList());
   }
 
   private static Predicate<? super Path> isJsonFile() {

@@ -22,9 +22,13 @@ This is the main entry point of the application.
 
 These modules collect various data sources.
 - [AWS](dcc-repository-aws/README.md)
+- [Collab](dcc-repository-collab/README.md)
 - [CGHub](dcc-repository-cghub/README.md)
 - [PCAWG](dcc-repository-pcawg/README.md)
 - [TCGA](dcc-repository-tcga/README.md)
+
+AWS and Collab share common code through:
+- [Cloud](dcc-repository-cloud/README.md)
 
 ### Index
 

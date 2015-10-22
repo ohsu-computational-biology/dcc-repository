@@ -15,46 +15,19 @@
   <description>${project.name}</description>
 
   <dependencies>
+  
     <!-- DCC - Repository -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-repository-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-
-    <!-- AWS -->
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-s3</artifactId>
-      <version>${aws-java-sdk.version}</version>
-    </dependency>
-    <!-- 
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk</artifactId>
-      <version>1.8.11</version>
-    </dependency>
-     -->
-
-    <!-- Git -->
-    <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
-      <version>${jgit.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>httpclient</artifactId>
-          <groupId>org.apache.httpcomponents</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-repository-cloud</artifactId>
+      <version>${project.version}</version>
+    </dependency>    
 
   </dependencies>
-
-  <properties>
-    <!-- Versions - Clients -->
-    <aws-java-sdk.version>1.10.2</aws-java-sdk.version>
-    <jgit.version>4.0.1.201506240215-r</jgit.version>
-  </properties>
 
 </project>

@@ -23,7 +23,10 @@
     </encoder>
   </appender>
 
-  <logger name="de.flapdoodle.embed" level="WARN" />
+  <!-- 
+  <logger name="org.apache" level="DEBUG" />
+  -->
+  
 
   <root level="info">
     <appender-ref ref="STDOUT" />

@@ -15,53 +15,70 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.aws;
+package org.icgc.dcc.repository.cloud;
 
-import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
+import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 
-import org.icgc.dcc.repository.aws.s3.AWSClientFactory;
-import org.icgc.dcc.repository.cloud.CloudImporter;
+import java.util.List;
+
 import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
 import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
 import org.icgc.dcc.repository.cloud.transfer.CloudTransferJobReader;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.RepositoryServers;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositorySource;
+import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 
-import com.google.common.collect.ImmutableList;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-public class AWSImporter extends CloudImporter {
+@Slf4j
+public abstract class CloudImporter extends GenericRepositorySourceFileImporter {
 
-  /**
-   * Constants.
-   */
-  private static final String DEFAULT_BUCKET_NAME = "oicr.icgc";
-  private static final String DEFAULT_BUCKET_KEY_PREFIX = "data";
-  private static final String DEFAULT_GIT_ORG_URL = "https://github.com/ICGC-TCGA-PanCancer";
-  private static final String DEFAULT_GIT_REPO_URL = DEFAULT_GIT_ORG_URL + "/s3-transfer-operations.git";
-
-  public AWSImporter(@NonNull RepositoryFileContext context) {
-    super(AWS, context);
+  public CloudImporter(@NonNull RepositorySource source, @NonNull RepositoryFileContext context) {
+    super(source, context);
   }
 
   @Override
-  protected CloudTransferJobReader createJobReader() {
-    val paths = ImmutableList.of("s3-transfer-jobs-prod1/completed-jobs", "s3-transfer-jobs-prod2/completed-jobs");
-    return new CloudTransferJobReader(DEFAULT_GIT_REPO_URL, paths);
+  protected Iterable<RepositoryFile> readFiles() {
+    log.info("Reading completed transfer jobs...");
+    val completedJobs = readCompletedJobs();
+    log.info("Read {} completed transfer jobs", formatCount(completedJobs));
+
+    log.info("Reading object summaries...");
+    val objectSummaries = readObjectSummaries();
+    log.info("Read {} object summaries", formatCount(objectSummaries));
+
+    log.info("Processing files...");
+    val files = processFiles(completedJobs, objectSummaries);
+    log.info("Processed {} files", formatCount(files));
+
+    return files;
   }
 
-  @Override
-  protected CloudS3BucketReader createBucketReader() {
-    val s3 = AWSClientFactory.createS3Client();
-    return new CloudS3BucketReader(DEFAULT_BUCKET_NAME, DEFAULT_BUCKET_KEY_PREFIX, s3);
+  private List<ObjectNode> readCompletedJobs() {
+    val jobReader = createJobReader();
+    return jobReader.readJobs();
   }
 
-  @Override
-  protected CloudFileProcessor createFileProcessor() {
-    val awsServer = RepositoryServers.getAWSServer();
-    return new CloudFileProcessor(context, awsServer);
+  private List<S3ObjectSummary> readObjectSummaries() {
+    val bucketReader = createBucketReader();
+    return bucketReader.readSummaries();
   }
+
+  private Iterable<RepositoryFile> processFiles(List<ObjectNode> completedJobs, List<S3ObjectSummary> objectSummaries) {
+    val fileProcessor = createFileProcessor();
+    return fileProcessor.processCompletedJobs(completedJobs, objectSummaries);
+  }
+
+  abstract protected CloudTransferJobReader createJobReader();
+
+  abstract protected CloudS3BucketReader createBucketReader();
+
+  abstract protected CloudFileProcessor createFileProcessor();
 
 }

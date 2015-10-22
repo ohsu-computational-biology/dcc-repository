@@ -15,19 +15,18 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.collab.core;
+package org.icgc.dcc.repository.cloud.core;
 
 import static java.lang.String.format;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getFileMd5sum;
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getFileName;
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getFileSize;
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getFiles;
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getGnosId;
-import static org.icgc.dcc.repository.collab.util.CollabS3TransferJobs.getObjectId;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getCollabServer;
+import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getFileMd5sum;
+import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getFileName;
+import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getFileSize;
+import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getFiles;
+import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getGnosId;
+import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getObjectId;
 
 import java.io.File;
 import java.util.List;
@@ -54,15 +53,16 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CollabFileProcessor extends RepositoryFileProcessor {
+public class CloudFileProcessor extends RepositoryFileProcessor {
 
   /**
    * Metadata.
    */
-  private final RepositoryServer server = getCollabServer();
+  private final RepositoryServer server;
 
-  public CollabFileProcessor(RepositoryFileContext context) {
+  public CloudFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer server) {
     super(context);
+    this.server = server;
   }
 
   public Iterable<RepositoryFile> processCompletedJobs(@NonNull List<ObjectNode> completedJobs,
@@ -152,6 +152,10 @@ public class CollabFileProcessor extends RepositoryFileProcessor {
 
     return objectFile;
   }
+
+  //
+  // Utilities
+  //
 
   private static Iterable<JsonNode> resolveIncludedFiles(ObjectNode job) {
     return resolveFiles(job, file -> isBamFile(file) || isVcfFile(file)).collect(toImmutableList());

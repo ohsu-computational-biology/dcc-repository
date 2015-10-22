@@ -17,59 +17,51 @@
  */
 package org.icgc.dcc.repository.collab;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 
-import java.util.List;
-
-import org.icgc.dcc.repository.collab.core.CollabFileProcessor;
-import org.icgc.dcc.repository.collab.reader.CollabS3BucketReader;
-import org.icgc.dcc.repository.collab.reader.CollabS3TransferJobReader;
+import org.icgc.dcc.repository.cloud.CloudImporter;
+import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
+import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
+import org.icgc.dcc.repository.cloud.transfer.CloudTransferJobReader;
+import org.icgc.dcc.repository.collab.s3.AWSClientFactory;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
+import org.icgc.dcc.repository.core.model.RepositoryServers;
 
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class CollabImporter extends GenericRepositorySourceFileImporter {
+public class CollabImporter extends CloudImporter {
+
+  /**
+   * Constants.
+   */
+  private static final String DEFAULT_BUCKET_NAME = "oicr.icgc";
+  private static final String DEFAULT_BUCKET_KEY_PREFIX = "data";
+  private static final String DEFAULT_GIT_ORG_URL = "https://github.com/ICGC-TCGA-PanCancer";
+  private static final String DEFAULT_GIT_REPO_URL = DEFAULT_GIT_ORG_URL + "/ceph_transfer_ops.git";
 
   public CollabImporter(@NonNull RepositoryFileContext context) {
     super(COLLAB, context);
   }
 
   @Override
-  protected Iterable<RepositoryFile> readFiles() {
-    log.info("Reading completed transfer jobs...");
-    val completedJobs = readCompletedJobs();
-    log.info("Read {} completed transfer jobs", formatCount(completedJobs));
-
-    log.info("Reading object summaries...");
-    val objectSummaries = readObjectSummaries();
-    log.info("Read {} object summaries", formatCount(objectSummaries));
-
-    log.info("Processing files...");
-    val files = processFiles(completedJobs, objectSummaries);
-    log.info("Processed {} files", formatCount(files));
-
-    return files;
+  protected CloudTransferJobReader createJobReader() {
+    val paths = ImmutableList.of("ceph-transfer-jobs-prod1/completed-jobs", "ceph-transfer-jobs-prod2/completed-jobs");
+    return new CloudTransferJobReader(DEFAULT_GIT_REPO_URL, paths);
   }
 
-  private List<ObjectNode> readCompletedJobs() {
-    return new CollabS3TransferJobReader().read();
+  @Override
+  protected CloudS3BucketReader createBucketReader() {
+    val s3 = AWSClientFactory.createS3Client();
+    return new CloudS3BucketReader(DEFAULT_BUCKET_NAME, DEFAULT_BUCKET_KEY_PREFIX, s3);
   }
 
-  private List<S3ObjectSummary> readObjectSummaries() {
-    return new CollabS3BucketReader().readSummaries();
-  }
-
-  private Iterable<RepositoryFile> processFiles(List<ObjectNode> completedJobs, List<S3ObjectSummary> objectSummaries) {
-    return new CollabFileProcessor(context).processCompletedJobs(completedJobs, objectSummaries);
+  @Override
+  protected CloudFileProcessor createFileProcessor() {
+    val collabServer = RepositoryServers.getCollabServer();
+    return new CloudFileProcessor(context, collabServer);
   }
 
 }

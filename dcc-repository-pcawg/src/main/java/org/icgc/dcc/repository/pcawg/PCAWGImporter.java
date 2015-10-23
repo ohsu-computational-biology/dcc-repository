@@ -46,7 +46,7 @@ public class PCAWGImporter extends GenericRepositorySourceFileImporter {
   private final URL archiveUrl;
 
   public PCAWGImporter(@NonNull URL archiveUrl, @NonNull RepositoryFileContext context) {
-    super(PCAWG, context);
+    super(PCAWG, context, log);
     this.archiveUrl = archiveUrl;
   }
 

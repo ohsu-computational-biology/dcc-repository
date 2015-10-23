@@ -26,6 +26,7 @@ import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.writer.RepositorySourceFileWriter;
+import org.slf4j.Logger;
 
 import lombok.Cleanup;
 import lombok.Getter;
@@ -33,9 +34,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RequiredArgsConstructor
 public abstract class GenericRepositorySourceFileImporter implements RepositorySourceFileImporter {
 
@@ -51,6 +50,8 @@ public abstract class GenericRepositorySourceFileImporter implements RepositoryS
    */
   @NonNull
   protected final RepositoryFileContext context;
+  @NonNull
+  protected final Logger log;
 
   @Override
   @SneakyThrows

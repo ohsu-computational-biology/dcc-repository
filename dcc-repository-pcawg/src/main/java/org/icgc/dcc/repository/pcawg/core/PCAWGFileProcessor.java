@@ -245,6 +245,10 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return donorFile;
   }
 
+  //
+  // Utilities
+  //
+
   private static Iterable<JsonNode> resolveIncludedFiles(JsonNode workflow) {
     return resolveFiles(workflow, file -> isBamFile(file) || isVcfFile(file) || isXmlFile(file))
         .collect(toImmutableList());

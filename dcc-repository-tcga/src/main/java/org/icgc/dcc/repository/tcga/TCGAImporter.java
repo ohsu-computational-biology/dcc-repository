@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TCGAImporter extends GenericRepositorySourceFileImporter {
 
   public TCGAImporter(RepositoryFileContext context) {
-    super(TCGA, context);
+    super(TCGA, context, log);
   }
 
   @Override

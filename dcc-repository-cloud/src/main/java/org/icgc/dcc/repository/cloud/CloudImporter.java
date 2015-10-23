@@ -28,19 +28,18 @@ import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
+import org.slf4j.Logger;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NonNull;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public abstract class CloudImporter extends GenericRepositorySourceFileImporter {
 
-  public CloudImporter(@NonNull RepositorySource source, @NonNull RepositoryFileContext context) {
-    super(source, context);
+  public CloudImporter(@NonNull RepositorySource source, @NonNull RepositoryFileContext context, @NonNull Logger log) {
+    super(source, context, log);
   }
 
   @Override

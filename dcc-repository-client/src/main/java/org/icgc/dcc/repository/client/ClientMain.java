@@ -65,8 +65,11 @@ public class ClientMain {
     val properties = applicationContext.getBean(ClientProperties.class);
     val importer = applicationContext.getBean(RepositoryImporter.class);
 
+    // See {@code repository.steps}
+    val steps = properties.getRepository().getSteps();
+
     // Main point of execution
-    importer.execute(properties.getRepository().getSteps());
+    importer.execute(steps);
   }
 
   private static ConfigurableApplicationContext createApplicationContext(String... args) {

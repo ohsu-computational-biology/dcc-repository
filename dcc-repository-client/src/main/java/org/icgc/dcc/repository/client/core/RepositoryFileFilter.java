@@ -26,6 +26,7 @@ import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCod
 import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.COLLABORATORY;
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
@@ -55,7 +56,7 @@ public class RepositoryFileFilter {
   }
 
   private boolean isIncluded(RepositoryFile file) {
-    val repoCodes = file.getFileCopies().stream().map(FileCopy::getRepoCode).collect(toImmutableSet());
+    val repoCodes = getRepoCodes(file);
 
     // Not released via PCAWG yet ignore
     val awsOnly = only(repoCodes, AWS_VIRGINIA);
@@ -64,7 +65,11 @@ public class RepositoryFileFilter {
     return !(awsOnly || collabOnly);
   }
 
-  private boolean only(Collection<String> repoCodes, String repoCode) {
+  private static Set<String> getRepoCodes(RepositoryFile file) {
+    return file.getFileCopies().stream().map(FileCopy::getRepoCode).collect(toImmutableSet());
+  }
+
+  private static boolean only(Collection<String> repoCodes, String repoCode) {
     return repoCodes.size() == 1 && repoCodes.contains(repoCode);
   }
 

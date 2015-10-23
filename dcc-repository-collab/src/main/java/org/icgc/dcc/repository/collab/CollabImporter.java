@@ -19,6 +19,8 @@ package org.icgc.dcc.repository.collab;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 
+import java.util.Collection;
+
 import org.icgc.dcc.repository.cloud.CloudImporter;
 import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
 import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
@@ -31,31 +33,34 @@ import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CollabImporter extends CloudImporter {
 
   /**
    * Constants.
    */
-  private static final String DEFAULT_BUCKET_NAME = "oicr.icgc";
-  private static final String DEFAULT_BUCKET_KEY_PREFIX = "data";
-  private static final String DEFAULT_GIT_ORG_URL = "https://github.com/ICGC-TCGA-PanCancer";
-  private static final String DEFAULT_GIT_REPO_URL = DEFAULT_GIT_ORG_URL + "/ceph_transfer_ops.git";
+  private static final String BUCKET_NAME = "oicr.icgc";
+  private static final String BUCKET_KEY_PREFIX = "data";
+  private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/ceph_transfer_ops.git";
+  private static final Collection<String> GIT_REPO_PATHS = ImmutableList.of(
+      "ceph-transfer-jobs-prod1/completed-jobs",
+      "ceph-transfer-jobs-prod2/completed-jobs");
 
   public CollabImporter(@NonNull RepositoryFileContext context) {
-    super(COLLAB, context);
+    super(COLLAB, context, log);
   }
 
   @Override
   protected CloudTransferJobReader createJobReader() {
-    val paths = ImmutableList.of("ceph-transfer-jobs-prod1/completed-jobs", "ceph-transfer-jobs-prod2/completed-jobs");
-    return new CloudTransferJobReader(DEFAULT_GIT_REPO_URL, paths);
+    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_PATHS);
   }
 
   @Override
   protected CloudS3BucketReader createBucketReader() {
     val s3 = AWSClientFactory.createS3Client();
-    return new CloudS3BucketReader(DEFAULT_BUCKET_NAME, DEFAULT_BUCKET_KEY_PREFIX, s3);
+    return new CloudS3BucketReader(BUCKET_NAME, BUCKET_KEY_PREFIX, s3);
   }
 
   @Override

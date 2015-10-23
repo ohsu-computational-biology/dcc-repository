@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CGHubImporter extends GenericRepositorySourceFileImporter {
 
   public CGHubImporter(RepositoryFileContext context) {
-    super(CGHUB, context);
+    super(CGHUB, context, log);
   }
 
   @Override

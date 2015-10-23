@@ -227,7 +227,7 @@ public class RepositoryImporter {
       report.addException(exception);
     }
 
-    val message = new ReportEmail("DCC Repository Importer", report);
+    val message = new ReportEmail("DCC Repository", report);
     mailer.sendMail(message);
   }
 
@@ -235,10 +235,10 @@ public class RepositoryImporter {
     // Order will be execution order subject to activation
     return ImmutableList.of(
         new PCAWGImporter(context),
-        new TCGAImporter(context),
-        new CGHubImporter(context),
         new AWSImporter(context),
-        new CollabImporter(context));
+        new CollabImporter(context),
+        new TCGAImporter(context),
+        new CGHubImporter(context));
   }
 
   private static void logBanner(String message) {

@@ -140,10 +140,10 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
 
     if (baiFile.isPresent()) {
       val baiFileName = getFileName(baiFile.get());
-      val baiId = resolveObjectId(gnosId, baiFileName);
+      val baiObjectId = resolveObjectId(gnosId, baiFileName);
       fileCopy.getIndexFile()
-          .setId(baiId)
-          .setFileId(context.ensureFileId(baiId))
+          .setId(context.ensureFileId(baiObjectId))
+          .setObjectId(baiObjectId)
           .setFileName(baiFileName)
           .setFileFormat(FileFormat.BAI)
           .setFileSize(getFileSize(baiFile.get()))

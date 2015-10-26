@@ -129,7 +129,7 @@ public class RepositoryFile {
   public static class IndexFile {
 
     String id;
-    String fileId;
+    String objectId;
     String fileName;
     String fileFormat;
     Long fileSize;

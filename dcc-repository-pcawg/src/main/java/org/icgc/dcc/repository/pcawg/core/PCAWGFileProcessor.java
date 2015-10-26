@@ -203,10 +203,10 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
       if (baiFile.isPresent()) {
         val baiFileName = getFileName(baiFile.get());
-        val baiId = resolveObjectId(gnosId, baiFileName);
+        val baiObjectId = resolveObjectId(gnosId, baiFileName);
         fileCopy.getIndexFile()
-            .setId(baiId)
-            .setFileId(context.ensureFileId(baiId))
+            .setId(context.ensureFileId(baiObjectId))
+            .setObjectId(baiObjectId)
             .setFileName(baiFileName)
             .setFileFormat(FileFormat.BAI)
             .setFileSize(getFileSize(baiFile.get()))
@@ -214,10 +214,10 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
       }
       if (tbiFile.isPresent()) {
         val tbiFileName = getFileName(tbiFile.get());
-        val tbiId = resolveObjectId(gnosId, tbiFileName);
+        val tbiObjectId = resolveObjectId(gnosId, tbiFileName);
         fileCopy.getIndexFile()
-            .setId(tbiId)
-            .setFileId(context.ensureFileId(tbiId))
+            .setId(context.ensureFileId(tbiObjectId))
+            .setObjectId(tbiObjectId)
             .setFileName(tbiFileName)
             .setFileFormat(FileFormat.TBI)
             .setFileSize(getFileSize(tbiFile.get()))

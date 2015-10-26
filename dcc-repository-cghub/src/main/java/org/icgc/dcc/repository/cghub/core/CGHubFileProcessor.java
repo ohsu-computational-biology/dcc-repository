@@ -155,10 +155,10 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
 
     if (baiFile.isPresent()) {
       val baiFileName = getFileName(baiFile.get());
-      val baiId = resolveObjectId(analysisId, baiFileName);
+      val baiObjectId = resolveObjectId(analysisId, baiFileName);
       fileCopy.getIndexFile()
-          .setId(baiId)
-          .setFileId(context.ensureFileId(baiId))
+          .setId(context.ensureFileId(baiObjectId))
+          .setObjectId(baiObjectId)
           .setFileName(baiFileName)
           .setFileFormat(FileFormat.BAI)
           .setFileSize(getFileSize(baiFile.get()))

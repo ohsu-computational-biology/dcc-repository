@@ -21,7 +21,6 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAliquotId;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalysisId;
-import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalyteCode;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getChecksum;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getDiseaseAbbr;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getFileName;
@@ -36,7 +35,8 @@ import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getPartici
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getRefassemShortName;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getResults;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleId;
-import static org.icgc.dcc.repository.cghub.util.CGHubConverters.convertAnalyteCode;
+import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleType;
+import static org.icgc.dcc.repository.cghub.util.CGHubConverters.convertSampleTypeCode;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getCGHubServer;
 
@@ -234,8 +234,9 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   }
 
   private static String resolveSpecimenType(JsonNode result) {
-    val analyteCode = getAnalyteCode(result);
-    return convertAnalyteCode(analyteCode);
+    // They call this "sample_type"
+    val sampleType = getSampleType(result);
+    return convertSampleTypeCode(sampleType);
   }
 
   private static boolean isBamFile(JsonNode file) {

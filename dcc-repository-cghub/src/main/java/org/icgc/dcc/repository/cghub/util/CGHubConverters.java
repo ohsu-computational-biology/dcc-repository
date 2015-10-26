@@ -37,7 +37,7 @@ public final class CGHubConverters {
       put("03", "Primary tumour - blood derived (peripheral blood)");
       put("04", "Recurrent tumour - blood derived (bone marrow)");
       put("05", "Primary tumour - additional new primary");
-      put("06", null); // See https://jira.oicr.on.ca/browse/DCC-4023
+      put("06", "Metastatic tumour - other");
       put("07", "Metastatic tumour - additional metastatic");
       put("08", null); // See https://jira.oicr.on.ca/browse/DCC-4023
       put("09", "Primary tumour - blood derived (bone marrow)");

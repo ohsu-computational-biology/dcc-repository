@@ -35,6 +35,10 @@ public final class CGHubAnalysisDetails {
     return result.get("files");
   }
 
+  public static String getSampleType(@NonNull JsonNode result) {
+    return result.get("sample_type").textValue();
+  }
+
   public static String getAnalyteCode(@NonNull JsonNode result) {
     return result.get("analyte_code").textValue();
   }

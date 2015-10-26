@@ -19,12 +19,11 @@ package org.icgc.dcc.repository.cghub;
 
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-@Ignore("For development only")
+//@Ignore("For development only")
 public class CGHubImporterTest {
 
   @Test

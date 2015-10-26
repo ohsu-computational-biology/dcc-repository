@@ -118,7 +118,7 @@
   <properties>
     <!-- Versions - DCC -->
     <dcc-common.version>3.8.15.0</dcc-common.version>
-    <dcc-id.version>0.0.17</dcc-id.version>
+    <dcc-id.version>0.0.18</dcc-id.version>
 
     <!-- Versions - Utilities -->
     <commons-lang3.version>3.3.2</commons-lang3.version>

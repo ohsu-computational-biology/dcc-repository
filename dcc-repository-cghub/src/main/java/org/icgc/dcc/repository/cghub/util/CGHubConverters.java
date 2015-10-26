@@ -19,36 +19,41 @@ package org.icgc.dcc.repository.cghub.util;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import lombok.NoArgsConstructor;
-
 import com.google.common.collect.ImmutableMap;
+
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class CGHubConverters {
 
-  private static final Map<String, String> SAMPLE_TYPE_CODE_MAPPING = ImmutableMap.<String, String> builder()
-      .put("01", "Primary solid Tumor")
-      .put("02", "Recurrent Solid Tumor")
-      .put("03", "Primary Blood Derived Cancer - Peripheral Blood")
-      .put("04", "Recurrent Blood Derived Cancer - Bone Marrow")
-      .put("05", "Additional - New Primary")
-      .put("06", "Metastatic")
-      .put("07", "Additional Metastatic")
-      .put("08", "Human Tumor Original Cells")
-      .put("09", "Primary Blood Derived Cancer - Bone Marrow")
-      .put("10", "Blood Derived Normal")
-      .put("11", "Solid Tissue Normal")
-      .put("12", "Buccal Cell Normal")
-      .put("13", "EBV Immortalized Normal")
-      .put("14", "Bone Marrow Normal")
-      .put("20", "Control Analyte")
-      .put("40", "Recurrent Blood Derived Cancer - Peripheral Blood")
-      .put("50", "Cell Lines")
-      .put("60", "Primary Xenograft Tissue")
-      .put("61", "Cell Line Derived Xenograft Tissue")
-      .build();
+  private static final Map<String, String> SAMPLE_TYPE_CODE_MAPPING = new HashMap<String, String>() { // Need nulls
+
+    {
+      put("01", "Primary tumour - solid tissue");
+      put("02", "Recurrent tumour - solid tissue");
+      put("03", "Primary tumour - blood derived (peripheral blood)");
+      put("04", "Recurrent tumour - blood derived (bone marrow)");
+      put("05", "Primary tumour - additional new primary");
+      put("06", null); // See https://jira.oicr.on.ca/browse/DCC-4023
+      put("07", "Metastatic tumour - additional metastatic");
+      put("08", null); // See https://jira.oicr.on.ca/browse/DCC-4023
+      put("09", "Primary tumour - blood derived (bone marrow)");
+      put("10", "Normal - blood derived");
+      put("11", "Normal - solid tissue");
+      put("12", "Normal - buccal cell");
+      put("13", "Normal - EBV immortalized");
+      put("14", "Normal - bone marrow");
+      put("20", null); // See https://jira.oicr.on.ca/browse/DCC-4023
+      put("40", "Recurrent tumour - blood derived (peripheral blood)");
+      put("50", "Cell line - derived from tumour");
+      put("60", "Xenograft - derived from primary tumour");
+      put("61", "Xenograft - derived from tumour cell line");
+    }
+
+  };
 
   private static final Map<String, String> ANALYTE_CODE_MAPPING = ImmutableMap.<String, String> builder()
       .put("D", "DNA")

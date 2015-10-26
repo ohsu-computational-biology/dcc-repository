@@ -21,6 +21,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAliquotId;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalysisId;
+import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAnalyteCode;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getChecksum;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getDiseaseAbbr;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getFileName;
@@ -35,6 +36,7 @@ import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getPartici
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getRefassemShortName;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getResults;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleId;
+import static org.icgc.dcc.repository.cghub.util.CGHubConverters.convertAnalyteCode;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getCGHubServer;
 
@@ -172,6 +174,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
         .setStudy(null) // Set downstream
         .setDonorId(context.getDonorId(legacyDonorId, projectCode))
         .setSpecimenId(context.getSpecimenId(legacySpecimenId, projectCode))
+        .setSpecimenType(resolveSpecimenType(result))
         .setSampleId(context.getSampleId(legacySampleId, projectCode))
         .setSubmittedDonorId(getParticipantId(result))
         .setSubmittedSpecimenId(getSampleId(result))
@@ -188,15 +191,15 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   // Utilities
   //
 
-  private Stream<JsonNode> resolveIncludedFiles(JsonNode result) {
+  private static Stream<JsonNode> resolveIncludedFiles(JsonNode result) {
     return resolveFiles(result, file -> isBamFile(file) || isFastqFile(file));
   }
 
-  private Optional<JsonNode> resolveBaiFile(JsonNode result) {
+  private static Optional<JsonNode> resolveBaiFile(JsonNode result) {
     return resolveFiles(result, file -> isBaiFile(file)).findFirst();
   }
 
-  private Stream<JsonNode> resolveFiles(JsonNode result, Predicate<? super JsonNode> filter) {
+  private static Stream<JsonNode> resolveFiles(JsonNode result, Predicate<? super JsonNode> filter) {
     return stream(getFiles(result)).filter(filter);
   }
 
@@ -228,6 +231,11 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
     refAssembly.startsWith("HG19") || refAssembly.startsWith("NCBI37") || refAssembly.startsWith("GRCh37") ? "GRCh37" : //
     refAssembly.startsWith("HG18") || refAssembly.startsWith("NCBI36") || refAssembly.startsWith("GRCh36") ? "GRCh36" : //
     null;
+  }
+
+  private static String resolveSpecimenType(JsonNode result) {
+    val analyteCode = getAnalyteCode(result);
+    return convertAnalyteCode(analyteCode);
   }
 
   private static boolean isBamFile(JsonNode file) {

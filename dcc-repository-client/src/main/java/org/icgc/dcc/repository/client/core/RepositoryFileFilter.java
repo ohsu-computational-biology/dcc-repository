@@ -25,7 +25,6 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.AWS_VIRGINIA;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.COLLABORATORY;
 
-import java.util.Collection;
 import java.util.Set;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -58,19 +57,30 @@ public class RepositoryFileFilter {
   private boolean isIncluded(RepositoryFile file) {
     val repoCodes = getRepoCodes(file);
 
-    // Not released via PCAWG yet ignore
-    val awsOnly = only(repoCodes, AWS_VIRGINIA);
-    val collabOnly = only(repoCodes, COLLABORATORY);
+    val pcawg = containsPCAWG(repoCodes);
+    if (pcawg) {
+      return true;
+    }
 
-    return !(awsOnly || collabOnly);
+    // Not released via PCAWG yet ignore
+    val aws = repoCodes.contains(AWS_VIRGINIA);
+    val collab = repoCodes.contains(COLLABORATORY);
+
+    return !(aws || collab);
+  }
+
+  private boolean containsPCAWG(Set<String> repoCodes) {
+    for (val repoCode : repoCodes) {
+      if (repoCode.toLowerCase().startsWith("pcawg")) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private static Set<String> getRepoCodes(RepositoryFile file) {
     return file.getFileCopies().stream().map(FileCopy::getRepoCode).collect(toImmutableSet());
-  }
-
-  private static boolean only(Collection<String> repoCodes, String repoCode) {
-    return repoCodes.size() == 1 && repoCodes.contains(repoCode);
   }
 
 }

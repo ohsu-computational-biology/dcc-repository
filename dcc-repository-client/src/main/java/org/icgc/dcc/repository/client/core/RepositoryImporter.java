@@ -99,8 +99,11 @@ public class RepositoryImporter {
 
   @NonNull
   public void execute(@NonNull Set<Step> steps) {
-    val watch = createStarted();
+    log.info("Running steps {} using sources {}", steps, context.getSources());
 
+    int stepNumber = 1;
+    val stepCount = steps.size();
+    val watch = createStarted();
     val exceptions = Lists.<Exception> newArrayList();
     try {
 
@@ -112,6 +115,7 @@ public class RepositoryImporter {
         log.warn("*** Skipping import!");
       } else {
         // Write and always continue if an exception
+        logStep(stepNumber++, stepCount, "Importing sources");
         exceptions.addAll(writeSourceFiles());
       }
 
@@ -122,13 +126,15 @@ public class RepositoryImporter {
       if (!steps.contains(Step.MERGE)) {
         log.warn("*** Skipping merge!");
       } else {
+        logStep(stepNumber++, stepCount, "Merging files");
+
         // Collect
         val files = collectFiles();
 
-        // Aggregate
+        // Combine
         val combinedFiles = combineFiles(files);
 
-        // Aggregate
+        // Filter
         val filteredFiles = filterFiles(combinedFiles);
 
         // Write
@@ -143,6 +149,7 @@ public class RepositoryImporter {
         log.warn("*** Skipping index!");
       } else {
         // Index
+        logStep(stepNumber++, stepCount, "Indexing files");
         indexFiles();
       }
     } catch (Exception e) {
@@ -157,12 +164,17 @@ public class RepositoryImporter {
   private List<Exception> writeSourceFiles() {
     val importers = createImporters(context);
 
+    int sourceNumber = 1;
+    val sourceCount = context.getSources().size();
     val exceptions = ImmutableList.<Exception> builder();
     for (val importer : importers) {
-      boolean active = context.isSourceActive(importer.getSource());
+      val active = context.isSourceActive(importer.getSource());
       if (active) {
         try {
-          logBanner("Importing '" + importer.getSource() + "' sourced files");
+          log.info(repeat("-", 80));
+          log.info("[{}/{}] Import: {}", sourceNumber++, sourceCount, importer.getSource());
+          log.info(repeat("-", 80));
+
           importer.execute();
         } catch (Exception e) {
           log.error("Error procesing '" + importer.getSource() + "': ", e);
@@ -175,26 +187,22 @@ public class RepositoryImporter {
   }
 
   private Iterable<Set<RepositoryFile>> collectFiles() {
-    logBanner("Collecting files");
     val collector = new RepositoryFileCollector(context);
     return collector.collectFiles();
   }
 
   private Iterable<RepositoryFile> combineFiles(Iterable<Set<RepositoryFile>> files) {
-    logBanner("Combining files");
     val combiner = new RepositoryFileCombiner(context);
     return combiner.combineFiles(files);
   }
 
   private Iterable<RepositoryFile> filterFiles(Iterable<RepositoryFile> files) {
-    logBanner("Filtering files");
     val filter = new RepositoryFileFilter(context);
     return filter.filterFiles(files);
   }
 
   @SneakyThrows
   private void writeFiles(Iterable<RepositoryFile> files) {
-    logBanner("Writing files");
     @Cleanup
     val writer = new RepositoryFileWriter(context.getMongoUri());
     writer.write(files);
@@ -202,7 +210,6 @@ public class RepositoryImporter {
 
   @SneakyThrows
   private void indexFiles() {
-    logBanner("Indexing files");
     @Cleanup
     val indexer = new RepositoryFileIndexer(context.getMongoUri(), context.getEsUri(), context.getIndexAlias());
     indexer.indexFiles();
@@ -241,10 +248,10 @@ public class RepositoryImporter {
         new CGHubImporter(context));
   }
 
-  private static void logBanner(String message) {
-    log.info(repeat("-", 80));
-    log.info(message);
-    log.info(repeat("-", 80));
+  private static void logStep(int stepNumber, int stepCount, String message) {
+    log.info(repeat("#", 80));
+    log.info("[{}/{}] Step: " + message, stepNumber, stepCount);
+    log.info(repeat("#", 80));
   }
 
 }

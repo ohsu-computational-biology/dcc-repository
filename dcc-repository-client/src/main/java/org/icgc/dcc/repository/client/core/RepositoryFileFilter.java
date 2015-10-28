@@ -71,6 +71,7 @@ public class RepositoryFileFilter {
 
   private boolean containsPCAWG(Set<String> repoCodes) {
     for (val repoCode : repoCodes) {
+      // TODO: Use RepositorySource instead
       if (repoCode.toLowerCase().startsWith("pcawg")) {
         return true;
       }

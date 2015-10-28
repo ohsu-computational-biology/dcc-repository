@@ -30,6 +30,7 @@ import org.icgc.dcc.repository.core.model.RepositorySource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Sets;
 import com.mongodb.MongoClientURI;
 
 import lombok.Data;
@@ -50,8 +51,8 @@ public class ClientProperties {
   @Data
   public static class RepositoryProperties {
 
-    Set<RepositoryImporter.Step> steps;
-    Set<RepositorySource> sources;
+    Set<RepositoryImporter.Step> steps = Sets.newHashSet();
+    Set<RepositorySource> sources = Sets.newHashSet();
 
     @MongoURI
     MongoClientURI mongoUri;

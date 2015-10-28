@@ -65,6 +65,7 @@ public class RepositoryFileCollector {
   }
 
   private Iterable<RepositorySourceFileReader> createReaders() {
+    log.info("Creating readers for sources: {}...", context.getSources());
     return context.getSources().stream()
         .map(source -> new RepositorySourceFileReader(context.getMongoUri(), source))
         .collect(toImmutableList());

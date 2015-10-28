@@ -59,6 +59,11 @@
         <artifactId>dcc-repository-core</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-id-client</artifactId>
+        <version>${dcc-id.version}</version>
+      </dependency>
 
     </dependencies>
   </dependencyManagement>

@@ -97,9 +97,8 @@ public final class RepositoryFileContextBuilder {
     val idClient = createIdClient();
     val tcgaClient = createTCGAClient();
 
-    return new RepositoryFileContext(repoMongoUri, esUri, indexAlias, skipImport, sources, primarySites, idClient,
-        tcgaClient,
-        pcawgIdResolver);
+    return new RepositoryFileContext(repoMongoUri, esUri, indexAlias, skipImport, sources, primarySites,
+        idClient, tcgaClient, pcawgIdResolver);
   }
 
   private IdClient createIdClient() {

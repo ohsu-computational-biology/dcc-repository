@@ -204,7 +204,7 @@ public class RepositoryImporter {
   private void indexFiles() {
     logBanner("Indexing files");
     @Cleanup
-    val indexer = new RepositoryFileIndexer(context.getMongoUri(), context.getEsUri());
+    val indexer = new RepositoryFileIndexer(context.getMongoUri(), context.getEsUri(), context.getIndexAlias());
     indexer.indexFiles();
   }
 

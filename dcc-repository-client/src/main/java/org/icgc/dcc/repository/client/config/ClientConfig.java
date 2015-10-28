@@ -65,7 +65,8 @@ public class ClientConfig {
     // Outputs
     context
         .repoMongoUri(properties.getRepository().getMongoUri())
-        .esUri(properties.getRepository().getEsUri());
+        .esUri(properties.getRepository().getEsUri())
+        .indexAlias(properties.getRepository().getIndexAlias());
 
     return context.build();
   }

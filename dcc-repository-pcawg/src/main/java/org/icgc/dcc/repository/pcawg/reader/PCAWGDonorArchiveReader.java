@@ -36,6 +36,7 @@ public class PCAWGDonorArchiveReader {
       getUrl(PCAWG_ARCHIVE_BASE_URL + "/gnos_metadata/latest/reports/donors_with_bwa_alignment.jsonl");
   public static final URL DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
       getUrl(PCAWG_ARCHIVE_BASE_URL + "/_tmp/release_aug2015.v2.jsonl");
+  // getUrl(PCAWG_ARCHIVE_BASE_URL + "/_tmp/release_oct2015.v1.jsonl");
 
   /**
    * Constants.

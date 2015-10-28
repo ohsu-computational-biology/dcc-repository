@@ -44,8 +44,6 @@ public class RepositoryFileIndexes {
   /**
    * Index naming.
    */
-  // TODO: Change back after development
-  public static final String REPO_INDEX_ALIAS = "test-icgc-repository";
   public static final DateTimeFormatter INDEX_NAME_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
   /**
@@ -77,23 +75,23 @@ public class RepositoryFileIndexes {
     return (ObjectNode) typeMapping;
   }
 
-  public static String getCurrentIndexName() {
+  public static String getCurrentIndexName(String indexAlias) {
     val currentDate = INDEX_NAME_DATE_FORMAT.format(LocalDate.now());
-    return REPO_INDEX_ALIAS + "-" + currentDate;
+    return indexAlias + "-" + currentDate;
   }
 
-  public static LocalDate getIndexDate(String indexName) {
-    val date = indexName.replace(REPO_INDEX_ALIAS + "-", "");
+  public static LocalDate getIndexDate(String indexAlias, String indexName) {
+    val date = indexName.replace(indexAlias + "-", "");
     return INDEX_NAME_DATE_FORMAT.parse(date, LocalDate::from);
   }
 
-  public static Predicate<? super String> isRepoIndexName() {
-    return indexName -> indexName.startsWith(REPO_INDEX_ALIAS);
+  public static Predicate<? super String> isRepoIndexName(String indexAlias) {
+    return indexName -> indexName.startsWith(indexAlias);
   }
 
-  public static Comparator<? super String> compareIndexDateDescending() {
+  public static Comparator<? super String> compareIndexDateDescending(String indexAlias) {
     return (repoIndexA, repoIndexB) -> {
-      return -getIndexDate(repoIndexA).compareTo(getIndexDate(repoIndexB)); // Time descending
+      return -getIndexDate(indexAlias, repoIndexA).compareTo(getIndexDate(indexAlias, repoIndexB)); // Time descending
     };
   }
 

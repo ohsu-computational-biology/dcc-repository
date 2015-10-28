@@ -50,6 +50,9 @@ public class RepositoryFileContext {
   @NonNull
   private final URI esUri;
   @Getter
+  @NonNull
+  private final String indexAlias;
+  @Getter
   private final boolean skipImport;
   @Getter
   @NonNull

@@ -23,7 +23,6 @@ import static com.google.common.base.Throwables.propagate;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.REPO_INDEX_ALIAS;
 import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.compareIndexDateDescending;
 import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.getCurrentIndexName;
 import static org.icgc.dcc.repository.index.core.RepositoryFileIndexes.getSettings;
@@ -62,6 +61,8 @@ public class RepositoryFileIndexer implements Closeable {
   @NonNull
   private final MongoClientURI mongoUri;
   @NonNull
+  private final String indexAlias;
+  @NonNull
   private final String indexName;
 
   /**
@@ -70,9 +71,10 @@ public class RepositoryFileIndexer implements Closeable {
   @NonNull
   private final TransportClient client;
 
-  public RepositoryFileIndexer(@NonNull MongoClientURI mongoUri, @NonNull URI esUri) {
+  public RepositoryFileIndexer(@NonNull MongoClientURI mongoUri, @NonNull URI esUri, String indexAlias) {
     this.mongoUri = mongoUri;
-    this.indexName = getCurrentIndexName();
+    this.indexAlias = indexAlias;
+    this.indexName = getCurrentIndexName(indexAlias);
     this.client = newTransportClient(esUri);
   }
 
@@ -179,17 +181,15 @@ public class RepositoryFileIndexer implements Closeable {
 
   @SneakyThrows
   private void aliasIndex() {
-    val alias = REPO_INDEX_ALIAS;
-
     // Remove existing alias
     val request = client.admin().indices().prepareAliases();
     for (val index : getIndexNames()) {
-      request.removeAlias(index, alias);
+      request.removeAlias(index, indexAlias);
     }
 
     // Add new alias
-    log.info("Assigning index alias {} to index {}...", alias, indexName);
-    request.addAlias(indexName, alias);
+    log.info("Assigning index alias {} to index {}...", indexAlias, indexName);
+    request.addAlias(indexName, indexAlias);
 
     // Re-assign
     checkState(request
@@ -197,15 +197,15 @@ public class RepositoryFileIndexer implements Closeable {
         .actionGet()
         .isAcknowledged(),
         "Assigning index alias '%s' to index '%s' was not acknowledged!",
-        alias, indexName);
+        indexAlias, indexName);
   }
 
   private void pruneIndexes() {
     String[] staleRepoIndexNames =
         getIndexNames()
             .stream()
-            .filter(isRepoIndexName())
-            .sorted(compareIndexDateDescending())
+            .filter(isRepoIndexName(indexAlias))
+            .sorted(compareIndexDateDescending(indexAlias))
             .skip(3) // Keep 3
             .toArray(size -> new String[size]);
 

@@ -21,6 +21,7 @@ spring:
 repository:
   sources: # All
   steps: # All
+  indexAlias: icgc-repository
 
 ---
 
@@ -36,6 +37,7 @@ spring:
 repository:
   esUri: es://localhost:9300
   mongoUri: mongodb://localhost/dcc-repository
+  indexAlias: test-icgc-repository
 
 # Imports
 imports:

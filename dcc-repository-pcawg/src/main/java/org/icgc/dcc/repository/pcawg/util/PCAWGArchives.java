@@ -41,7 +41,7 @@ public class PCAWGArchives {
   /**
    * Field values.
    */
-  public static final List<String> PCAWG_LIBRARY_STRATEGY_NAMES = ImmutableList.of(
+  public static final List<String> PCAWG_LIBRARY_STRATEGIES = ImmutableList.of(
       "rna_seq", "wgs");
   public static final List<String> PCAWG_SPECIMEN_CLASSES = ImmutableList.of(
       "normal_specimen", "normal_specimens", "tumor_specimen", "tumor_specimens");

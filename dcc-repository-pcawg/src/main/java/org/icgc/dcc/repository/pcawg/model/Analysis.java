@@ -26,22 +26,22 @@ import lombok.Value;
 public class Analysis {
 
   @NonNull
-  String libraryStrategyName;
+  String libraryStrategy;
   @NonNull
   String workflowType;
   @NonNull
   String specimenClass;
 
   public boolean isRNAAlignment() {
-    return "rna_seq".equals(libraryStrategyName) && ("star".equals(workflowType) || "tophat".equals(workflowType));
+    return "rna_seq".equals(libraryStrategy) && ("star".equals(workflowType) || "tophat".equals(workflowType));
   }
 
   public boolean isBWAAlignment() {
-    return "wgs".equals(libraryStrategyName) && "bwa_alignment".equals(workflowType);
+    return "wgs".equals(libraryStrategy) && "bwa_alignment".equals(workflowType);
   }
 
-  public boolean isSangerVariantCalling() {
-    return "wgs".equals(libraryStrategyName) && "sanger_variant_calling".equals(workflowType);
+  public boolean isVariantCalling() {
+    return "wgs".equals(libraryStrategy) && workflowType.endsWith("_variant_calling");
   }
 
 }

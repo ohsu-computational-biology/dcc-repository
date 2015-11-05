@@ -29,9 +29,8 @@ import static org.icgc.dcc.repository.core.model.RepositoryServers.getPCAWGServe
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveAnalysisMethod;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveDataCategorization;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveFileFormat;
-import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_LIBRARY_STRATEGY_NAMES;
+import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_LIBRARY_STRATEGIES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_SPECIMEN_CLASSES;
-import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_WORKFLOW_TYPES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.getBamFileMd5sum;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.getBamFileName;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.getBamFileSize;
@@ -110,19 +109,43 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val submittedDonorId = getSubmitterDonorId(donor);
     val donorFiles = ImmutableList.<RepositoryFile> builder();
 
-    for (val libraryStrategyName : PCAWG_LIBRARY_STRATEGY_NAMES) {
+    // Each strategy
+    for (val libraryStrategy : PCAWG_LIBRARY_STRATEGIES) {
       for (val specimenClass : PCAWG_SPECIMEN_CLASSES) {
-        val specimens = donor.path(libraryStrategyName).path(specimenClass);
+        val specimens = donor.path(libraryStrategy).path(specimenClass);
 
+        // Each specimen
         for (val specimen : specimens.isArray() ? specimens : singleton(specimens)) {
-          for (val workflowType : PCAWG_WORKFLOW_TYPES) {
-            val workflow = specimen.path(workflowType);
+
+          // Each workflow
+          val iterator = specimen.fields();
+          while (iterator.hasNext()) {
+            val entry = iterator.next();
+            val workflowType = entry.getKey();
+            val workflow = entry.getValue();
+
             val analysis = Analysis.builder()
-                .libraryStrategyName(libraryStrategyName)
+                .libraryStrategy(libraryStrategy)
                 .specimenClass(specimenClass)
                 .workflowType(workflowType).build();
 
+            // Each file
             for (val workflowFile : resolveIncludedFiles(workflow)) {
+              System.out.println("File name: " + getFileName(workflowFile));
+
+              // See
+              // https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#UniformmetadataJSONdocumentforICGCDataRepositories-Datatypeassignmentforvariantcallresultfiles
+              if (getFileName(workflowFile).contains(".germline.") && workflowType.equals("sanger_variant_calling")) {
+                continue;
+              }
+              if (libraryStrategy.equals("wgs") && specimenClass.equals("tumor_specimens")
+                  && workflowType.equals("broad_tar_variant_calling")) {
+                continue;
+              }
+              if (hasFileExtension(workflowFile, ".tar.gz")) {
+                continue;
+              }
+
               val donorFile = createDonorFile(projectCode, submittedDonorId, analysis, workflow, workflowFile);
               donorFiles.add(donorFile);
             }

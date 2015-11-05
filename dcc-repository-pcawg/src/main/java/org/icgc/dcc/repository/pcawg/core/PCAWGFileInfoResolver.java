@@ -30,6 +30,10 @@ import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * See https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#
+ * UniformmetadataJSONdocumentforICGCDataRepositories-Datatypeassignmentforvariantcallresultfiles
+ */
 @Slf4j
 public class PCAWGFileInfoResolver {
 
@@ -43,10 +47,10 @@ public class PCAWGFileInfoResolver {
       analysisMethod
           .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
           .setSoftware(Software.BWA_MEM);
-    } else if (analysis.isSangerVariantCalling()) {
+    } else if (analysis.isVariantCalling()) {
       analysisMethod
           .setAnalysisType(AnalysisType.VARIANT_CALLING)
-          .setSoftware(Software.SANGER_VAR);
+          .setSoftware(resolveVariantCallingSoftware(analysis));
     }
 
     return analysisMethod;
@@ -63,9 +67,9 @@ public class PCAWGFileInfoResolver {
       category
           .setDataType(DataType.ALIGNED_READS)
           .setExperimentalStrategy(ExperimentalStrategy.WGS);
-    } else if (analysis.isSangerVariantCalling()) {
+    } else if (analysis.isVariantCalling()) {
       category
-          .setDataType(resolveSangerVariantCallingDataType(fileName))
+          .setDataType(resolveVariantCallingDataType(fileName))
           .setExperimentalStrategy(ExperimentalStrategy.WGS);
     }
 
@@ -79,8 +83,8 @@ public class PCAWGFileInfoResolver {
         log.warn("File with name '{}' and {} does not end in '{}'!", fileName, analysis, extension);
       }
       return FileFormat.BAM;
-    } else if (analysis.isSangerVariantCalling()) {
-      val dataType = resolveSangerVariantCallingDataType(fileName);
+    } else if (analysis.isVariantCalling()) {
+      val dataType = resolveVariantCallingDataType(fileName);
       return dataType == null ? null : FileFormat.VCF;
     } else {
       return null;
@@ -90,15 +94,15 @@ public class PCAWGFileInfoResolver {
   private static String resolveRNAAlignmentSoftware(Analysis analysis) {
     val workflowType = analysis.getWorkflowType();
     if ("tophat".equals(workflowType)) {
-      return "TopHat2";
+      return Software.TOP_HAT2;
     } else if ("star".equals(workflowType)) {
-      return "STAR";
+      return Software.STAR;
     } else {
       return workflowType;
     }
   }
 
-  private static String resolveSangerVariantCallingDataType(String fileName) {
+  private static String resolveVariantCallingDataType(String fileName) {
     if (fileName.endsWith(".somatic.snv_mnv.vcf.gz")) {
       return DataType.SSM;
     } else if (fileName.endsWith(".somatic.cnv.vcf.gz")) {
@@ -107,8 +111,33 @@ public class PCAWGFileInfoResolver {
       return DataType.STSM;
     } else if (fileName.endsWith(".somatic.indel.vcf.gz")) {
       return DataType.SSM;
+    } else if (fileName.endsWith(".germline.snv_mnv.vcf.gz")) {
+      return DataType.SGV;
+    } else if (fileName.endsWith(".germline.cnv.vcf.gz")) {
+      return DataType.CNGV;
+    } else if (fileName.endsWith(".germline.sv.vcf.gz")) {
+      return DataType.STGV;
+    } else if (fileName.endsWith(".germline.indel.vcf.gz")) {
+      return DataType.SGV;
     } else {
       return null;
+    }
+  }
+
+  private static String resolveVariantCallingSoftware(Analysis analysis) {
+    val workflowType = analysis.getWorkflowType();
+    if (workflowType.equals("broad_variant_calling")) {
+      return Software.BROAD_VARIANT_CALL_PIPELINE;
+    } else if (workflowType.equals("dkfz_embl_variant_calling")) {
+      return Software.DKFZ_EMBL_VARIANT_CALL_PIPELINE;
+    } else if (workflowType.equals("muse_variant_calling")) {
+      return Software.MUSE_VARIANT_CALL_PIPELINE;
+    } else if (workflowType.equals("sanger_variant_calling")) {
+      return Software.SANGER_VARIANT_CALL_PIPELINE;
+    } else {
+      // Unknown
+      val pipeline = workflowType.replace("_variant_calling", "");
+      return String.format("%s variant call pipeline", pipeline);
     }
   }
 

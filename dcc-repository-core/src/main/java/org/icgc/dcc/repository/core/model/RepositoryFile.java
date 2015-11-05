@@ -205,7 +205,13 @@ public class RepositoryFile {
   public class Software {
 
     public final String BWA_MEM = "BWA MEM";
-    public final String SANGER_VAR = "Sanger variant call pipeline";
+    public final String STAR = "STAR";
+    public final String TOP_HAT2 = "TopHat2";
+
+    public final String BROAD_VARIANT_CALL_PIPELINE = "Broad variant call pipeline";
+    public final String DKFZ_EMBL_VARIANT_CALL_PIPELINE = "DKFZ/EMBL variant call pipeline";
+    public final String MUSE_VARIANT_CALL_PIPELINE = "MUSE variant call pipeline";
+    public final String SANGER_VARIANT_CALL_PIPELINE = "Sanger variant call pipeline";
 
   }
 
@@ -243,6 +249,9 @@ public class RepositoryFile {
     public final String SSM = "SSM";
     public final String CNSM = "CNSM";
     public final String STSM = "StSM";
+    public final String SGV = "SGV";
+    public final String CNGV = "CNGV";
+    public final String STGV = "StGV";
 
   }
 

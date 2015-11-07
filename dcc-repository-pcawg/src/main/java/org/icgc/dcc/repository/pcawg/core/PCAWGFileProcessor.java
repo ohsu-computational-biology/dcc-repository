@@ -131,11 +131,10 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
             // Each file
             for (val workflowFile : resolveIncludedFiles(workflow)) {
-              System.out.println("File name: " + getFileName(workflowFile));
-
               // See
               // https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#UniformmetadataJSONdocumentforICGCDataRepositories-Datatypeassignmentforvariantcallresultfiles
-              if (getFileName(workflowFile).contains(".germline.") && workflowType.equals("sanger_variant_calling")) {
+              val fileName = getFileName(workflowFile);
+              if (fileName.contains(".germline.") && workflowType.equals("sanger_variant_calling")) {
                 continue;
               }
               if (libraryStrategy.equals("wgs") && specimenClass.equals("tumor_specimens")
@@ -147,6 +146,13 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
               }
 
               val donorFile = createDonorFile(projectCode, submittedDonorId, analysis, workflow, workflowFile);
+
+              // JJ: Ignore files like these for now:
+              // 712ba532-fb1a-43fa-a356-b446b509ceb7.embl-delly_1-0-0-preFilter-hpc.150708.sv.vcf.gz
+              if (donorFile.getDataCategorization().getDataType() == null) {
+                continue;
+              }
+
               donorFiles.add(donorFile);
             }
           }

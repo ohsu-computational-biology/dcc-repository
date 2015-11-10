@@ -45,6 +45,7 @@ public class CollabImporter extends CloudImporter {
   private static final String BUCKET_KEY_PREFIX = "data";
   private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/ceph_transfer_ops.git";
   private static final Collection<String> GIT_REPO_PATHS = ImmutableList.of(
+      "ceph-transfer-jobs/completed-jobs",
       "ceph-transfer-jobs-prod1/completed-jobs",
       "ceph-transfer-jobs-prod2/completed-jobs");
 

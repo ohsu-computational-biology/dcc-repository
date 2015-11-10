@@ -57,6 +57,7 @@ public class RepositoryFileFilter {
   private boolean isIncluded(RepositoryFile file) {
     val repoCodes = getRepoCodes(file);
 
+    // PCAWG published
     val pcawg = containsPCAWG(repoCodes);
     if (pcawg) {
       return true;
@@ -65,8 +66,12 @@ public class RepositoryFileFilter {
     // Not released via PCAWG yet ignore
     val aws = repoCodes.contains(AWS_VIRGINIA);
     val collab = repoCodes.contains(COLLABORATORY);
+    if (aws || collab) {
+      return false;
+    }
 
-    return !(aws || collab);
+    // All others are ok
+    return true;
   }
 
   private boolean containsPCAWG(Set<String> repoCodes) {

@@ -18,6 +18,7 @@
 package org.icgc.dcc.repository.client.core;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
+import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
@@ -41,7 +42,7 @@ public class RepositoryImporterTest {
 
   @Test
   public void testExecuteSomeFast() throws IOException {
-    val importer = createImporter(AWS, PCAWG);
+    val importer = createImporter(AWS, COLLAB, PCAWG);
     importer.execute();
   }
 

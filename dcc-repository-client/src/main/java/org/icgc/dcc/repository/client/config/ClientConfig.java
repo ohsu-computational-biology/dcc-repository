@@ -18,6 +18,7 @@
 package org.icgc.dcc.repository.client.config;
 
 import org.icgc.dcc.common.core.mail.Mailer;
+import org.icgc.dcc.common.core.report.BufferedReport;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
@@ -67,6 +68,10 @@ public class ClientConfig {
         .repoMongoUri(properties.getRepository().getMongoUri())
         .esUri(properties.getRepository().getEsUri())
         .indexAlias(properties.getRepository().getIndexAlias());
+
+    // Reporting
+    context
+        .report(new BufferedReport());
 
     return context.build();
   }

@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
+import org.icgc.dcc.common.core.report.BufferedReport;
 import org.icgc.dcc.common.core.tcga.TCGAClient;
 import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.repository.core.model.RepositorySource;
@@ -34,9 +35,7 @@ import com.mongodb.MongoClientURI;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RequiredArgsConstructor(access = PACKAGE)
 public class RepositoryFileContext {
 
@@ -74,6 +73,9 @@ public class RepositoryFileContext {
   private final TCGAClient tcgaClient;
   @NonNull
   private final RepositoryIdResolver pcawgIdResolver;
+  @Getter
+  @NonNull
+  private final BufferedReport report;
 
   /**
    * Data.
@@ -82,11 +84,11 @@ public class RepositoryFileContext {
   private final Set<String> pcawgSubmittedDonorIds = pcawgIdResolver.resolveIds();
 
   public void reportError(String error, Object... args) {
-    log.error("Error: {}", String.format(error, args));
+    report.addError(error, args);
   }
 
   public void reportWarning(String warning, Object... args) {
-    log.error("Warning: {}", String.format(warning, args));
+    report.addWarning(warning, args);
   }
 
   @NonNull

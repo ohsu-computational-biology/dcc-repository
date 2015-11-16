@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.icgc.dcc.common.core.mail.Mailer;
-import org.icgc.dcc.common.core.report.BufferedReport;
 import org.icgc.dcc.common.core.report.ReportEmail;
 import org.icgc.dcc.repository.aws.AWSImporter;
 import org.icgc.dcc.repository.cghub.CGHubImporter;
@@ -42,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 import lombok.Cleanup;
 import lombok.Getter;
@@ -104,7 +102,6 @@ public class RepositoryImporter {
     int stepNumber = 1;
     val stepCount = steps.size();
     val watch = createStarted();
-    val exceptions = Lists.<Exception> newArrayList();
     try {
 
       //
@@ -116,7 +113,7 @@ public class RepositoryImporter {
       } else {
         // Write and always continue if an exception
         logStep(stepNumber++, stepCount, "Importing sources");
-        exceptions.addAll(writeSourceFiles());
+        writeSourceFiles();
       }
 
       //
@@ -153,20 +150,20 @@ public class RepositoryImporter {
         indexFiles();
       }
     } catch (Exception e) {
-      exceptions.add(e);
+      reportException("Unknown exception processing", e);
     } finally {
-      report(watch, exceptions);
+      report(watch);
     }
 
+    val exceptions = context.getReport().getExceptions();
     checkState(exceptions.isEmpty(), "Exception(s) processing %s", exceptions);
   }
 
-  private List<Exception> writeSourceFiles() {
+  private void writeSourceFiles() {
     val importers = createImporters(context);
 
     int sourceNumber = 1;
     val sourceCount = context.getSources().size();
-    val exceptions = ImmutableList.<Exception> builder();
     for (val importer : importers) {
       val active = context.isSourceActive(importer.getSource());
       if (active) {
@@ -175,15 +172,19 @@ public class RepositoryImporter {
           log.info("[{}/{}] Import: {}", sourceNumber++, sourceCount, importer.getSource());
           log.info(repeat("-", 80));
 
+          // Perform import of source
           importer.execute();
         } catch (Exception e) {
-          log.error("Error procesing '" + importer.getSource() + "': ", e);
-          exceptions.add(e);
+          reportException(String.format("Error processing '%s': %s", importer.getSource(), e.getMessage()), e);
         }
       }
     }
+  }
 
-    return exceptions.build();
+  private void reportException(final java.lang.String message, Exception e) {
+    log.error(message, e);
+    context.getReport().addError(message);
+    context.getReport().addException(e);
   }
 
   private Iterable<Set<RepositoryFile>> collectFiles() {
@@ -215,23 +216,19 @@ public class RepositoryImporter {
     indexer.indexFiles();
   }
 
-  private void report(Stopwatch watch, List<Exception> exceptions) {
-    val success = exceptions.isEmpty();
-    if (success) {
-      log.info("Finished importing repository in {}", watch);
-    } else {
-      log.error("Finished importing repository with errors in {}:", watch);
-      int i = 0;
-      for (val e : exceptions) {
-        log.error("[" + ++i + "/" + exceptions.size() + "]: ", e);
-      }
-    }
-
-    val report = new BufferedReport();
+  private void report(Stopwatch watch) {
+    val report = context.getReport();
     report.addTimer(watch);
 
-    for (val exception : exceptions) {
-      report.addException(exception);
+    val success = report.getExceptionCount() == 0;
+    if (success) {
+      log.info("Finished importing repositories in {}", watch);
+    } else {
+      log.error("Finished importing repositories with errors in {}:", watch);
+      int i = 0;
+      for (val e : report.getExceptions()) {
+        log.error("[" + ++i + "/" + report.getExceptions().size() + "]: ", e);
+      }
     }
 
     val message = new ReportEmail("DCC Repository", report);
@@ -239,7 +236,7 @@ public class RepositoryImporter {
   }
 
   private static List<RepositorySourceFileImporter> createImporters(RepositoryFileContext context) {
-    // Order will be execution order subject to activation
+    // The list order will be execution order, subject to activation
     return ImmutableList.of(
         new PCAWGImporter(context),
         new AWSImporter(context),

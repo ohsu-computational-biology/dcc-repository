@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
+import org.icgc.dcc.common.core.report.BufferedReport;
 import org.icgc.dcc.common.core.tcga.TCGAClient;
 import org.icgc.dcc.common.core.util.URIs;
 import org.icgc.dcc.id.client.core.IdClient;
@@ -86,6 +87,9 @@ public final class RepositoryFileContextBuilder {
   @Setter
   @Accessors(chain = true, fluent = true)
   private RepositoryIdResolver pcawgIdResolver;
+  @Setter
+  @Accessors(chain = true, fluent = true)
+  private BufferedReport report = new BufferedReport();
 
   public static RepositoryFileContextBuilder builder() {
     return new RepositoryFileContextBuilder();
@@ -98,7 +102,7 @@ public final class RepositoryFileContextBuilder {
     val tcgaClient = createTCGAClient();
 
     return new RepositoryFileContext(repoMongoUri, esUri, indexAlias, skipImport, sources, primarySites,
-        idClient, tcgaClient, pcawgIdResolver);
+        idClient, tcgaClient, pcawgIdResolver, report);
   }
 
   private IdClient createIdClient() {

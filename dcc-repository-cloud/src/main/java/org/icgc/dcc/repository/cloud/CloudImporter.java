@@ -74,6 +74,10 @@ public abstract class CloudImporter extends GenericRepositorySourceFileImporter 
     return fileProcessor.processCompletedJobs(completedJobs, objectSummaries);
   }
 
+  /**
+   * Template methods.
+   */
+
   abstract protected CloudTransferJobReader createJobReader();
 
   abstract protected CloudS3BucketReader createBucketReader();

@@ -82,12 +82,16 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
       Map<String, S3ObjectSummary> objectSummaryIndex) {
     val objectFiles = ImmutableList.<RepositoryFile> builder();
     for (val completedJob : completedJobs) {
-
       for (val file : resolveIncludedFiles(completedJob)) {
         val objectId = getObjectId(file);
         val objectSummary = objectSummaryIndex.get(objectId);
-        val objectFile = createObjectFile(completedJob, file, objectSummary);
+        if (objectSummary == null) {
+          context.reportError("Missing object summary for object id {} and completed job {}", objectId, completedJob);
+          continue;
+        }
 
+        // Join completed job and object summary
+        val objectFile = createObjectFile(completedJob, file, objectSummary);
         objectFiles.add(objectFile);
       }
     }

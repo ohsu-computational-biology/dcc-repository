@@ -21,6 +21,10 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>dcc-repository-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dcc-repository-resources</artifactId>
+    </dependency>
 
     <!-- Index -->
     <dependency>

@@ -49,7 +49,7 @@ public class RepositoryFileIndexes {
   /**
    * Metadata location.
    */
-  private static final String ES_CONFIG_BASE_PATH = "mappings";
+  private static final String ES_CONFIG_BASE_PATH = "org/icgc/dcc/repository/resources/mappings";
 
   public static ObjectNode getSettings() throws IOException {
     val resourceName = format("%s/index.settings.json", ES_CONFIG_BASE_PATH);

@@ -27,6 +27,8 @@
     <module>dcc-repository-cghub</module>
     <module>dcc-repository-tcga</module>
     <module>dcc-repository-index</module>
+
+    <module>dcc-repository-resources</module>
   </modules>
 
   <repositories>
@@ -38,25 +40,30 @@
 
   <dependencyManagement>
     <dependencies>
-    
+
       <!-- DCC - Common -->
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-common-core</artifactId>
         <version>${dcc-common.version}</version>
       </dependency>
-      
+
       <!-- DCC - ID -->
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-id-client</artifactId>
         <version>${dcc-id.version}</version>
       </dependency>
-      
+
       <!-- DCC - Repository -->
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>dcc-repository-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dcc-repository-resources</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

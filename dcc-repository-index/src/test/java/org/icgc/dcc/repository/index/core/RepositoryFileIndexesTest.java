@@ -15,25 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.tcga;
+package org.icgc.dcc.repository.index.core;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-@Ignore("For development only")
-public class TCGAImporterTest {
+public class RepositoryFileIndexesTest {
 
   @Test
-  public void testExecute() throws IOException {
-    val context = newLocalRepositoryFileContext();
-    val tcgaImporter = new TCGAImporter(context);
-    tcgaImporter.execute();
+  public void testGetTypeMapping() throws Exception {
+    val typeName = "file-centric";
+    val typeMapping = RepositoryFileIndexes.getTypeMapping(typeName);
+
+    assertThat(typeMapping).isNotNull();
+    assertThat(typeMapping.has(typeName)).isTrue();
   }
 
 }

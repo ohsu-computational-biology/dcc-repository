@@ -17,18 +17,17 @@
  */
 package org.icgc.dcc.repository.tcga.reader;
 
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
-import org.icgc.dcc.repository.tcga.reader.TCGAArchivePageReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
+@Ignore("For development only")
 public class TCGAArchivePageReaderTest {
 
   @Test
-  @Ignore("For development only")
   public void testReadEntries() {
     val url =
         "https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/cesc/bcr/nationwidechildrens.org/bio/clin/nationwidechildrens.org_CESC.bio.Level_1.200.62.0";

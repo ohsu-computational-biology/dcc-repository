@@ -29,6 +29,11 @@ import lombok.val;
 
 public class AWSClientFactory {
 
+  /**
+   * Constants.
+   */
+  private static final String COLLAB_S3_ENDPOINT = "https://object.cancercollaboratory.org:9080";
+
   public static AmazonS3 createS3Client() {
     // Required for current version of Rados Gateway
     SignerFactory.registerSigner("S3Signer", S3Signer.class);
@@ -36,7 +41,7 @@ public class AWSClientFactory {
     val s3 = new AmazonS3Client(
         new ProfileCredentialsProvider("collab"),
         new ClientConfiguration().withSignerOverride("S3Signer"));
-    s3.setEndpoint("https://www.cancercollaboratory.org:9080");
+    s3.setEndpoint(COLLAB_S3_ENDPOINT);
     s3.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
     return s3;

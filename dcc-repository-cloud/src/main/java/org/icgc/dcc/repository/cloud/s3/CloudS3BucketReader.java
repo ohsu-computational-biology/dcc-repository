@@ -18,13 +18,17 @@
 package org.icgc.dcc.repository.cloud.s3;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -52,9 +56,12 @@ public class CloudS3BucketReader {
   public List<S3ObjectSummary> readSummaries() {
     val objectSummaries = ImmutableList.<S3ObjectSummary> builder();
 
-    readBucket(bucketName, prefix, (objectSummary) -> {
-      objectSummaries.add(objectSummary);
-    });
+    // For all bucket partitions
+    for (val bucketName : getBucketNames()) {
+      readBucket(bucketName, prefix, (objectSummary) -> {
+        objectSummaries.add(objectSummary);
+      });
+    }
 
     return objectSummaries.build();
   }
@@ -72,6 +79,24 @@ public class CloudS3BucketReader {
 
       request.setMarker(listing.getNextMarker());
     } while (listing.isTruncated());
+  }
+
+  private Set<String> getBucketNames() {
+    val bucketNames = ImmutableSet.<String> builder();
+
+    for (val bucketPartition : s3.listBuckets()) {
+      if (isBucketPartition(bucketPartition)) {
+        bucketNames.add(bucketPartition.getName());
+      }
+    }
+
+    return bucketNames.build();
+  }
+
+  private boolean isBucketPartition(Bucket bucketPartition) {
+    // Bucket partitioning naming scheme
+    val bucketPartitionPattern = Pattern.quote(bucketName) + "(\\.\\d+)?";
+    return bucketPartition.getName().matches(bucketPartitionPattern);
   }
 
 }

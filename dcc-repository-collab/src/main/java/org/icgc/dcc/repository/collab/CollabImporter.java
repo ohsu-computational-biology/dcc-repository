@@ -19,8 +19,6 @@ package org.icgc.dcc.repository.collab;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 
-import java.util.Collection;
-
 import org.icgc.dcc.repository.cloud.CloudImporter;
 import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
 import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
@@ -28,8 +26,6 @@ import org.icgc.dcc.repository.cloud.transfer.CloudTransferJobReader;
 import org.icgc.dcc.repository.collab.s3.AWSClientFactory;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryServers;
-
-import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
@@ -44,10 +40,7 @@ public class CollabImporter extends CloudImporter {
   private static final String BUCKET_NAME = "oicr.icgc";
   private static final String BUCKET_KEY_PREFIX = "data";
   private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/ceph_transfer_ops.git";
-  private static final Collection<String> GIT_REPO_PATHS = ImmutableList.of(
-      "ceph-transfer-jobs/completed-jobs",
-      "ceph-transfer-jobs-prod1/completed-jobs",
-      "ceph-transfer-jobs-prod2/completed-jobs");
+  private static final String GIT_REPO_DIR_GLOB = "ceph-transfer-jobs*";
 
   public CollabImporter(@NonNull RepositoryFileContext context) {
     super(COLLAB, context, log);
@@ -55,7 +48,7 @@ public class CollabImporter extends CloudImporter {
 
   @Override
   protected CloudTransferJobReader createJobReader() {
-    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_PATHS);
+    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_DIR_GLOB);
   }
 
   @Override

@@ -19,8 +19,6 @@ package org.icgc.dcc.repository.aws;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
 
-import java.util.Collection;
-
 import org.icgc.dcc.repository.aws.s3.AWSClientFactory;
 import org.icgc.dcc.repository.cloud.CloudImporter;
 import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
@@ -28,8 +26,6 @@ import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
 import org.icgc.dcc.repository.cloud.transfer.CloudTransferJobReader;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryServers;
-
-import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
@@ -44,9 +40,7 @@ public class AWSImporter extends CloudImporter {
   private static final String BUCKET_NAME = "oicr.icgc";
   private static final String BUCKET_KEY_PREFIX = "data";
   private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/s3-transfer-operations.git";
-  private static final Collection<String> GIT_REPO_PATHS = ImmutableList.of(
-      "s3-transfer-jobs-prod1/completed-jobs",
-      "s3-transfer-jobs-prod2/completed-jobs");
+  private static final String GIT_REPO_DIR_GLOB = "s3-transfer-jobs-*";
 
   public AWSImporter(@NonNull RepositoryFileContext context) {
     super(AWS, context, log);
@@ -54,7 +48,7 @@ public class AWSImporter extends CloudImporter {
 
   @Override
   protected CloudTransferJobReader createJobReader() {
-    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_PATHS);
+    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_DIR_GLOB);
   }
 
   @Override

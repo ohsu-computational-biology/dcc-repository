@@ -18,14 +18,15 @@
 package org.icgc.dcc.repository.cloud.transfer;
 
 import static com.google.common.io.Files.createTempDir;
+import static java.nio.file.Files.newDirectoryStream;
 import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -33,13 +34,13 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
-import org.icgc.dcc.common.core.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -61,7 +62,7 @@ public class CloudTransferJobReader {
   @NonNull
   private final String repoUrl;
   @NonNull
-  private final Collection<String> paths;
+  private final String repoDirGlob;
 
   @SneakyThrows
   public List<ObjectNode> readJobs() {
@@ -107,8 +108,13 @@ public class CloudTransferJobReader {
     return Files.list(completedDir.toPath()).filter(isJsonFile()).collect(toImmutableList());
   }
 
+  @SneakyThrows
   private List<File> resolveCompletedDirs(File repoDir) {
-    return paths.stream().map(path -> new File(repoDir, path)).collect(Collectors.toImmutableList());
+    log.info("Resolving repo dirs using glob: '{}'", repoDirGlob);
+    @Cleanup
+    val dirs = newDirectoryStream(repoDir.toPath(), repoDirGlob);
+
+    return stream(dirs).map(d -> new File(d.toFile(), "completed-jobs")).collect(toImmutableList());
   }
 
   private static Predicate<? super Path> isJsonFile() {

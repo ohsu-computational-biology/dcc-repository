@@ -86,7 +86,8 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
         val objectId = getObjectId(file);
         val objectSummary = objectSummaryIndex.get(objectId);
         if (objectSummary == null) {
-          context.reportWarning("Missing object summary for object id %s and completed job %s", objectId, completedJob);
+          context.reportWarning("Missing object summary for object id %s and completed job %s", objectId,
+              completedJob.path("_runs_"));
           continue;
         }
 

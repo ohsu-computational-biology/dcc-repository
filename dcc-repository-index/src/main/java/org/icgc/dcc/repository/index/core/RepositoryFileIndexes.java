@@ -20,8 +20,8 @@ package org.icgc.dcc.repository.index.core;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.io.Resources.getResource;
 import static java.lang.String.format;
-import static org.icgc.dcc.common.core.util.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
+import static org.icgc.dcc.common.json.Jackson.DEFAULT;
 
 import java.io.IOException;
 import java.time.LocalDate;

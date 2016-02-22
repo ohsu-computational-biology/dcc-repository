@@ -1,7 +1,14 @@
-ICGC DCC - Repository - Client
-===
+# ICGC DCC - Repository - Client
 
 Client module that is the execution entry point into the system.
+
+## Build
+
+To compile, test and package the module, execute the following from the root of the repository:
+
+```shell
+mvn -am -pl dcc-repository/dcc-repository-client
+```
 
 ## Configuration
 

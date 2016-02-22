@@ -1,9 +1,8 @@
-ICGC DCC - Repository - Change Log
-===
+# ICGC DCC - Repository - Change Log
 
 Change log for Repository importer
 
-0.0.1
+1.0.0
 --
  - First release!
 

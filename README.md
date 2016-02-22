@@ -1,17 +1,24 @@
-ICGC DCC - Repository
-===
+# ICGC DCC - Repository
 
 Importer for the ICGC "Data Repository" feature which imports file metadata from various external data sources.
 
-Modules
----
+## Build
+
+To compile, test and package the system, execute the following from the root of the repository:
+
+```shell
+mvn
+```
+
+## Modules
 
 The Repository system is comprised of the following modules.
 
-### Core
+### Common
 
 This module is the shared understanding of the system
 - [Core](dcc-repository-core/README.md)
+- [Resources](dcc-repository-resources/README.md)
 
 ### Client
 
@@ -35,16 +42,15 @@ AWS and Collab share common code through:
 This module indexes the collected data sources.
 
 - [Index](dcc-repository-index/README.md)
-
-Build
----
-
-From the command line:
-
-	mvn clean package
 	
-Changes
----
+## Installation
 
-See [CHANGES.md](CHANGES.md)
+For automated deployment and installation of the infrastructure and software components, please consult the [dcc-cm](https://github.com/icgc-dcc/dcc-cm/blob/develop/ansible/README.md) project.
 
+## Changes
+
+Change log for the user-facing system modules may be found in [CHANGES.md](CHANGES.md).
+
+## License
+
+Copyright and license information may be found in [LICENSE.md](LICENSE.md).

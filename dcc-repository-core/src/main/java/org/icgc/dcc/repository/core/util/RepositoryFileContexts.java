@@ -41,6 +41,7 @@ public final class RepositoryFileContexts {
   public static RepositoryFileContext newLocalRepositoryFileContext(Set<RepositorySource> sources) {
     return RepositoryFileContextBuilder
         .builder()
+        .geneMongoUri(null)
         .realIds(false)
         .sources(sources)
         .indexAlias("dev-icgc-repository")

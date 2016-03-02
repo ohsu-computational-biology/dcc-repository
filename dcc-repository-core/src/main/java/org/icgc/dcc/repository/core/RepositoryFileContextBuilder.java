@@ -18,6 +18,7 @@
 package org.icgc.dcc.repository.core;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.net.URI;
@@ -97,12 +98,20 @@ public final class RepositoryFileContextBuilder {
 
   @NonNull
   public RepositoryFileContext build() {
-    val primarySites = getProjectPrimarySites(geneMongoUri);
+    val primarySites = createPrimarySites();
     val idClient = createIdClient();
     val tcgaClient = createTCGAClient();
 
     return new RepositoryFileContext(repoMongoUri, esUri, indexAlias, skipImport, sources, primarySites,
         idClient, tcgaClient, pcawgIdResolver, report);
+  }
+
+  private Map<String, String> createPrimarySites() {
+    if (geneMongoUri == null) {
+      return emptyMap();
+    }
+
+    return getProjectPrimarySites(geneMongoUri);
   }
 
   private IdClient createIdClient() {

@@ -15,37 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.ega;
 
-import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
-import java.util.Set;
+import org.junit.Test;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import lombok.val;
 
-import com.google.common.collect.ImmutableSet;
+public class EGAImporterTest {
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
-
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositorySource implements Identifiable {
-
-  CGHUB("CGHub"),
-  EGA("EGA"),
-  TCGA("TCGA"),
-  PCAWG("PCAWG"),
-  AWS("AWS"),
-  COLLAB("Collaboratory");
-
-  @Getter
-  @NonNull
-  private final String id;
-
-  @Getter(lazy = true)
-  @Accessors(fluent = true)
-  private static final Set<RepositorySource> all = ImmutableSet.copyOf(values());
+  @Test
+  // @Ignore("For development only")
+  public void testExecute() {
+    val context = newLocalRepositoryFileContext();
+    val egaImporter = new EGAImporter(context);
+    egaImporter.execute();
+  }
 
 }

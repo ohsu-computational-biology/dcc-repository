@@ -15,37 +15,14 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.ega.model;
 
-import static lombok.AccessLevel.PRIVATE;
+import lombok.Value;
 
-import java.util.Set;
+@Value
+public class EGASubmissionFile {
 
-import org.icgc.dcc.common.core.model.Identifiable;
-
-import com.google.common.collect.ImmutableSet;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
-
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositorySource implements Identifiable {
-
-  CGHUB("CGHub"),
-  EGA("EGA"),
-  TCGA("TCGA"),
-  PCAWG("PCAWG"),
-  AWS("AWS"),
-  COLLAB("Collaboratory");
-
-  @Getter
-  @NonNull
-  private final String id;
-
-  @Getter(lazy = true)
-  @Accessors(fluent = true)
-  private static final Set<RepositorySource> all = ImmutableSet.copyOf(values());
+  EGAStudyFile study;
+  EGAAnalysisFile analysis;
 
 }

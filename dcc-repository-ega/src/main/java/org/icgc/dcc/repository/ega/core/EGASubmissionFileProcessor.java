@@ -15,37 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.ega.core;
 
-import static lombok.AccessLevel.PRIVATE;
+import java.util.Collections;
 
-import java.util.Set;
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
+import org.icgc.dcc.repository.ega.model.EGASubmissionFile;
 
-import org.icgc.dcc.common.core.model.Identifiable;
-
-import com.google.common.collect.ImmutableSet;
-
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositorySource implements Identifiable {
+@Slf4j
+public class EGASubmissionFileProcessor extends RepositoryFileProcessor {
 
-  CGHUB("CGHub"),
-  EGA("EGA"),
-  TCGA("TCGA"),
-  PCAWG("PCAWG"),
-  AWS("AWS"),
-  COLLAB("Collaboratory");
+  /**
+   * Metadata.
+   */
+  @SuppressWarnings("unused")
+  private final RepositoryServer server;
 
-  @Getter
-  @NonNull
-  private final String id;
+  public EGASubmissionFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer server) {
+    super(context);
+    this.server = server;
+  }
 
-  @Getter(lazy = true)
-  @Accessors(fluent = true)
-  private static final Set<RepositorySource> all = ImmutableSet.copyOf(values());
+  public Iterable<RepositoryFile> processSubmissions(@NonNull Iterable<EGASubmissionFile> submissionFiles) {
+    for (val submissionFile : submissionFiles) {
+      log.info("{}", submissionFile);
+    }
+
+    return Collections.emptyList();
+  }
 
 }

@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.repository.ega.model;
 
+import lombok.Builder;
 import lombok.Value;
 
 @Value
-public class EGASubmissionFile {
+@Builder(builderMethodName = "submission")
+public class EGASubmission {
 
-  EGAStudyFile study;
-  EGAAnalysisFile analysis;
+  EGAStudyFile studyFile;
+  EGAAnalysisFile analysisFile;
 
 }

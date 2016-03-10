@@ -15,15 +15,18 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.submission;
+package org.icgc.dcc.repository.ega.reader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.walk;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.repository.ega.model.EGAAnalysisFile.analysisFile;
+import static org.icgc.dcc.repository.ega.model.EGAStudyFile.studyFile;
+import static org.icgc.dcc.repository.ega.model.EGASubmission.submission;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,14 +38,14 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
 import org.icgc.dcc.repository.ega.model.EGAStudyFile;
-import org.icgc.dcc.repository.ega.model.EGASubmissionFile;
+import org.icgc.dcc.repository.ega.model.EGASubmission;
 import org.json.XML;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
 import com.google.common.collect.Maps;
-import com.google.common.io.Resources;
+import com.google.common.io.Files;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -60,14 +63,15 @@ public class EGASubmissionReader {
   private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JsonOrgModule());
 
   private static final Pattern STUDY_FILE_PATTERN = Pattern.compile(""
-      // study/study.[study].xml
-      // e.g. study/study.PCAWG.xml
+      // Template: study/study.[study].xml
+      // Example : study/study.PCAWG.xml
       + "study/study\\."
       + "([^.]+)" // [study]
       + "\\.xml");
+
   private static final Pattern ANALYSIS_FILE_PATTERN = Pattern.compile(""
-      // [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].xml
-      // e.g. BRCA-UK/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4acd08c6-1354-414d-8961-1f04acb2275c.xml
+      // Template: [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].xml
+      // Example : BRCA-UK/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4acd08c6-1354-414d-8961-1f04acb2275c.xml
       + "([^/]+)" // [projectId]
       + "/analysis_"
       + "([^.]+)" // [type]
@@ -84,27 +88,36 @@ public class EGASubmissionReader {
    */
   @NonNull
   private final String repoUrl;
-  private final File repoDir = new File("/tmp/dcc-repository-ega");
+  @NonNull
+  private final File repoDir;
 
   @SneakyThrows
-  public List<EGASubmissionFile> readSubmissionFiles() {
-    updateRepo();
+  public List<EGASubmission> readSubmissions() {
+    // Ensure we are in-sync with the remote
+    updateLocalRepo();
 
+    // Read and assemble
     val studyFiles = readStudyFiles(repoDir);
     val analysisFiles = readAnalysisFiles(repoDir);
-    val submissionFiles = createSubmissionFiles(studyFiles, analysisFiles);
+    val submissions = createSubmissions(studyFiles, analysisFiles);
 
-    return submissionFiles;
+    return submissions;
   }
 
-  private List<EGASubmissionFile> createSubmissionFiles(List<EGAStudyFile> studyFiles,
+  private List<EGASubmission> createSubmissions(List<EGAStudyFile> studyFiles,
       List<EGAAnalysisFile> analysisFiles) {
     val studyIndex = Maps.<String, EGAStudyFile> uniqueIndex(studyFiles, f -> f.getStudy());
-    return analysisFiles.stream().map(f -> new EGASubmissionFile(studyIndex.get(f.getStudy()), f))
+
+    // Combine both files into a wrapper
+    return analysisFiles.stream()
+        .map(f -> submission()
+            .studyFile(studyIndex.get(f.getStudy()))
+            .analysisFile(f)
+            .build())
         .collect(toImmutableList());
   }
 
-  private void updateRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
+  private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
     if (repoDir.exists()) {
       log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
       Git
@@ -124,8 +137,7 @@ public class EGASubmissionReader {
 
   @SneakyThrows
   private List<EGAStudyFile> readStudyFiles(File repoDir) {
-    return Files
-        .walk(repoDir.toPath())
+    return walk(repoDir.toPath())
         .filter(this::isXmlFile)
         .filter(this::isStudyFile)
         .map(this::createStudyFile)
@@ -134,8 +146,7 @@ public class EGASubmissionReader {
 
   @SneakyThrows
   private List<EGAAnalysisFile> readAnalysisFiles(File repoDir) {
-    return Files
-        .walk(repoDir.toPath())
+    return walk(repoDir.toPath())
         .filter(this::isXmlFile)
         .filter(this::isAnalysisFile)
         .map(this::createAnalysisFile)
@@ -163,36 +174,45 @@ public class EGASubmissionReader {
   }
 
   private Matcher matchFile(Path path, Pattern pattern) {
+    // Match without using the absolute portion of the path
     val relativePath = repoDir.toPath().relativize(path);
     return pattern.matcher(relativePath.toString());
   }
 
   private EGAStudyFile createStudyFile(Path path) {
+    // Parse template
     val matcher = matchStudyFile(path);
     checkState(matcher.find());
 
-    return new EGAStudyFile(
-        matcher.group(1),
-        readFile(path));
+    // Combine path metadata with file metadata
+    return studyFile()
+        .study(matcher.group(1))
+        .contents(readFile(path))
+        .build();
   }
 
   private EGAAnalysisFile createAnalysisFile(Path path) {
+    // Parse template
     val matcher = matchAnalysisFile(path);
     checkState(matcher.find());
 
-    return new EGAAnalysisFile(
-        matcher.group(1),
-        matcher.group(2),
-        matcher.group(3),
-        matcher.group(4),
-        matcher.group(5),
-        readFile(path));
+    // Combine path metadata with file metadata
+    return analysisFile()
+        .projectId(matcher.group(1))
+        .type(matcher.group(2))
+        .study(matcher.group(3))
+        .workflow(matcher.group(4))
+        .analysisId(matcher.group(5))
+        .contents(readFile(path))
+        .build();
   }
 
   @SneakyThrows
   private static ObjectNode readFile(Path path) {
-    val xml = Resources.toString(path.toUri().toURL(), UTF_8);
+    // Can't use jackson-dataformat-xml because of lack of repeating elements
+    val xml = Files.toString(path.toFile(), UTF_8);
     val json = XML.toJSONObject(xml);
+
     return MAPPER.convertValue(json, ObjectNode.class);
   }
 

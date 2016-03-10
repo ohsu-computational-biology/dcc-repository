@@ -17,20 +17,22 @@
  */
 package org.icgc.dcc.repository.ega.core;
 
-import java.util.Collections;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
+import org.elasticsearch.common.collect.ImmutableList;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
-import org.icgc.dcc.repository.ega.model.EGASubmissionFile;
+import org.icgc.dcc.repository.ega.model.EGASubmission;
 
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EGASubmissionFileProcessor extends RepositoryFileProcessor {
+public class EGAFileProcessor extends RepositoryFileProcessor {
 
   /**
    * Metadata.
@@ -38,17 +40,23 @@ public class EGASubmissionFileProcessor extends RepositoryFileProcessor {
   @SuppressWarnings("unused")
   private final RepositoryServer server;
 
-  public EGASubmissionFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer server) {
+  public EGAFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer server) {
     super(context);
     this.server = server;
   }
 
-  public Iterable<RepositoryFile> processSubmissions(@NonNull Iterable<EGASubmissionFile> submissionFiles) {
-    for (val submissionFile : submissionFiles) {
-      log.info("{}", submissionFile);
-    }
+  public Iterable<RepositoryFile> processSubmissions(@NonNull Iterable<EGASubmission> submissions) {
+    return stream(submissions)
+        .peek(f -> log.info("{}", f))
+        .map(this::processSubmission)
+        .collect(toImmutableList());
+  }
 
-    return Collections.emptyList();
+  private RepositoryFile processSubmission(EGASubmission submission) {
+    val file = new RepositoryFile();
+    file.setStudy(ImmutableList.of(submission.getStudyFile().getStudy()));
+
+    return file;
   }
 
 }

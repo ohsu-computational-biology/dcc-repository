@@ -30,6 +30,7 @@ import lombok.val;
 public enum RepositoryFileCollection implements Identifiable {
 
   FILE("File", null),
+  EGA_FILE("EGAFile", RepositorySource.EGA),
   CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
   TCGA_FILE("TCGAFile", RepositorySource.TCGA),
   PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),

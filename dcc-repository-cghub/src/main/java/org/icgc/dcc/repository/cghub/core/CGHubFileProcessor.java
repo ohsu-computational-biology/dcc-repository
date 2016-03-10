@@ -75,8 +75,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
     super(context);
   }
 
-  @NonNull
-  public Iterable<RepositoryFile> processDetails(Iterable<ObjectNode> details) {
+  public Iterable<RepositoryFile> processDetails(@NonNull Iterable<ObjectNode> details) {
     log.info("Procesing and filtering details...");
     val analysisFiles = stream(details)
         .flatMap(detail -> stream(getResults(detail)))
@@ -228,9 +227,11 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   private static String resolveGenomeBuild(String refAssembly) {
     return //
     "unaligned".equals(refAssembly) ? null : //
-    refAssembly.startsWith("HG19") || refAssembly.startsWith("NCBI37") || refAssembly.startsWith("GRCh37") ? "GRCh37" : //
-    refAssembly.startsWith("HG18") || refAssembly.startsWith("NCBI36") || refAssembly.startsWith("GRCh36") ? "GRCh36" : //
-    null;
+        refAssembly.startsWith("HG19") || refAssembly.startsWith("NCBI37")
+            || refAssembly.startsWith("GRCh37") ? "GRCh37" : //
+                refAssembly.startsWith("HG18") || refAssembly.startsWith("NCBI36")
+                    || refAssembly.startsWith("GRCh36") ? "GRCh36" : //
+                        null;
   }
 
   private static String resolveSpecimenType(JsonNode result) {

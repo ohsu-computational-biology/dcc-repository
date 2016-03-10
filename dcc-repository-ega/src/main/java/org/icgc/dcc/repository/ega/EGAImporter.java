@@ -21,18 +21,21 @@ import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getEGAServer;
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
 
+import java.io.File;
+
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.ega.core.EGASubmissionFileProcessor;
-import org.icgc.dcc.repository.ega.model.EGASubmissionFile;
-import org.icgc.dcc.repository.ega.submission.EGASubmissionReader;
+import org.icgc.dcc.repository.ega.core.EGAFileProcessor;
+import org.icgc.dcc.repository.ega.model.EGASubmission;
+import org.icgc.dcc.repository.ega.reader.EGASubmissionReader;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * See https://github.com/ICGC-TCGA-PanCancer/ega-submission-tool
+ * See https://github.com/ICGC-TCGA-PanCancer/ega-submission-tool for information on how the data was created for
+ * import.
  */
 @Slf4j
 public class EGAImporter extends GenericRepositorySourceFileImporter {
@@ -41,6 +44,7 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
    * Constants.
    */
   private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/pcawg-ega-submission.git";
+  private static final File GIT_REPO_DIR = new File("/tmp/dcc-repository-ega");
 
   public EGAImporter(RepositoryFileContext context) {
     super(EGA, context, log);
@@ -48,25 +52,25 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
 
   @Override
   protected Iterable<RepositoryFile> readFiles() {
-    log.info("Reading submission files...");
-    val details = readSubmissionFiles();
-    log.info("Finished reading {} submission files", formatCount(details));
+    log.info("Reading submissions...");
+    val submissions = readSubmissions();
+    log.info("Finished reading {} submissions", formatCount(submissions));
 
     log.info("Processing files...");
-    val files = processSubmissionFiles(details);
+    val files = processSubmissionFiles(submissions);
     log.info("Finished processing {} files", formatCount(files));
 
     return files;
   }
 
-  private Iterable<EGASubmissionFile> readSubmissionFiles() {
-    val reader = new EGASubmissionReader(GIT_REPO_URL);
-    return reader.readSubmissionFiles();
+  private Iterable<EGASubmission> readSubmissions() {
+    val reader = new EGASubmissionReader(GIT_REPO_URL, GIT_REPO_DIR);
+    return reader.readSubmissions();
   }
 
-  private Iterable<RepositoryFile> processSubmissionFiles(Iterable<EGASubmissionFile> submissionFiles) {
-    val processor = new EGASubmissionFileProcessor(context, getEGAServer());
-    return processor.processSubmissions(submissionFiles);
+  private Iterable<RepositoryFile> processSubmissionFiles(Iterable<EGASubmission> submission) {
+    val processor = new EGAFileProcessor(context, getEGAServer());
+    return processor.processSubmissions(submission);
   }
 
 }

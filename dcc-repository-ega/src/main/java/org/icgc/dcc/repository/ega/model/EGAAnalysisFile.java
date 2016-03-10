@@ -23,7 +23,7 @@ import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder(builderMethodName = "analysisFile")
+@Builder
 public class EGAAnalysisFile {
 
   String projectId;
@@ -32,5 +32,9 @@ public class EGAAnalysisFile {
   String workflow;
   String analysisId;
   ObjectNode contents;
+
+  public static EGAAnalysisFileBuilder analysisFile() {
+    return builder();
+  }
 
 }

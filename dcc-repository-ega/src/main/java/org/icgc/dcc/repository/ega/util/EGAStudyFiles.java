@@ -15,20 +15,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.model;
+package org.icgc.dcc.repository.ega.util;
 
-import lombok.Builder;
-import lombok.Value;
+import static lombok.AccessLevel.PRIVATE;
 
-@Value
-@Builder
-public class EGASubmission {
+import org.icgc.dcc.repository.ega.model.EGAStudyFile;
 
-  EGAStudyFile studyFile;
-  EGAAnalysisFile analysisFile;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-  public static EGASubmissionBuilder submission() {
-    return builder();
+@NoArgsConstructor(access = PRIVATE)
+public final class EGAStudyFiles {
+
+  public static String getAccession(@NonNull EGAStudyFile studyFile) {
+    return studyFile.getContents().path("STUDY_SET").path("STUDY").path("accession").textValue();
   }
 
 }

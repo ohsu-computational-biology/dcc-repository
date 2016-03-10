@@ -23,10 +23,14 @@ import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder(builderMethodName = "studyFile")
+@Builder
 public class EGAStudyFile {
 
   String study;
   ObjectNode contents;
+
+  public static EGAStudyFileBuilder studyFile() {
+    return builder();
+  }
 
 }

@@ -19,13 +19,17 @@ package org.icgc.dcc.repository.ega.core;
 
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.ega.util.EGAStudyFiles.getAccession;
 
-import org.elasticsearch.common.collect.ImmutableList;
+import java.util.List;
+
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.ega.model.EGASubmission;
+
+import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.val;
@@ -54,9 +58,18 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
 
   private RepositoryFile processSubmission(EGASubmission submission) {
     val file = new RepositoryFile();
-    file.setStudy(ImmutableList.of(submission.getStudyFile().getStudy()));
+    file.setStudy(resolveStudies(submission));
+    file.addDonor()
+        .setProjectCode(submission.getAnalysisFile().getProjectId());
 
     return file;
+  }
+
+  private List<String> resolveStudies(EGASubmission submission) {
+    val studyFile = submission.getStudyFile();
+    return ImmutableList.of(
+        studyFile.getStudy(),
+        getAccession(studyFile));
   }
 
 }

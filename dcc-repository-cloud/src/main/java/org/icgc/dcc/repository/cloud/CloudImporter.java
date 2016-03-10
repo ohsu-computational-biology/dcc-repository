@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.repository.cloud;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 
 import java.util.List;
 

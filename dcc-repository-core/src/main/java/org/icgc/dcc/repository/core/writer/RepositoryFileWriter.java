@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.repository.core.writer;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositoryFileCollection.FILE;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;

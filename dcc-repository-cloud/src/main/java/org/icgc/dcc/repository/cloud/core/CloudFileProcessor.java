@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.cloud.core;
 
 import static java.lang.String.format;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getFileMd5sum;

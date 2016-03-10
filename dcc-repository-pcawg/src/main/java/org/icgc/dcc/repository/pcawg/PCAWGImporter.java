@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.repository.pcawg;
 
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
 import static org.icgc.dcc.repository.pcawg.reader.PCAWGDonorArchiveReader.DEFAULT_PCAWG_DONOR_ARCHIVE_URL;
 

@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.core.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.util.Jongos.newJongo;
 
 import java.io.Closeable;

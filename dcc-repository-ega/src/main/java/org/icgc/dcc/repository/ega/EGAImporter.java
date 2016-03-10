@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.ega;
 
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getEGAServer;
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
 
@@ -49,11 +50,11 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
   protected Iterable<RepositoryFile> readFiles() {
     log.info("Reading submission files...");
     val details = readSubmissionFiles();
-    log.info("Finished reading details");
+    log.info("Finished reading {} submission files", formatCount(details));
 
-    log.info("Processing details...");
+    log.info("Processing files...");
     val files = processSubmissionFiles(details);
-    log.info("Finished processing details");
+    log.info("Finished processing {} files", formatCount(files));
 
     return files;
   }

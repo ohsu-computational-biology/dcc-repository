@@ -19,7 +19,7 @@ package org.icgc.dcc.repository.core.util;
 
 import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.collect.Iterables.isEmpty;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositorySourceFileImporter;

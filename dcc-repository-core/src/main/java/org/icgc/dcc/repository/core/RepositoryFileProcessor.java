@@ -19,7 +19,7 @@ package org.icgc.dcc.repository.core;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.icgc.dcc.common.core.tcga.TCGAIdentifiers.isUUID;
-import static org.icgc.dcc.common.core.util.FormatUtils.formatCount;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getTCGAProjects;

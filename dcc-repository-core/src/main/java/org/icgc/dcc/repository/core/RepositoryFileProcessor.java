@@ -24,6 +24,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getTCGAProjects;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -35,6 +36,7 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import lombok.NonNull;
@@ -133,6 +135,10 @@ public abstract class RepositoryFileProcessor {
   //
   // Utilities
   //
+
+  protected static List<String> studies(String... values) {
+    return ImmutableList.copyOf(values);
+  }
 
   protected static Stream<Donor> streamFileDonors(@NonNull Iterable<RepositoryFile> files) {
     return stream(files).flatMap(file -> file.getDonors().stream());

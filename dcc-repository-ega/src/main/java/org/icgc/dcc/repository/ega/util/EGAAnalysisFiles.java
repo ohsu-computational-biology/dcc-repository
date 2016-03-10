@@ -18,17 +18,57 @@
 package org.icgc.dcc.repository.ega.util;
 
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
-import org.icgc.dcc.repository.ega.model.EGAStudyFile;
+import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class EGAStudyFiles {
+public final class EGAAnalysisFiles {
 
-  public static String getAccession(@NonNull EGAStudyFile studyFile) {
-    return studyFile.getContents().at("/STUDY_SET/STUDY/accession").textValue();
+  public static ObjectNode getReferenceAssembly(@NonNull EGAAnalysisFile analysisFile) {
+    return (ObjectNode) at(analysisFile, "/ANALYSIS_SET/ANALYSIS/ANALYSIS_TYPE/REFERENCE_ALIGNMENT/ASSEMBLY/CUSTOM");
+  }
+
+  public static ArrayNode getFiles(@NonNull EGAAnalysisFile analysisFile) {
+    return (ArrayNode) at(analysisFile, "/ANALYSIS_SET/ANALYSIS/FILES/FILE");
+  }
+
+  public static String getFileName(@NonNull JsonNode file) {
+    return file.get("filename").textValue();
+  }
+
+  public static String getFileType(@NonNull JsonNode file) {
+    return file.get("filetype").textValue();
+  }
+
+  public static String getChecksum(@NonNull JsonNode file) {
+    return file.get("checksum").textValue();
+  }
+
+  public static ObjectNode getAnalysisAttributes(@NonNull EGAAnalysisFile analysisFile) {
+    val attributes = DEFAULT.createObjectNode();
+    val array = at(analysisFile, "/ANALYSIS_SET/ANALYSIS/ANALYSIS_ATTRIBUTES/ANALYSIS_ATTRIBUTE");
+    for (val element : array) {
+      attributes.put(element.get("TAG").textValue(), element.get("VALUE").textValue());
+    }
+
+    return attributes;
+  }
+
+  public static JsonNode getSampleRef(@NonNull EGAAnalysisFile analysisFile) {
+    return at(analysisFile, "/ANALYSIS_SET/ANALYSIS/SAMPLE_REF");
+  }
+
+  private static JsonNode at(EGAAnalysisFile analysisFile, String path) {
+    return analysisFile.getContents().at(path);
   }
 
 }

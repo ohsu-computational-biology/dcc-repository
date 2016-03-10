@@ -17,23 +17,23 @@
  */
 package org.icgc.dcc.repository.ega.model;
 
-import java.util.Set;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-public class EGASubmission {
+public class EGAGnosFile {
 
-  EGAStudyFile studyFile;
-  Set<EGASampleFile> sampleFiles;
+  String projectId;
+  String type;
+  String study;
+  String workflow;
+  String analysisId;
+  ObjectNode contents;
 
-  EGAGnosFile gnosFile;
-  EGAAnalysisFile analysisFile;
-  EGAReceiptFile receiptFile;
-
-  public static EGASubmissionBuilder submission() {
+  public static EGAGnosFileBuilder gnosFile() {
     return builder();
   }
 

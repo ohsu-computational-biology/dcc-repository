@@ -17,24 +17,30 @@
  */
 package org.icgc.dcc.repository.ega.model;
 
-import java.util.Set;
+import com.google.common.primitives.Longs;
 
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-public class EGASubmission {
+public class EGAReceiptFile implements Comparable<EGAReceiptFile> {
 
-  EGAStudyFile studyFile;
-  Set<EGASampleFile> sampleFiles;
+  String projectId;
+  String type;
+  String study;
+  String workflow;
+  String analysisId;
+  long timestamp;
 
-  EGAGnosFile gnosFile;
-  EGAAnalysisFile analysisFile;
-  EGAReceiptFile receiptFile;
-
-  public static EGASubmissionBuilder submission() {
+  public static EGAReceiptFileBuilder receiptFile() {
     return builder();
+  }
+
+  @Override
+  public int compareTo(EGAReceiptFile o) {
+    // Temporally descending
+    return -Longs.compare(timestamp, o.timestamp);
   }
 
 }

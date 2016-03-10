@@ -20,7 +20,7 @@ package org.icgc.dcc.repository.cghub.reader;
 import static com.google.common.base.Stopwatch.createStarted;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.net.HttpHeaders.ACCEPT;
-import static org.icgc.dcc.common.json.Jackson.DEFAULT;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectDiseaseCodes;
 
 import java.io.IOException;

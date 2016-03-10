@@ -18,25 +18,37 @@
 package org.icgc.dcc.repository.ega.reader;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.getFirst;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.Files.walk;
+import static org.icgc.dcc.common.core.util.function.Predicates.not;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.repository.ega.model.EGAAnalysisFile.analysisFile;
+import static org.icgc.dcc.repository.ega.model.EGAGnosFile.gnosFile;
+import static org.icgc.dcc.repository.ega.model.EGAReceiptFile.receiptFile;
+import static org.icgc.dcc.repository.ega.model.EGASampleFile.sampleFile;
 import static org.icgc.dcc.repository.ega.model.EGAStudyFile.studyFile;
 import static org.icgc.dcc.repository.ega.model.EGASubmission.submission;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
+import org.icgc.dcc.repository.ega.model.EGAGnosFile;
+import org.icgc.dcc.repository.ega.model.EGAReceiptFile;
+import org.icgc.dcc.repository.ega.model.EGASampleFile;
 import org.icgc.dcc.repository.ega.model.EGAStudyFile;
 import org.icgc.dcc.repository.ega.model.EGASubmission;
 import org.json.XML;
@@ -44,8 +56,10 @@ import org.json.XML;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
+import com.google.common.collect.TreeMultimap;
+import com.google.common.io.CharStreams;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -62,12 +76,46 @@ public class EGASubmissionReader {
    */
   private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JsonOrgModule());
 
+  private static final Pattern TEST_FILE_PATTERN = Pattern.compile(""
+      + "TEST-PROJ"
+      + ".*");
+
   private static final Pattern STUDY_FILE_PATTERN = Pattern.compile(""
       // Template: study/study.[study].xml
       // Example : study/study.PCAWG.xml
-      + "study/study\\."
+      + "study/study"
+      + "\\."
       + "([^.]+)" // [study]
       + "\\.xml");
+
+  private static final Pattern SAMPLE_FILE_PATTERN = Pattern.compile(""
+      // Template: [projectId]/sample/sample.[projectId].[type]_[timestamp].xml`
+      // Example : BRCA-EU/sample/sample.BRCA-EU.wgs_1455048989.xml
+      + "([^/]+)" // [projectId]
+      + "/sample/sample"
+      + "\\."
+      + "[^.]+"
+      + "\\."
+      + "([^.]+)" // [type]
+      + "_"
+      + "([^.]+)" // [timestamp]
+      + "\\.xml");
+
+  private static final Pattern GNOS_FILE_PATTERN = Pattern.compile(""
+      // Template: [projectId]/analysis_[type].[study]_[workflow]/GNOS_xml/analysis.[analysisId].GNOS.xml.gz
+      // Example :
+      // BRCA-EU/analysis_alignment.PCAWG_WGS_BWA/GNOS_xml/analysis.01b8baf1-9926-4118-9f4c-c2986bbfe561.GNOS.xml.gz
+      + "([^/]+)" // [projectId]
+      + "/analysis_"
+      + "([^.]+)" // [type]
+      + "\\."
+      + "([^_]+)" // [study]
+      + "_"
+      + "([^/]+)" // [workflow]
+      + "/GNOS_xml/analysis"
+      + "\\."
+      + "([^.]+)" // [analysisId]
+      + "\\.GNOS\\.xml\\.gz");
 
   private static final Pattern ANALYSIS_FILE_PATTERN = Pattern.compile(""
       // Template: [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].xml
@@ -79,8 +127,30 @@ public class EGASubmissionReader {
       + "([^_]+)" // [study]
       + "_"
       + "([^/]+)" // [workflow]
-      + "/analysis/analysis\\."
+      + "/analysis/analysis"
+      + "\\."
       + "([^.]+)" // [analysisId]
+      + "\\.xml");
+
+  private static final Pattern RECEIPT_FILE_PATTERN = Pattern.compile(""
+      // Template:
+      // [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].submission-[timestamp]_[id].xml
+      // Example :
+      // LICA-FR/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4884bd78-4002-4379-89f5-5855454ff858.submission-1455301216_2e9ffc2d-d824-449a-bb2f-b313f8fda985.xml
+      + "([^/]+)" // [projectId]
+      + "/analysis_"
+      + "([^.]+)" // [type]
+      + "\\."
+      + "([^_]+)" // [study]
+      + "_"
+      + "([^/]+)" // [workflow]
+      + "/analysis/analysis"
+      + "\\."
+      + "([^.]+)" // [analysisId]
+      + "\\."
+      + "submission-"
+      + "(\\d+)" // [timestamp]
+      + "_[^.]+" // [id]
       + "\\.xml");
 
   /**
@@ -97,21 +167,40 @@ public class EGASubmissionReader {
     updateLocalRepo();
 
     // Read and assemble
-    val studyFiles = readStudyFiles(repoDir);
-    val analysisFiles = readAnalysisFiles(repoDir);
-    val submissions = createSubmissions(studyFiles, analysisFiles);
+    val studyFiles = readStudyFiles();
+    val sampleFiles = readSampleFiles();
+    val gnosFiles = readGnosFiles();
+    val analysisFiles = readAnalysisFiles();
+    val receiptFiles = readReceiptFiles();
+    val submissions = createSubmissions(studyFiles, sampleFiles, gnosFiles, analysisFiles, receiptFiles);
 
     return submissions;
   }
 
-  private List<EGASubmission> createSubmissions(List<EGAStudyFile> studyFiles,
-      List<EGAAnalysisFile> analysisFiles) {
-    val studyIndex = Maps.<String, EGAStudyFile> uniqueIndex(studyFiles, f -> f.getStudy());
+  private List<EGASubmission> createSubmissions(
+      List<EGAStudyFile> studyFiles,
+      List<EGASampleFile> sampleFiles,
+      List<EGAGnosFile> gnosFiles,
+      List<EGAAnalysisFile> analysisFiles,
+      List<EGAReceiptFile> receiptFiles) {
+
+    // Index for lookup
+    val studyIndex = Maps.<String, EGAStudyFile> uniqueIndex(studyFiles, EGAStudyFile::getStudy);
+    val gnosIndex = Maps.<String, EGAGnosFile> uniqueIndex(gnosFiles, EGAGnosFile::getAnalysisId);
+
+    val receiptIndex = TreeMultimap.<String, EGAReceiptFile> create();
+    receiptFiles.forEach(f -> receiptIndex.put(f.getAnalysisId(), f));
+
+    val sampleIndex = HashMultimap.<String, EGASampleFile> create();
+    sampleFiles.forEach(f -> sampleIndex.put(f.getProjectId(), f));
 
     // Combine both files into a wrapper
     return analysisFiles.stream()
         .map(f -> submission()
             .studyFile(studyIndex.get(f.getStudy()))
+            .sampleFiles(sampleIndex.get(f.getProjectId()))
+            .gnosFile(gnosIndex.get(f.getAnalysisId()))
+            .receiptFile(getFirst(receiptIndex.get(f.getAnalysisId()), null))
             .analysisFile(f)
             .build())
         .collect(toImmutableList());
@@ -135,42 +224,90 @@ public class EGASubmissionReader {
     }
   }
 
-  @SneakyThrows
-  private List<EGAStudyFile> readStudyFiles(File repoDir) {
-    return walk(repoDir.toPath())
-        .filter(this::isXmlFile)
+  private List<EGAStudyFile> readStudyFiles() {
+    return traverseRepo()
         .filter(this::isStudyFile)
         .map(this::createStudyFile)
         .collect(toImmutableList());
   }
 
-  @SneakyThrows
-  private List<EGAAnalysisFile> readAnalysisFiles(File repoDir) {
-    return walk(repoDir.toPath())
-        .filter(this::isXmlFile)
+  private List<EGASampleFile> readSampleFiles() {
+    return traverseRepo()
+        .filter(this::isSampleFile)
+        .map(this::createSampleFile)
+        .collect(toImmutableList());
+  }
+
+  private List<EGAGnosFile> readGnosFiles() {
+    return traverseRepo()
+        .filter(this::isGnosFile)
+        .map(this::createGnosFile)
+        .collect(toImmutableList());
+  }
+
+  private List<EGAAnalysisFile> readAnalysisFiles() {
+    return traverseRepo()
         .filter(this::isAnalysisFile)
         .map(this::createAnalysisFile)
         .collect(toImmutableList());
   }
 
-  private boolean isXmlFile(Path path) {
-    return path.toFile().getName().endsWith(".xml");
+  private List<EGAReceiptFile> readReceiptFiles() {
+    return traverseRepo()
+        .filter(this::isReceiptFile)
+        .map(this::createReceiptFile)
+        .collect(toImmutableList());
+  }
+
+  @SneakyThrows
+  private Stream<Path> traverseRepo() {
+    return Files
+        .walk(repoDir.toPath())
+        .filter(not(this::isTestFile));
+  }
+
+  private boolean isTestFile(Path path) {
+    return matchFile(path, TEST_FILE_PATTERN).matches();
   }
 
   private boolean isStudyFile(Path path) {
     return matchStudyFile(path).matches();
   }
 
+  private boolean isSampleFile(Path path) {
+    return matchSampleFile(path).matches();
+  }
+
+  private boolean isGnosFile(Path path) {
+    return matchGnosFile(path).matches();
+  }
+
   private boolean isAnalysisFile(Path path) {
     return matchAnalysisFile(path).matches();
+  }
+
+  private boolean isReceiptFile(Path path) {
+    return matchReceiptFile(path).matches();
   }
 
   private Matcher matchStudyFile(Path path) {
     return matchFile(path, STUDY_FILE_PATTERN);
   }
 
+  private Matcher matchSampleFile(Path path) {
+    return matchFile(path, SAMPLE_FILE_PATTERN);
+  }
+
+  private Matcher matchGnosFile(Path path) {
+    return matchFile(path, GNOS_FILE_PATTERN);
+  }
+
   private Matcher matchAnalysisFile(Path path) {
     return matchFile(path, ANALYSIS_FILE_PATTERN);
+  }
+
+  private Matcher matchReceiptFile(Path path) {
+    return matchFile(path, RECEIPT_FILE_PATTERN);
   }
 
   private Matcher matchFile(Path path, Pattern pattern) {
@@ -191,6 +328,36 @@ public class EGASubmissionReader {
         .build();
   }
 
+  private EGASampleFile createSampleFile(Path path) {
+    // Parse template
+    val matcher = matchSampleFile(path);
+    checkState(matcher.find());
+
+    // Combine path metadata with file metadata
+    return sampleFile()
+        .projectId(matcher.group(1))
+        .type(matcher.group(2))
+        .timestamp(Long.parseLong(matcher.group(3)))
+        .contents(readFile(path))
+        .build();
+  }
+
+  private EGAGnosFile createGnosFile(Path path) {
+    // Parse template
+    val matcher = matchGnosFile(path);
+    checkState(matcher.find());
+
+    // Combine path metadata with file metadata
+    return gnosFile()
+        .projectId(matcher.group(1))
+        .type(matcher.group(2))
+        .study(matcher.group(3))
+        .workflow(matcher.group(4))
+        .analysisId(matcher.group(5))
+        .contents(readFile(path))
+        .build();
+  }
+
   private EGAAnalysisFile createAnalysisFile(Path path) {
     // Parse template
     val matcher = matchAnalysisFile(path);
@@ -207,10 +374,32 @@ public class EGASubmissionReader {
         .build();
   }
 
+  private EGAReceiptFile createReceiptFile(Path path) {
+    // Parse template
+    val matcher = matchReceiptFile(path);
+    checkState(matcher.find());
+
+    // Combine path metadata with file metadata
+    return receiptFile()
+        .projectId(matcher.group(1))
+        .type(matcher.group(2))
+        .study(matcher.group(3))
+        .workflow(matcher.group(4))
+        .analysisId(matcher.group(5))
+        .timestamp(Long.parseLong(matcher.group(6)))
+        .build();
+  }
+
   @SneakyThrows
   private static ObjectNode readFile(Path path) {
-    // Can't use jackson-dataformat-xml because of lack of repeating elements
-    val xml = Files.toString(path.toFile(), UTF_8);
+    val file = path.toFile();
+    val compressed = file.getName().endsWith(".gz");
+    val fileStream = new FileInputStream(file);
+    val inputStream = compressed ? new GZIPInputStream(fileStream) : fileStream;
+
+    // Can't use jackson-dataformat-xml because of lack of repeating elements support, etc.
+    val reader = new InputStreamReader(inputStream, UTF_8);
+    val xml = CharStreams.toString(reader);
     val json = XML.toJSONObject(xml);
 
     return MAPPER.convertValue(json, ObjectNode.class);

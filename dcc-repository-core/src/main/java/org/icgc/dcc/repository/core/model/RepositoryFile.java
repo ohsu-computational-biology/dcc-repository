@@ -96,6 +96,14 @@ public class RepositoryFile {
   @Accessors(chain = true)
   public static class ReferenceGenome {
 
+    /**
+     * Constants.
+     */
+    public static final ReferenceGenome PCAWG = new ReferenceGenome()
+        .setDownloadUrl("ftp://ftp.sanger.ac.uk/pub/project/PanCancer/genome.fa.gz")
+        .setGenomeBuild("GRCh37")
+        .setReferenceName("hs37d5");
+
     String genomeBuild;
     String referenceName;
     String downloadUrl;

@@ -62,7 +62,7 @@ public final class RepositoryServers {
 
   // @formatter:off
   public static final List<RepositoryServer> SERVERS = ImmutableList.of(
-      server().source(EGA)   .type(EGA_ARCHIVE).name("EGA - UK")              .code(RepositoryCodes.EGA)               .country("UK").baseUrl("https://www.ebi.ac.uk/ega/").build(),
+      server().source(EGA)   .type(EGA_ARCHIVE).name("EGA - United Kingdom")  .code(RepositoryCodes.EGA)               .country("UK").baseUrl("https://ega.ebi.ac.uk/ega/").build(),
       server().source(CGHUB) .type(GNOS)       .name("CGHub - Santa Cruz")    .code(RepositoryCodes.CGHUB)             .country("US").baseUrl("https://cghub.ucsc.edu/").build(),
       server().source(TCGA)  .type(WEB_ARCHIVE).name("TCGA DCC - Bethesda")   .code(RepositoryCodes.TCGA)              .country("US").baseUrl("https://tcga-data.nci.nih.gov/").build(),
       server().source(PCAWG) .type(GNOS)       .name("PCAWG - Barcelona")     .code(RepositoryCodes.PCAWG_BARCELONA)   .country("ES").baseUrl("https://gtrepo-bsc.annailabs.com/").build(),

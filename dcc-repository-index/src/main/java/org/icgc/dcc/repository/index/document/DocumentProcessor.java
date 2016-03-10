@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.index.document;
 
 import static org.elasticsearch.client.Requests.indexRequest;
-import static org.icgc.dcc.common.json.Jackson.DEFAULT;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.util.function.Consumer;
 

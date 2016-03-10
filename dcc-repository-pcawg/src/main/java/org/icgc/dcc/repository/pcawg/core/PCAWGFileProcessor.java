@@ -75,14 +75,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
-  /**
-   * Constants.
-   */
-  private static final ReferenceGenome REFERENCE_GENOME = new ReferenceGenome()
-      .setDownloadUrl("ftp://ftp.sanger.ac.uk/pub/project/PanCancer/genome.fa.gz")
-      .setGenomeBuild("GRCh37")
-      .setReferenceName("hs37d5");
-
   public PCAWGFileProcessor(RepositoryFileContext context) {
     super(context);
   }
@@ -101,7 +93,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> createDonorFiles(Iterable<ObjectNode> donors) {
-    return stream(donors).flatMap(donor -> stream(processDonor(donor))).collect(toImmutableList());
+    return stream(donors).flatMap(stream(this::processDonor)).collect(toImmutableList());
   }
 
   private Iterable<RepositoryFile> processDonor(@NonNull ObjectNode donor) {
@@ -212,7 +204,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
         .setDataCategorization(resolveDataCategorization(analysis, fileName));
 
     donorFile
-        .setReferenceGenome(REFERENCE_GENOME);
+        .setReferenceGenome(ReferenceGenome.PCAWG);
 
     for (val pcawgServer : pcawgServers) {
       val fileCopy = donorFile.addFileCopy()

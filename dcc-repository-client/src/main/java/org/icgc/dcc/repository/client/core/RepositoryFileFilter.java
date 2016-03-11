@@ -24,6 +24,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.AWS_VIRGINIA;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.COLLABORATORY;
+import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.EGA;
 
 import java.util.Set;
 
@@ -59,11 +60,12 @@ public class RepositoryFileFilter {
 
     // PCAWG published
     val pcawg = containsPCAWG(repoCodes);
-    if (pcawg) {
+    val ega = repoCodes.contains(EGA);
+    if (pcawg || ega) {
       return true;
     }
 
-    // Not released via PCAWG yet ignore
+    // Not released via PCAWG yet so ignore
     val aws = repoCodes.contains(AWS_VIRGINIA);
     val collab = repoCodes.contains(COLLABORATORY);
     if (aws || collab) {

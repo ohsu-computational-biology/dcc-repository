@@ -20,8 +20,8 @@ package org.icgc.dcc.repository.index.core;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.io.Resources.getResource;
 import static java.lang.String.format;
-import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
+import static org.icgc.dcc.common.core.util.VersionUtils.getScmInfo;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -86,7 +86,8 @@ public class RepositoryFileIndexes {
   }
 
   public static Predicate<? super String> isRepoIndexName(String indexAlias) {
-    return indexName -> indexName.startsWith(indexAlias);
+    // Template: [indexAlias]-[yyyyMMdd]
+    return indexName -> indexName.matches(indexAlias + "-\\d{8}");
   }
 
   public static Comparator<? super String> compareIndexDateDescending(String indexAlias) {

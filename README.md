@@ -31,6 +31,7 @@ These modules collect various data sources.
 - [AWS](dcc-repository-aws/README.md)
 - [Collab](dcc-repository-collab/README.md)
 - [CGHub](dcc-repository-cghub/README.md)
+- [EGA](dcc-repository-ega/README.md)
 - [PCAWG](dcc-repository-pcawg/README.md)
 - [TCGA](dcc-repository-tcga/README.md)
 

@@ -77,7 +77,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   public Iterable<RepositoryFile> processSubmissions(@NonNull Iterable<EGASubmission> submissions) {
     return stream(submissions)
         .flatMap(stream(this::processSubmission))
-        .peek(f -> log.info("{}", f))
+        .peek(f -> log.debug("{}", f))
         .collect(toImmutableList());
   }
 

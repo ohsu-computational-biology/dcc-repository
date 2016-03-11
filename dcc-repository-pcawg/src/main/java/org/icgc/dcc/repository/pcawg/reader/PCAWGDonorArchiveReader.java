@@ -30,12 +30,10 @@ public class PCAWGDonorArchiveReader {
    * 
    * @see http://jsonlines.org/
    */
-  public static final URL ALTERNATE_PCAWG_DONOR_ARCHIVE_URL =
-      getUrl(PCAWG_ARCHIVE_BASE_URL + "/gnos_metadata/latest/reports/sanger_variant_called_donors.jsonl");
   public static final URL PREVIOUS_DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
-      getUrl(PCAWG_ARCHIVE_BASE_URL + "/gnos_metadata/latest/reports/donors_with_bwa_alignment.jsonl");
-  public static final URL DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
       getUrl(PCAWG_ARCHIVE_BASE_URL + "/data_releases/oct2015/release_oct2015.v1.jsonl"); // DCC-4137
+  public static final URL DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
+      getUrl(PCAWG_ARCHIVE_BASE_URL + "/data_releases/mar2016/release_mar2016.v1.jsonl");
 
   /**
    * Constants.

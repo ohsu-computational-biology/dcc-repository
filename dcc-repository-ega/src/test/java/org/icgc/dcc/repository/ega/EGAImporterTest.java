@@ -19,6 +19,7 @@ package org.icgc.dcc.repository.ega;
 
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
@@ -26,7 +27,7 @@ import lombok.val;
 public class EGAImporterTest {
 
   @Test
-  // @Ignore("For development only")
+  @Ignore("For development only")
   public void testExecute() {
     val context = newLocalRepositoryFileContext();
     val egaImporter = new EGAImporter(context);

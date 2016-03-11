@@ -19,7 +19,6 @@ package org.icgc.dcc.repository.ega.reader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getFirst;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.function.Predicates.not;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.repository.ega.model.EGAAnalysisFile.analysisFile;
@@ -30,16 +29,13 @@ import static org.icgc.dcc.repository.ega.model.EGAStudyFile.studyFile;
 import static org.icgc.dcc.repository.ega.model.EGASubmission.submission;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -51,15 +47,10 @@ import org.icgc.dcc.repository.ega.model.EGAReceiptFile;
 import org.icgc.dcc.repository.ega.model.EGASampleFile;
 import org.icgc.dcc.repository.ega.model.EGAStudyFile;
 import org.icgc.dcc.repository.ega.model.EGASubmission;
-import org.json.XML;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.io.CharStreams;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -74,8 +65,6 @@ public class EGASubmissionReader {
   /**
    * Constants.
    */
-  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JsonOrgModule());
-
   private static final Pattern TEST_FILE_PATTERN = Pattern.compile(""
       + "TEST-PROJ"
       + ".*");
@@ -161,6 +150,11 @@ public class EGASubmissionReader {
   @NonNull
   private final File repoDir;
 
+  /**
+   * Configuration.
+   */
+  private final EGAFileReader reader = new EGAFileReader();
+
   @SneakyThrows
   public List<EGASubmission> readSubmissions() {
     // Ensure we are in-sync with the remote
@@ -188,11 +182,11 @@ public class EGASubmissionReader {
     val studyIndex = Maps.<String, EGAStudyFile> uniqueIndex(studyFiles, EGAStudyFile::getStudy);
     val gnosIndex = Maps.<String, EGAGnosFile> uniqueIndex(gnosFiles, EGAGnosFile::getAnalysisId);
 
-    val receiptIndex = TreeMultimap.<String, EGAReceiptFile> create();
-    receiptFiles.forEach(f -> receiptIndex.put(f.getAnalysisId(), f));
-
     val sampleIndex = HashMultimap.<String, EGASampleFile> create();
     sampleFiles.forEach(f -> sampleIndex.put(f.getProjectId(), f));
+
+    val receiptIndex = TreeMultimap.<String, EGAReceiptFile> create();
+    receiptFiles.forEach(f -> receiptIndex.put(f.getAnalysisId(), f));
 
     // Combine both files into a wrapper
     return analysisFiles.stream()
@@ -324,7 +318,7 @@ public class EGASubmissionReader {
     // Combine path metadata with file metadata
     return studyFile()
         .study(matcher.group(1))
-        .contents(readFile(path))
+        .contents(reader.readFile(path))
         .build();
   }
 
@@ -338,7 +332,7 @@ public class EGASubmissionReader {
         .projectId(matcher.group(1))
         .type(matcher.group(2))
         .timestamp(Long.parseLong(matcher.group(3)))
-        .contents(readFile(path))
+        .contents(reader.readFile(path))
         .build();
   }
 
@@ -354,7 +348,7 @@ public class EGASubmissionReader {
         .study(matcher.group(3))
         .workflow(matcher.group(4))
         .analysisId(matcher.group(5))
-        .contents(readFile(path))
+        .contents(reader.readFile(path))
         .build();
   }
 
@@ -370,7 +364,7 @@ public class EGASubmissionReader {
         .study(matcher.group(3))
         .workflow(matcher.group(4))
         .analysisId(matcher.group(5))
-        .contents(readFile(path))
+        .contents(reader.readFile(path))
         .build();
   }
 
@@ -388,21 +382,6 @@ public class EGASubmissionReader {
         .analysisId(matcher.group(5))
         .timestamp(Long.parseLong(matcher.group(6)))
         .build();
-  }
-
-  @SneakyThrows
-  private static ObjectNode readFile(Path path) {
-    val file = path.toFile();
-    val compressed = file.getName().endsWith(".gz");
-    val fileStream = new FileInputStream(file);
-    val inputStream = compressed ? new GZIPInputStream(fileStream) : fileStream;
-
-    // Can't use jackson-dataformat-xml because of lack of repeating elements support, etc.
-    val reader = new InputStreamReader(inputStream, UTF_8);
-    val xml = CharStreams.toString(reader);
-    val json = XML.toJSONObject(xml);
-
-    return MAPPER.convertValue(json, ObjectNode.class);
   }
 
 }

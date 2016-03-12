@@ -17,11 +17,19 @@
  */
 package org.icgc.dcc.repository.ega.reader;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.icgc.dcc.common.core.util.function.Predicates.not;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import org.json.XML;
@@ -31,20 +39,43 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
 import com.google.common.io.CharStreams;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 
 @RequiredArgsConstructor
-public class EGAFileReader {
+public abstract class EGAFileReader<T> {
 
   /**
    * Constants.
    */
   private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JsonOrgModule());
 
+  private static final Pattern TEST_FILE_PATTERN = Pattern.compile("TEST-PROJ.*");
+
+  /**
+   * Configuration.
+   */
+  @NonNull
+  private final File repoDir;
+  @NonNull
+  private final Pattern filePattern;
+
   @SneakyThrows
-  public ObjectNode readFile(Path path) {
+  public List<T> readFiles() {
+    return Files
+        .walk(repoDir.toPath())
+        .filter(not(this::isIgnored))
+        .filter(this::isMatch)
+        .map(this::createFile)
+        .collect(toImmutableList());
+  }
+
+  protected abstract T createFile(Path path, Matcher matcher);
+
+  @SneakyThrows
+  protected ObjectNode readFile(Path path) {
     val file = path.toFile();
     val compressed = file.getName().endsWith(".gz");
     val fileStream = new FileInputStream(file);
@@ -56,6 +87,28 @@ public class EGAFileReader {
     val json = XML.toJSONObject(xml);
 
     return MAPPER.convertValue(json, ObjectNode.class);
+  }
+
+  private T createFile(Path path) {
+    // Parse template
+    val matcher = match(path, filePattern);
+    checkState(matcher.find());
+
+    return createFile(path, matcher);
+  }
+
+  private boolean isIgnored(Path path) {
+    return match(path, TEST_FILE_PATTERN).matches();
+  }
+
+  private boolean isMatch(Path path) {
+    return match(path, filePattern).matches();
+  }
+
+  private Matcher match(Path path, Pattern filePattern) {
+    // Match without using the absolute portion of the path
+    val relativePath = repoDir.toPath().relativize(path);
+    return filePattern.matcher(relativePath.toString());
   }
 
 }

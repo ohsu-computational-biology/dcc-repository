@@ -104,7 +104,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
 
     val egaFiles = ImmutableList.<RepositoryFile> builder();
     for (val file : files) {
-      if (isExcluded(file)) {
+      if (isExcludedFile(file)) {
         continue;
       }
 
@@ -186,11 +186,12 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   // Utilities
   //
 
-  private static boolean isExcluded(JsonNode file) {
-    return isBaiFile(file) ||
-        isTbiFile(file) ||
-        isIdxFile(file) ||
-        isReadmeFile(file);
+  private static boolean isExcludedFile(JsonNode file) {
+    return isIndexFile(file) || isReadmeFile(file);
+  }
+
+  private static boolean isIndexFile(JsonNode file) {
+    return isBaiFile(file) || isTbiFile(file) || isIdxFile(file);
   }
 
   private static boolean isBamFile(JsonNode file) {

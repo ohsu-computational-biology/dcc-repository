@@ -19,23 +19,13 @@ package org.icgc.dcc.repository.ega.reader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getFirst;
-import static org.icgc.dcc.common.core.util.function.Predicates.not;
+import static com.google.common.collect.Maps.uniqueIndex;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.repository.ega.model.EGAAnalysisFile.analysisFile;
-import static org.icgc.dcc.repository.ega.model.EGAGnosFile.gnosFile;
-import static org.icgc.dcc.repository.ega.model.EGAReceiptFile.receiptFile;
-import static org.icgc.dcc.repository.ega.model.EGASampleFile.sampleFile;
-import static org.icgc.dcc.repository.ega.model.EGAStudyFile.studyFile;
 import static org.icgc.dcc.repository.ega.model.EGASubmission.submission;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -49,7 +39,6 @@ import org.icgc.dcc.repository.ega.model.EGAStudyFile;
 import org.icgc.dcc.repository.ega.model.EGASubmission;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultimap;
 
 import lombok.NonNull;
@@ -63,86 +52,6 @@ import lombok.extern.slf4j.Slf4j;
 public class EGASubmissionReader {
 
   /**
-   * Constants.
-   */
-  private static final Pattern TEST_FILE_PATTERN = Pattern.compile(""
-      + "TEST-PROJ"
-      + ".*");
-
-  private static final Pattern STUDY_FILE_PATTERN = Pattern.compile(""
-      // Template: study/study.[study].xml
-      // Example : study/study.PCAWG.xml
-      + "study/study"
-      + "\\."
-      + "([^.]+)" // [study]
-      + "\\.xml");
-
-  private static final Pattern SAMPLE_FILE_PATTERN = Pattern.compile(""
-      // Template: [projectId]/sample/sample.[projectId].[type]_[timestamp].xml`
-      // Example : BRCA-EU/sample/sample.BRCA-EU.wgs_1455048989.xml
-      + "([^/]+)" // [projectId]
-      + "/sample/sample"
-      + "\\."
-      + "[^.]+"
-      + "\\."
-      + "([^.]+)" // [type]
-      + "_"
-      + "([^.]+)" // [timestamp]
-      + "\\.xml");
-
-  private static final Pattern GNOS_FILE_PATTERN = Pattern.compile(""
-      // Template: [projectId]/analysis_[type].[study]_[workflow]/GNOS_xml/analysis.[analysisId].GNOS.xml.gz
-      // Example :
-      // BRCA-EU/analysis_alignment.PCAWG_WGS_BWA/GNOS_xml/analysis.01b8baf1-9926-4118-9f4c-c2986bbfe561.GNOS.xml.gz
-      + "([^/]+)" // [projectId]
-      + "/analysis_"
-      + "([^.]+)" // [type]
-      + "\\."
-      + "([^_]+)" // [study]
-      + "_"
-      + "([^/]+)" // [workflow]
-      + "/GNOS_xml/analysis"
-      + "\\."
-      + "([^.]+)" // [analysisId]
-      + "\\.GNOS\\.xml\\.gz");
-
-  private static final Pattern ANALYSIS_FILE_PATTERN = Pattern.compile(""
-      // Template: [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].xml
-      // Example : BRCA-UK/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4acd08c6-1354-414d-8961-1f04acb2275c.xml
-      + "([^/]+)" // [projectId]
-      + "/analysis_"
-      + "([^.]+)" // [type]
-      + "\\."
-      + "([^_]+)" // [study]
-      + "_"
-      + "([^/]+)" // [workflow]
-      + "/analysis/analysis"
-      + "\\."
-      + "([^.]+)" // [analysisId]
-      + "\\.xml");
-
-  private static final Pattern RECEIPT_FILE_PATTERN = Pattern.compile(""
-      // Template:
-      // [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].submission-[timestamp]_[id].xml
-      // Example :
-      // LICA-FR/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4884bd78-4002-4379-89f5-5855454ff858.submission-1455301216_2e9ffc2d-d824-449a-bb2f-b313f8fda985.xml
-      + "([^/]+)" // [projectId]
-      + "/analysis_"
-      + "([^.]+)" // [type]
-      + "\\."
-      + "([^_]+)" // [study]
-      + "_"
-      + "([^/]+)" // [workflow]
-      + "/analysis/analysis"
-      + "\\."
-      + "([^.]+)" // [analysisId]
-      + "\\."
-      + "submission-"
-      + "(\\d+)" // [timestamp]
-      + "_[^.]+" // [id]
-      + "\\.xml");
-
-  /**
    * Configuration.
    */
   @NonNull
@@ -150,54 +59,13 @@ public class EGASubmissionReader {
   @NonNull
   private final File repoDir;
 
-  /**
-   * Configuration.
-   */
-  private final EGAFileReader reader = new EGAFileReader();
-
   @SneakyThrows
   public List<EGASubmission> readSubmissions() {
     // Ensure we are in-sync with the remote
     updateLocalRepo();
 
     // Read and assemble
-    val studyFiles = readStudyFiles();
-    val sampleFiles = readSampleFiles();
-    val gnosFiles = readGnosFiles();
-    val analysisFiles = readAnalysisFiles();
-    val receiptFiles = readReceiptFiles();
-    val submissions = createSubmissions(studyFiles, sampleFiles, gnosFiles, analysisFiles, receiptFiles);
-
-    return submissions;
-  }
-
-  private List<EGASubmission> createSubmissions(
-      List<EGAStudyFile> studyFiles,
-      List<EGASampleFile> sampleFiles,
-      List<EGAGnosFile> gnosFiles,
-      List<EGAAnalysisFile> analysisFiles,
-      List<EGAReceiptFile> receiptFiles) {
-
-    // Index for lookup
-    val studyIndex = Maps.<String, EGAStudyFile> uniqueIndex(studyFiles, EGAStudyFile::getStudy);
-    val gnosIndex = Maps.<String, EGAGnosFile> uniqueIndex(gnosFiles, EGAGnosFile::getAnalysisId);
-
-    val sampleIndex = HashMultimap.<String, EGASampleFile> create();
-    sampleFiles.forEach(f -> sampleIndex.put(f.getProjectId(), f));
-
-    val receiptIndex = TreeMultimap.<String, EGAReceiptFile> create();
-    receiptFiles.forEach(f -> receiptIndex.put(f.getAnalysisId(), f));
-
-    // Combine both files into a wrapper
-    return analysisFiles.stream()
-        .map(f -> submission()
-            .studyFile(studyIndex.get(f.getStudy()))
-            .sampleFiles(sampleIndex.get(f.getProjectId()))
-            .gnosFile(gnosIndex.get(f.getAnalysisId()))
-            .receiptFile(getFirst(receiptIndex.get(f.getAnalysisId()), null))
-            .analysisFile(f)
-            .build())
-        .collect(toImmutableList());
+    return createSubmissions();
   }
 
   private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
@@ -218,170 +86,58 @@ public class EGASubmissionReader {
     }
   }
 
-  private List<EGAStudyFile> readStudyFiles() {
-    return traverseRepo()
-        .filter(this::isStudyFile)
-        .map(this::createStudyFile)
+  private List<EGASubmission> createSubmissions() {
+    // Read sources
+    val studyFiles = readStudyFiles();
+    val sampleFiles = readSampleFiles();
+    val gnosFiles = readGnosFiles();
+    val analysisFiles = readAnalysisFiles();
+    val receiptFiles = readReceiptFiles();
+
+    // Index sources for lookup in combine step
+    val studyIndex = uniqueIndex(studyFiles, EGAStudyFile::getStudy);
+    val gnosIndex = uniqueIndex(gnosFiles, EGAGnosFile::getAnalysisId);
+
+    val sampleIndex = HashMultimap.<String, EGASampleFile> create();
+    sampleFiles.forEach(f -> sampleIndex.put(f.getProjectId(), f));
+
+    val receiptIndex = TreeMultimap.<String, EGAReceiptFile> create();
+    receiptFiles.forEach(f -> receiptIndex.put(f.getAnalysisId(), f));
+
+    // Combine both files into a merged record
+    return analysisFiles.stream()
+        .map(f -> submission()
+            .studyFile(studyIndex.get(f.getStudy()))
+            .sampleFiles(sampleIndex.get(f.getProjectId()))
+            .gnosFile(gnosIndex.get(f.getAnalysisId()))
+            .receiptFile(getLatestReceipt(receiptIndex, f.getAnalysisId()))
+            .analysisFile(f)
+            .build())
         .collect(toImmutableList());
+  }
+
+  private List<EGAStudyFile> readStudyFiles() {
+    return new EGAStudyFileReader(repoDir).readFiles();
   }
 
   private List<EGASampleFile> readSampleFiles() {
-    return traverseRepo()
-        .filter(this::isSampleFile)
-        .map(this::createSampleFile)
-        .collect(toImmutableList());
+    return new EGASampleFileReader(repoDir).readFiles();
   }
 
   private List<EGAGnosFile> readGnosFiles() {
-    return traverseRepo()
-        .filter(this::isGnosFile)
-        .map(this::createGnosFile)
-        .collect(toImmutableList());
+    return new EGAGnosFileReader(repoDir).readFiles();
   }
 
   private List<EGAAnalysisFile> readAnalysisFiles() {
-    return traverseRepo()
-        .filter(this::isAnalysisFile)
-        .map(this::createAnalysisFile)
-        .collect(toImmutableList());
+    return new EGAAnalysisFileReader(repoDir).readFiles();
   }
 
   private List<EGAReceiptFile> readReceiptFiles() {
-    return traverseRepo()
-        .filter(this::isReceiptFile)
-        .map(this::createReceiptFile)
-        .collect(toImmutableList());
+    return new EGAReceiptFileReader(repoDir).readFiles();
   }
 
-  @SneakyThrows
-  private Stream<Path> traverseRepo() {
-    return Files
-        .walk(repoDir.toPath())
-        .filter(not(this::isTestFile));
-  }
-
-  private boolean isTestFile(Path path) {
-    return matchFile(path, TEST_FILE_PATTERN).matches();
-  }
-
-  private boolean isStudyFile(Path path) {
-    return matchStudyFile(path).matches();
-  }
-
-  private boolean isSampleFile(Path path) {
-    return matchSampleFile(path).matches();
-  }
-
-  private boolean isGnosFile(Path path) {
-    return matchGnosFile(path).matches();
-  }
-
-  private boolean isAnalysisFile(Path path) {
-    return matchAnalysisFile(path).matches();
-  }
-
-  private boolean isReceiptFile(Path path) {
-    return matchReceiptFile(path).matches();
-  }
-
-  private Matcher matchStudyFile(Path path) {
-    return matchFile(path, STUDY_FILE_PATTERN);
-  }
-
-  private Matcher matchSampleFile(Path path) {
-    return matchFile(path, SAMPLE_FILE_PATTERN);
-  }
-
-  private Matcher matchGnosFile(Path path) {
-    return matchFile(path, GNOS_FILE_PATTERN);
-  }
-
-  private Matcher matchAnalysisFile(Path path) {
-    return matchFile(path, ANALYSIS_FILE_PATTERN);
-  }
-
-  private Matcher matchReceiptFile(Path path) {
-    return matchFile(path, RECEIPT_FILE_PATTERN);
-  }
-
-  private Matcher matchFile(Path path, Pattern pattern) {
-    // Match without using the absolute portion of the path
-    val relativePath = repoDir.toPath().relativize(path);
-    return pattern.matcher(relativePath.toString());
-  }
-
-  private EGAStudyFile createStudyFile(Path path) {
-    // Parse template
-    val matcher = matchStudyFile(path);
-    checkState(matcher.find());
-
-    // Combine path metadata with file metadata
-    return studyFile()
-        .study(matcher.group(1))
-        .contents(reader.readFile(path))
-        .build();
-  }
-
-  private EGASampleFile createSampleFile(Path path) {
-    // Parse template
-    val matcher = matchSampleFile(path);
-    checkState(matcher.find());
-
-    // Combine path metadata with file metadata
-    return sampleFile()
-        .projectId(matcher.group(1))
-        .type(matcher.group(2))
-        .timestamp(Long.parseLong(matcher.group(3)))
-        .contents(reader.readFile(path))
-        .build();
-  }
-
-  private EGAGnosFile createGnosFile(Path path) {
-    // Parse template
-    val matcher = matchGnosFile(path);
-    checkState(matcher.find());
-
-    // Combine path metadata with file metadata
-    return gnosFile()
-        .projectId(matcher.group(1))
-        .type(matcher.group(2))
-        .study(matcher.group(3))
-        .workflow(matcher.group(4))
-        .analysisId(matcher.group(5))
-        .contents(reader.readFile(path))
-        .build();
-  }
-
-  private EGAAnalysisFile createAnalysisFile(Path path) {
-    // Parse template
-    val matcher = matchAnalysisFile(path);
-    checkState(matcher.find());
-
-    // Combine path metadata with file metadata
-    return analysisFile()
-        .projectId(matcher.group(1))
-        .type(matcher.group(2))
-        .study(matcher.group(3))
-        .workflow(matcher.group(4))
-        .analysisId(matcher.group(5))
-        .contents(reader.readFile(path))
-        .build();
-  }
-
-  private EGAReceiptFile createReceiptFile(Path path) {
-    // Parse template
-    val matcher = matchReceiptFile(path);
-    checkState(matcher.find());
-
-    // Combine path metadata with file metadata
-    return receiptFile()
-        .projectId(matcher.group(1))
-        .type(matcher.group(2))
-        .study(matcher.group(3))
-        .workflow(matcher.group(4))
-        .analysisId(matcher.group(5))
-        .timestamp(Long.parseLong(matcher.group(6)))
-        .build();
+  private static EGAReceiptFile getLatestReceipt(TreeMultimap<String, EGAReceiptFile> receiptIndex, String analysisId) {
+    return getFirst(receiptIndex.get(analysisId), null);
   }
 
 }

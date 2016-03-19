@@ -19,6 +19,8 @@ package org.icgc.dcc.repository.collab;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 
+import java.io.File;
+
 import org.icgc.dcc.repository.cloud.CloudImporter;
 import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
 import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
@@ -39,8 +41,10 @@ public class CollabImporter extends CloudImporter {
    */
   private static final String BUCKET_NAME = "oicr.icgc";
   private static final String BUCKET_KEY_PREFIX = "data";
+
   private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/ceph_transfer_ops.git";
   private static final String GIT_REPO_DIR_GLOB = "ceph-transfer-jobs*";
+  private static final File GIT_REPO_DIR = new File("/tmp/dcc-repository-collab");
 
   public CollabImporter(@NonNull RepositoryFileContext context) {
     super(COLLAB, context, log);
@@ -48,7 +52,7 @@ public class CollabImporter extends CloudImporter {
 
   @Override
   protected CloudTransferJobReader createJobReader() {
-    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_DIR_GLOB);
+    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_DIR, GIT_REPO_DIR_GLOB);
   }
 
   @Override

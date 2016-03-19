@@ -19,6 +19,8 @@ package org.icgc.dcc.repository.aws;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
 
+import java.io.File;
+
 import org.icgc.dcc.repository.aws.s3.AWSClientFactory;
 import org.icgc.dcc.repository.cloud.CloudImporter;
 import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
@@ -39,8 +41,10 @@ public class AWSImporter extends CloudImporter {
    */
   private static final String BUCKET_NAME = "oicr.icgc";
   private static final String BUCKET_KEY_PREFIX = "data";
+
   private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/s3-transfer-operations.git";
   private static final String GIT_REPO_DIR_GLOB = "s3-transfer-jobs-*";
+  private static final File GIT_REPO_DIR = new File("/tmp/dcc-repository-aws");
 
   public AWSImporter(@NonNull RepositoryFileContext context) {
     super(AWS, context, log);
@@ -48,7 +52,7 @@ public class AWSImporter extends CloudImporter {
 
   @Override
   protected CloudTransferJobReader createJobReader() {
-    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_DIR_GLOB);
+    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_DIR, GIT_REPO_DIR_GLOB);
   }
 
   @Override

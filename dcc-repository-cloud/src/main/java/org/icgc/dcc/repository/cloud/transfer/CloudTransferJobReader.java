@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.repository.cloud.transfer;
 
-import static com.google.common.io.Files.createTempDir;
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.file.Files.newDirectoryStream;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -62,12 +62,15 @@ public class CloudTransferJobReader {
   @NonNull
   private final String repoUrl;
   @NonNull
+  private final File repoDir;
+  @NonNull
   private final String repoDirGlob;
 
   @SneakyThrows
   public List<ObjectNode> readJobs() {
-    val repoDir = cloneRepo();
-    val completedDirs = resolveCompletedDirs(repoDir);
+    updateLocalRepo();
+
+    val completedDirs = resolveCompletedDirs();
 
     val jobs = ImmutableList.<ObjectNode> builder();
     for (val completedDir : completedDirs) {
@@ -91,16 +94,22 @@ public class CloudTransferJobReader {
     return (ObjectNode) MAPPER.readTree(jsonFile.toFile());
   }
 
-  private File cloneRepo() throws GitAPIException, InvalidRemoteException, TransportException {
-    val repoDir = createTempDir();
-    log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
-    Git
-        .cloneRepository()
-        .setURI(repoUrl)
-        .setDirectory(repoDir)
-        .call();
+  private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
+    if (repoDir.exists()) {
+      log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
+      Git
+          .open(repoDir)
+          .pull();
+    } else {
+      checkState(repoDir.mkdirs(), "Could not create '%s'", repoDir);
 
-    return repoDir;
+      log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
+      Git
+          .cloneRepository()
+          .setURI(repoUrl)
+          .setDirectory(repoDir)
+          .call();
+    }
   }
 
   @SneakyThrows
@@ -109,7 +118,7 @@ public class CloudTransferJobReader {
   }
 
   @SneakyThrows
-  private List<File> resolveCompletedDirs(File repoDir) {
+  private List<File> resolveCompletedDirs() {
     log.info("Resolving repo dirs using glob: '{}'", repoDirGlob);
     @Cleanup
     val dirs = newDirectoryStream(repoDir.toPath(), repoDirGlob);

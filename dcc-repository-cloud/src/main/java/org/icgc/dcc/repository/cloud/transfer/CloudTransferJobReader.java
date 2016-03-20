@@ -18,8 +18,6 @@
 package org.icgc.dcc.repository.cloud.transfer;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.file.Files.newDirectoryStream;
-import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
@@ -29,18 +27,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
 
-import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -70,22 +66,26 @@ public class CloudTransferJobReader {
   public List<ObjectNode> readJobs() {
     updateLocalRepo();
 
-    val completedDirs = resolveCompletedDirs();
-
-    val jobs = ImmutableList.<ObjectNode> builder();
-    for (val completedDir : completedDirs) {
-      log.info("Resolving job files from completed dir '{}'...", completedDir.getCanonicalPath());
-      val jobFiles = resolveJobFiles(completedDir);
-
-      log.info("Reading {} completed jobs from {}...", formatCount(jobFiles.size()), completedDir);
-      jobs.addAll(readFiles(jobFiles));
-    }
-
-    return jobs.build();
+    return readFiles();
   }
 
-  private List<ObjectNode> readFiles(List<Path> files) throws IOException, JsonProcessingException {
-    return files.stream().map(this::readFile).collect(toImmutableList());
+  private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
+    if (repoDir.exists()) {
+      log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
+      Git.open(repoDir).pull();
+    } else {
+      checkState(repoDir.mkdirs(), "Could not create '%s'", repoDir);
+
+      log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
+      Git.cloneRepository().setURI(repoUrl).setDirectory(repoDir).call();
+    }
+  }
+
+  private List<ObjectNode> readFiles() {
+    return resolveCompletedDirs()
+        .flatMap(this::resolveJobFiles)
+        .map(this::readFile)
+        .collect(toImmutableList());
   }
 
   @SneakyThrows
@@ -94,40 +94,21 @@ public class CloudTransferJobReader {
     return (ObjectNode) MAPPER.readTree(jsonFile.toFile());
   }
 
-  private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
-    if (repoDir.exists()) {
-      log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
-      Git
-          .open(repoDir)
-          .pull();
-    } else {
-      checkState(repoDir.mkdirs(), "Could not create '%s'", repoDir);
-
-      log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
-      Git
-          .cloneRepository()
-          .setURI(repoUrl)
-          .setDirectory(repoDir)
-          .call();
-    }
+  @SneakyThrows
+  private Stream<Path> resolveJobFiles(File completedDir) {
+    log.info("Resolving job files from completed dir '{}'...", completedDir.getCanonicalPath());
+    return Files.list(completedDir.toPath()).filter(isJsonFile());
   }
 
   @SneakyThrows
-  private static List<Path> resolveJobFiles(File completedDir) {
-    return Files.list(completedDir.toPath()).filter(isJsonFile()).collect(toImmutableList());
-  }
-
-  @SneakyThrows
-  private List<File> resolveCompletedDirs() {
+  private Stream<File> resolveCompletedDirs() {
     log.info("Resolving repo dirs using glob: '{}'", repoDirGlob);
-    @Cleanup
-    val dirs = newDirectoryStream(repoDir.toPath(), repoDirGlob);
-
-    return stream(dirs).map(d -> new File(d.toFile(), "completed-jobs")).collect(toImmutableList());
+    val dirs = Files.newDirectoryStream(repoDir.toPath(), repoDirGlob);
+    return stream(dirs).map(d -> new File(d.toFile(), "completed-jobs"));
   }
 
   private static Predicate<? super Path> isJsonFile() {
-    return path -> path.toString().endsWith(".json");
+    return path -> path.toFile().getName().endsWith(".json");
   }
 
 }

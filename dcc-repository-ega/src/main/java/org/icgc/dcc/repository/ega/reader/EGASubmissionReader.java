@@ -71,18 +71,12 @@ public class EGASubmissionReader {
   private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
     if (repoDir.exists()) {
       log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
-      Git
-          .open(repoDir)
-          .pull();
+      Git.open(repoDir).pull();
     } else {
       checkState(repoDir.mkdirs(), "Could not create '%s'", repoDir);
 
       log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
-      Git
-          .cloneRepository()
-          .setURI(repoUrl)
-          .setDirectory(repoDir)
-          .call();
+      Git.cloneRepository().setURI(repoUrl).setDirectory(repoDir).call();
     }
   }
 

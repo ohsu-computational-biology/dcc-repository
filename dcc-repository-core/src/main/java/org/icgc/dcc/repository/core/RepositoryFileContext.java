@@ -56,7 +56,8 @@ public class RepositoryFileContext {
   @Getter
   @NonNull
   private final Set<RepositorySource> sources;
-  private final boolean readOnly = false;
+  @Getter
+  private final boolean readOnly;
 
   /**
    * Metadata.

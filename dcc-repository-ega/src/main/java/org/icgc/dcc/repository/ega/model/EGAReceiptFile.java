@@ -17,14 +17,12 @@
  */
 package org.icgc.dcc.repository.ega.model;
 
-import com.google.common.primitives.Longs;
-
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-public class EGAReceiptFile implements Comparable<EGAReceiptFile> {
+public class EGAReceiptFile {
 
   String projectId;
   String type;
@@ -35,12 +33,6 @@ public class EGAReceiptFile implements Comparable<EGAReceiptFile> {
 
   public static EGAReceiptFileBuilder receiptFile() {
     return builder();
-  }
-
-  @Override
-  public int compareTo(EGAReceiptFile o) {
-    // Temporally descending
-    return -Longs.compare(timestamp, o.timestamp);
   }
 
 }

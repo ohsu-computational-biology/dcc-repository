@@ -22,11 +22,9 @@ import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import com.mongodb.MongoClientURI;
 
-import lombok.NonNull;
-
 public class RepositorySourceFileReader extends RepositoryFileReader {
 
-  public RepositorySourceFileReader(@NonNull MongoClientURI mongoUri, RepositorySource source) {
+  public RepositorySourceFileReader(MongoClientURI mongoUri, RepositorySource source) {
     super(mongoUri, RepositoryFileCollection.forSource(source));
   }
 

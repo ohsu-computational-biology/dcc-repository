@@ -19,11 +19,13 @@ package org.icgc.dcc.repository.ega.reader;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.uniqueIndex;
+import static com.google.common.collect.Ordering.natural;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.repository.ega.model.EGASubmission.submission;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -83,7 +85,7 @@ public class EGASubmissionReader {
     val sampleIndex = HashMultimap.<String, EGASampleFile> create();
     sampleFiles.forEach(f -> sampleIndex.put(f.getProjectId(), f));
 
-    val receiptIndex = TreeMultimap.<String, EGAReceiptFile> create();
+    val receiptIndex = TreeMultimap.<String, EGAReceiptFile> create(natural(), timeDecending());
     receiptFiles.forEach(f -> receiptIndex.put(f.getAnalysisId(), f));
 
     // Combine both files into a merged record
@@ -120,6 +122,10 @@ public class EGASubmissionReader {
 
   private static EGAReceiptFile getLatestReceipt(TreeMultimap<String, EGAReceiptFile> receiptIndex, String analysisId) {
     return getFirst(receiptIndex.get(analysisId), null);
+  }
+
+  private static Comparator<? super EGAReceiptFile> timeDecending() {
+    return natural().onResultOf((EGAReceiptFile f) -> f.getTimestamp()).reversed();
   }
 
 }

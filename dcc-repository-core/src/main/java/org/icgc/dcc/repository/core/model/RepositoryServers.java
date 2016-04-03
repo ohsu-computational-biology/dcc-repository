@@ -42,7 +42,7 @@ import lombok.Value;
 @NoArgsConstructor(access = PRIVATE)
 public final class RepositoryServers {
 
-  public class RepositoryCodes {
+  public static class RepositoryCodes {
 
     public static final String CGHUB = "cghub";
     public static final String EGA = "ega";

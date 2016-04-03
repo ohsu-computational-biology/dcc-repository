@@ -44,11 +44,11 @@ public class RepositoryFileReader extends AbstractJongoComponent {
   @NonNull
   protected final MongoCollection collection;
 
-  public RepositoryFileReader(@NonNull MongoClientURI mongoUri) {
+  public RepositoryFileReader(MongoClientURI mongoUri) {
     this(mongoUri, RepositoryFileCollection.FILE);
   }
 
-  protected RepositoryFileReader(@NonNull MongoClientURI mongoUri, RepositoryFileCollection fileCollection) {
+  protected RepositoryFileReader(MongoClientURI mongoUri, @NonNull RepositoryFileCollection fileCollection) {
     super(mongoUri);
     this.fileCollection = fileCollection;
     this.collection = getCollection(fileCollection);

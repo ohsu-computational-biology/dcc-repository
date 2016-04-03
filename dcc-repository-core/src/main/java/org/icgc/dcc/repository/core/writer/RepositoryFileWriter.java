@@ -48,11 +48,11 @@ public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<Repositor
   @NonNull
   private final MongoCollection collection;
 
-  public RepositoryFileWriter(@NonNull MongoClientURI mongoUri) {
+  public RepositoryFileWriter(MongoClientURI mongoUri) {
     this(mongoUri, FILE);
   }
 
-  public RepositoryFileWriter(@NonNull MongoClientURI mongoUri, @NonNull RepositoryFileCollection fileCollection) {
+  public RepositoryFileWriter(MongoClientURI mongoUri, @NonNull RepositoryFileCollection fileCollection) {
     super(mongoUri);
     this.fileCollection = fileCollection;
     this.collection = getCollection(fileCollection);

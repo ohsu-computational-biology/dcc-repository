@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.repository.cloud.transfer;
 
-import static com.google.common.base.Preconditions.checkState;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 
@@ -29,10 +28,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.TransportException;
+import org.icgc.dcc.repository.core.util.TransferMetadataRepository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -64,21 +61,16 @@ public class CloudTransferJobReader {
 
   @SneakyThrows
   public List<ObjectNode> readJobs() {
-    updateLocalRepo();
+    // Ensure we are in-sync with the remote
+    updateMetadata();
 
+    // Read and assemble
     return readFiles();
   }
 
-  private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
-    if (repoDir.exists()) {
-      log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
-      Git.open(repoDir).pull();
-    } else {
-      checkState(repoDir.mkdirs(), "Could not create '%s'", repoDir);
-
-      log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
-      Git.cloneRepository().setURI(repoUrl).setDirectory(repoDir).call();
-    }
+  private void updateMetadata() throws GitAPIException, IOException {
+    val repository = new TransferMetadataRepository(repoUrl, repoDir);
+    repository.update();
   }
 
   private List<ObjectNode> readFiles() {

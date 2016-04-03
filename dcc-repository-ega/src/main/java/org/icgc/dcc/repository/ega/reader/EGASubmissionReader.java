@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.repository.ega.reader;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
@@ -27,10 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.TransportException;
+import org.icgc.dcc.repository.core.util.TransferMetadataRepository;
 import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
 import org.icgc.dcc.repository.ega.model.EGAGnosFile;
 import org.icgc.dcc.repository.ega.model.EGAReceiptFile;
@@ -45,9 +42,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RequiredArgsConstructor
 public class EGASubmissionReader {
 
@@ -62,22 +57,15 @@ public class EGASubmissionReader {
   @SneakyThrows
   public List<EGASubmission> readSubmissions() {
     // Ensure we are in-sync with the remote
-    updateLocalRepo();
+    updateMetadata();
 
     // Read and assemble
     return createSubmissions();
   }
 
-  private void updateLocalRepo() throws GitAPIException, InvalidRemoteException, TransportException, IOException {
-    if (repoDir.exists()) {
-      log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
-      Git.open(repoDir).pull();
-    } else {
-      checkState(repoDir.mkdirs(), "Could not create '%s'", repoDir);
-
-      log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
-      Git.cloneRepository().setURI(repoUrl).setDirectory(repoDir).call();
-    }
+  private void updateMetadata() throws GitAPIException, IOException {
+    val repository = new TransferMetadataRepository(repoUrl, repoDir);
+    repository.update();
   }
 
   private List<EGASubmission> createSubmissions() {

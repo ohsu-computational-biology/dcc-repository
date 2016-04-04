@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * See https://github.com/ICGC-TCGA-PanCancer/ega-submission-tool for information on how the data was created for
  * import.
+ * 
+ * @see https://www.ebi.ac.uk/ega/dacs/EGAC00001000010
  */
 @Slf4j
 public class EGAImporter extends GenericRepositorySourceFileImporter {

@@ -18,13 +18,11 @@
 package org.icgc.dcc.repository.ega.reader;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.function.Predicates.not;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -32,12 +30,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import org.json.XML;
+import org.icgc.dcc.repository.ega.util.XMLObjectNodeReader;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
-import com.google.common.io.CharStreams;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +45,7 @@ public abstract class EGAFileReader<T> {
   /**
    * Constants.
    */
-  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JsonOrgModule());
+  private static final XMLObjectNodeReader reader = new XMLObjectNodeReader();
 
   private static final Pattern TEST_FILE_PATTERN = Pattern.compile("TEST-PROJ.*");
 
@@ -81,12 +76,7 @@ public abstract class EGAFileReader<T> {
     val fileStream = new FileInputStream(file);
     val inputStream = compressed ? new GZIPInputStream(fileStream) : fileStream;
 
-    // Can't use jackson-dataformat-xml because of lack of repeating elements support, etc.
-    val reader = new InputStreamReader(inputStream, UTF_8);
-    val xml = CharStreams.toString(reader);
-    val json = XML.toJSONObject(xml);
-
-    return MAPPER.convertValue(json, ObjectNode.class);
+    return reader.read(inputStream);
   }
 
   private T createFile(Path path) {

@@ -22,26 +22,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.icgc.dcc.common.core.io.ForwardingInputStream;
+import org.icgc.dcc.repository.ega.model.EGAMetadataArchive;
 import org.icgc.dcc.repository.ega.util.XMLObjectNodeReader;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Maps;
 
 import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RequiredArgsConstructor
 public class EGAMetadataArchiveReader {
 
@@ -66,19 +62,17 @@ public class EGAMetadataArchiveReader {
   @SneakyThrows
   public EGAMetadataArchive read(@NonNull String datasetId) {
     @Cleanup
-    val tar = readTarStream(datasetId);
+    val tarball = readTarball(datasetId);
 
     TarArchiveEntry entry = null;
     val archive = new EGAMetadataArchive(datasetId);
-    while ((entry = tar.getNextTarEntry()) != null) {
-      log.info("Reading {}...", entry.getName());
-
+    while ((entry = tarball.getNextTarEntry()) != null) {
       if (isMappingFile(entry)) {
         val mappingId = getMappingId(entry);
-        val mapping = parseMapping(mappingId, tar);
+        val mapping = parseMapping(mappingId, tarball);
         archive.getMappings().put(mappingId, mapping);
       } else if (isXmlFile(entry)) {
-        val xml = parseXml(tar);
+        val xml = parseXml(tarball);
         if (isStudy(entry)) {
           archive.getStudies().put(getStudyId(entry), xml);
         } else if (isSample(entry)) {
@@ -104,10 +98,14 @@ public class EGAMetadataArchiveReader {
     return MAPPING_READER.read(mappingId, new ForwardingInputStream(inputStream, false));
   }
 
-  private TarArchiveInputStream readTarStream(String datasetId) throws IOException {
-    val url = getArchiveUrl(datasetId);
-    val gzip = new GZIPInputStream(url.openStream());
-    return new TarArchiveInputStream(gzip);
+  private TarArchiveInputStream readTarball(String datasetId) throws IOException {
+    try {
+      val url = getArchiveUrl(datasetId);
+      val gzip = new GZIPInputStream(url.openStream());
+      return new TarArchiveInputStream(gzip);
+    } catch (IOException e) {
+      throw new RuntimeException("Error reading tarball for dataset " + datasetId, e);
+    }
   }
 
   @SneakyThrows
@@ -173,21 +171,6 @@ public class EGAMetadataArchiveReader {
 
   private static boolean isXmlFile(TarArchiveEntry entry) {
     return entry.isFile() && entry.getName().toLowerCase().endsWith(".xml");
-  }
-
-  @Value
-  public static class EGAMetadataArchive {
-
-    final String datasetId;
-
-    final Map<String, List<ObjectNode>> mappings = Maps.newHashMap();
-
-    final Map<String, ObjectNode> studies = Maps.newHashMap();
-    final Map<String, ObjectNode> samples = Maps.newHashMap();
-    final Map<String, ObjectNode> experiments = Maps.newHashMap();
-    final Map<String, ObjectNode> runs = Maps.newHashMap();
-    final Map<String, ObjectNode> analysis = Maps.newHashMap();
-
   }
 
 }

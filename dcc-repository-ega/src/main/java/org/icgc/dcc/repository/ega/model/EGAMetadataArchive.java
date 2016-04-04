@@ -15,23 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
+package org.icgc.dcc.repository.ega.model;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import java.util.List;
+import java.util.Map;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
-import lombok.val;
+import lombok.Value;
 
-@Ignore("For development only")
-public class EGAImporterTest {
+@Value
+public class EGAMetadataArchive {
 
-  @Test
-  public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val egaImporter = new EGAImporter(context);
-    egaImporter.execute();
-  }
+  final String datasetId;
+
+  final Map<String, List<ObjectNode>> mappings = Maps.newHashMap();
+
+  final Map<String, ObjectNode> studies = Maps.newHashMap();
+  final Map<String, ObjectNode> samples = Maps.newHashMap();
+  final Map<String, ObjectNode> experiments = Maps.newHashMap();
+  final Map<String, ObjectNode> runs = Maps.newHashMap();
+  final Map<String, ObjectNode> analysis = Maps.newHashMap();
 
 }

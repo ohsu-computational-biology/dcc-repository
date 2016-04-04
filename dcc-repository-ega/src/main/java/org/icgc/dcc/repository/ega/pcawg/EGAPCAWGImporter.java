@@ -15,66 +15,64 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
+package org.icgc.dcc.repository.ega.pcawg;
 
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
+import static org.icgc.dcc.repository.core.model.RepositoryServers.getEGAServer;
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
+
+import java.io.File;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.ega.reader.EGAMetadataArchiveReader;
-import org.icgc.dcc.repository.ega.util.EGAClient;
-import org.icgc.dcc.repository.ega.util.EGAProjects;
-
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
+import org.icgc.dcc.repository.ega.pcawg.core.EGAFileProcessor;
+import org.icgc.dcc.repository.ega.pcawg.model.EGASubmission;
+import org.icgc.dcc.repository.ega.pcawg.reader.EGASubmissionReader;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * See https://github.com/ICGC-TCGA-PanCancer/ega-submission-tool for information on how the data was created for
+ * import.
+ * 
  * @see https://www.ebi.ac.uk/ega/dacs/EGAC00001000010
  */
 @Slf4j
-public class EGAImporter extends GenericRepositorySourceFileImporter {
+public class EGAPCAWGImporter extends GenericRepositorySourceFileImporter {
 
-  public EGAImporter(RepositoryFileContext context) {
+  /**
+   * Constants.
+   */
+  private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/pcawg-ega-submission.git";
+  private static final File GIT_REPO_DIR = new File("/tmp/dcc-repository-ega");
+
+  public EGAPCAWGImporter(RepositoryFileContext context) {
     super(EGA, context, log);
   }
 
   @Override
   protected Iterable<RepositoryFile> readFiles() {
-    val reader = new EGAMetadataArchiveReader();
-    val client = createEGAClient();
-    val datasetIds = client.getDatasetIds();
+    log.info("Reading submissions...");
+    val submissions = readSubmissions();
+    log.info("Finished reading {} submissions", formatCount(submissions));
 
-    int i = 0;
-    val watch = Stopwatch.createStarted();
-    for (val datasetId : datasetIds) {
-      i++;
-      if (datasetId.equals("EGAD00001001124")) {
-        // Corrupted
-        continue;
-      }
+    log.info("Processing files...");
+    val files = processSubmissionFiles(submissions);
+    log.info("Finished processing {} files", formatCount(files));
 
-      val metadata = reader.read(datasetId);
-      val projectCodes = EGAProjects.getDatasetProjectCodes(datasetId);
-
-      log.info("{}. {} = {}", i, metadata.getDatasetId(), projectCodes);
-    }
-
-    log.info("Finished reading {} data sets in {}", i, watch);
-
-    return ImmutableList.of();
+    return files;
   }
 
-  private org.icgc.dcc.repository.ega.util.EGAClient createEGAClient() {
-    val userName = System.getProperty("ega.username");
-    val password = System.getProperty("ega.password");
-    val client = new EGAClient(userName, password);
+  private Iterable<EGASubmission> readSubmissions() {
+    val reader = new EGASubmissionReader(GIT_REPO_URL, GIT_REPO_DIR);
+    return reader.readSubmissions();
+  }
 
-    client.login();
-    return client;
+  private Iterable<RepositoryFile> processSubmissionFiles(Iterable<EGASubmission> submission) {
+    val processor = new EGAFileProcessor(context, getEGAServer());
+    return processor.processSubmissions(submission);
   }
 
 }

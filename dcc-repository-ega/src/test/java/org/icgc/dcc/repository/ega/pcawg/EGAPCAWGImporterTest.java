@@ -15,22 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
+package org.icgc.dcc.repository.ega.pcawg;
 
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
+import org.icgc.dcc.repository.ega.pcawg.EGAPCAWGImporter;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-@Ignore("For development only")
-public class EGAImporterTest {
+public class EGAPCAWGImporterTest {
 
   @Test
+  @Ignore("For development only")
   public void testExecute() {
     val context = newLocalRepositoryFileContext();
-    val egaImporter = new EGAImporter(context);
+    val egaImporter = new EGAPCAWGImporter(context);
     egaImporter.execute();
   }
 

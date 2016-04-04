@@ -15,23 +15,41 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
+package org.icgc.dcc.repository.ega.util;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Ignore("For development only")
-public class EGAImporterTest {
+public class EGAClientTest {
 
   @Test
-  public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val egaImporter = new EGAImporter(context);
-    egaImporter.execute();
+  public void testDatasetIds() {
+    val client = createClient();
+
+    val success = client.login();
+    assertThat(success).isTrue();
+
+    val datasetIds = client.getDatasetIds();
+    assertThat(datasetIds).isNotEmpty();
+
+    int i = 0;
+    for (val datasetId : datasetIds) {
+      log.info("{}. {}", ++i, datasetId);
+    }
+  }
+
+  private static EGAClient createClient() {
+    val userName = System.getProperty("ega.username");
+    val password = System.getProperty("ega.password");
+
+    return new EGAClient(userName, password);
   }
 
 }

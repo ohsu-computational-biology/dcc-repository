@@ -33,7 +33,7 @@ import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositorySourceFileImporter;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.writer.RepositoryFileWriter;
-import org.icgc.dcc.repository.ega.EGAImporter;
+import org.icgc.dcc.repository.ega.pcawg.EGAPCAWGImporter;
 import org.icgc.dcc.repository.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.pcawg.PCAWGImporter;
 import org.icgc.dcc.repository.tcga.TCGAImporter;
@@ -240,7 +240,7 @@ public class RepositoryImporter {
     // The list order will be execution order, subject to activation
     return ImmutableList.of(
         new PCAWGImporter(context),
-        new EGAImporter(context),
+        new EGAPCAWGImporter(context),
         new AWSImporter(context),
         new CollabImporter(context),
         new TCGAImporter(context),

@@ -44,10 +44,13 @@ public class EGAMappingReader {
   public List<ObjectNode> read(@NonNull String mappingId, @NonNull InputStream inputStream) {
     val lines = readLines(inputStream);
 
-    return lines
-        .map(TAB::splitToList)
-        .map(toObjectNode(getHeaders(mappingId)))
-        .collect(toImmutableList());
+    try {
+      return lines.map(TAB::splitToList)
+          .map(toObjectNode(getHeaders(mappingId)))
+          .collect(toImmutableList());
+    } catch (Exception e) {
+      throw new IllegalStateException("Error processing " + mappingId, e);
+    }
   }
 
   @SuppressWarnings("resource")
@@ -70,13 +73,18 @@ public class EGAMappingReader {
   }
 
   private static List<String> getHeaders(String mappingId) {
-    if (mappingId.equals("Run_Sample_meta_info") || mappingId.equals("Analysis_Sample_meta_info")) {
+    if (mappingId.equals("Run_Sample_meta_info")) {
       return ImmutableList.of(
           "EGA_SAMPLE_ID",
           "SAMPLE_ALIAS",
           "BIOSAMPLE_ID",
           "SAMPLE_TITLE",
           "ATTRIBUTES");
+    } else if (mappingId.equals("Analysis_Sample_meta_info")) {
+      return ImmutableList.of(
+          "EGA_SAMPLE_ID",
+          "SAMPLE_ALIAS",
+          "BIOSAMPLE_ID");
     } else if (mappingId.equals("Study_Experiment_Run_sample")) {
       return ImmutableList.of(
           "STUDY_EGA_ID",
@@ -99,10 +107,12 @@ public class EGAMappingReader {
           "STUDY EGA_ID",
           "STUDY_TITLE",
           "STUDY_TYPE",
-          "ANALYSIS EGA_ID",
+          "ANALYSIS_EGA_ID",
           "ANALYSIS_TYPE",
           "ANALYSIS_TITLE",
-          "EGA_SAMPLE_ID");
+          "EGA_SAMPLE_ID",
+          "x",
+          "y");
     } else if (mappingId.equals("Sample_File")) {
       return ImmutableList.of(
           "SAMPLE_ALIAS",

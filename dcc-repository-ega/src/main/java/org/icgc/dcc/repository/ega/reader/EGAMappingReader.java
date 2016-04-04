@@ -34,6 +34,7 @@ import org.icgc.dcc.common.core.io.ForwardingInputStream;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
+import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -42,6 +43,7 @@ public class EGAMappingReader {
 
   @SneakyThrows
   public List<ObjectNode> read(@NonNull String mappingId, @NonNull InputStream inputStream) {
+    @Cleanup
     val lines = readLines(inputStream);
 
     return lines
@@ -51,7 +53,7 @@ public class EGAMappingReader {
   }
 
   @SuppressWarnings("resource")
-  private Stream<String> readLines(InputStream inputStream) {
+  private static Stream<String> readLines(InputStream inputStream) {
     return new BufferedReader(new InputStreamReader(new ForwardingInputStream(inputStream, false))).lines();
   }
 

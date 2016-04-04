@@ -15,51 +15,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.reader;
+package org.icgc.dcc.repository.ega.pcawg.model;
 
-import static org.icgc.dcc.repository.ega.model.EGAAnalysisFile.analysisFile;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import lombok.Builder;
+import lombok.Value;
 
-import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
+@Value
+@Builder
+public class EGAStudyFile {
 
-public class EGAAnalysisFileReader extends EGAFileReader<EGAAnalysisFile> {
+  String study;
+  ObjectNode contents;
 
-  /**
-   * Constants.
-   */
-  private static final Pattern ANALYSIS_FILE_PATTERN = Pattern.compile(""
-      // Template: [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].xml
-      // Example : BRCA-UK/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4acd08c6-1354-414d-8961-1f04acb2275c.xml
-      + "([^/]+)" // [projectId]
-      + "/analysis_"
-      + "([^.]+)" // [type]
-      + "\\."
-      + "([^_]+)" // [study]
-      + "_"
-      + "([^/]+)" // [workflow]
-      + "/analysis/analysis"
-      + "\\."
-      + "([^.]+)" // [analysisId]
-      + "\\.xml");
-
-  public EGAAnalysisFileReader(File repoDir) {
-    super(repoDir, ANALYSIS_FILE_PATTERN);
-  }
-
-  @Override
-  protected EGAAnalysisFile createFile(Path path, Matcher matcher) {
-    return analysisFile()
-        .projectId(matcher.group(1))
-        .type(matcher.group(2))
-        .study(matcher.group(3))
-        .workflow(matcher.group(4))
-        .analysisId(matcher.group(5))
-        .contents(readFile(path))
-        .build();
+  public static EGAStudyFileBuilder studyFile() {
+    return builder();
   }
 
 }

@@ -15,25 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.model;
-
-import java.util.Set;
+package org.icgc.dcc.repository.ega.pcawg.model;
 
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-public class EGASubmission {
+public class EGAReceiptFile {
 
-  EGAStudyFile studyFile;
-  Set<EGASampleFile> sampleFiles;
+  String projectId;
+  String type;
+  String study;
+  String workflow;
+  String analysisId;
+  long timestamp;
 
-  EGAGnosFile gnosFile;
-  EGAAnalysisFile analysisFile;
-  EGAReceiptFile receiptFile;
-
-  public static EGASubmissionBuilder submission() {
+  public static EGAReceiptFileBuilder receiptFile() {
     return builder();
   }
 

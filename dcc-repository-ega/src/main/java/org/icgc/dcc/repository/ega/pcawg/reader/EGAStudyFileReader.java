@@ -15,26 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.model;
+package org.icgc.dcc.repository.ega.pcawg.reader;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import static org.icgc.dcc.repository.ega.pcawg.model.EGAStudyFile.studyFile;
 
-import lombok.Builder;
-import lombok.Value;
+import java.io.File;
+import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-@Value
-@Builder
-public class EGAAnalysisFile {
+import org.icgc.dcc.repository.ega.pcawg.model.EGAStudyFile;
 
-  String projectId;
-  String type;
-  String study;
-  String workflow;
-  String analysisId;
-  ObjectNode contents;
+public class EGAStudyFileReader extends EGAFileReader<EGAStudyFile> {
 
-  public static EGAAnalysisFileBuilder analysisFile() {
-    return builder();
+  /**
+   * Constants.
+   */
+  private static final Pattern STUDY_FILE_PATTERN = Pattern.compile(""
+      // Template: study/study.[study].xml
+      // Example : study/study.PCAWG.xml
+      + "study/study"
+      + "\\."
+      + "([^.]+)" // [study]
+      + "\\.xml");
+
+  public EGAStudyFileReader(File repoDir) {
+    super(repoDir, STUDY_FILE_PATTERN);
+  }
+
+  @Override
+  protected EGAStudyFile createFile(Path path, Matcher matcher) {
+    return studyFile()
+        .study(matcher.group(1))
+        .contents(readFile(path))
+        .build();
   }
 
 }

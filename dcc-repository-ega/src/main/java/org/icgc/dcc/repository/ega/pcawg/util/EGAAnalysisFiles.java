@@ -15,12 +15,12 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.util;
+package org.icgc.dcc.repository.ega.pcawg.util;
 
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
-import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAAnalysisFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

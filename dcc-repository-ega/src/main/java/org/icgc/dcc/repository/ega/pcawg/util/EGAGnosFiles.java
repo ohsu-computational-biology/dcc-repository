@@ -15,40 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.reader;
+package org.icgc.dcc.repository.ega.pcawg.util;
 
-import static org.icgc.dcc.repository.ega.model.EGAStudyFile.studyFile;
+import static lombok.AccessLevel.PRIVATE;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAGnosFile;
 
-import org.icgc.dcc.repository.ega.model.EGAStudyFile;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
-public class EGAStudyFileReader extends EGAFileReader<EGAStudyFile> {
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-  /**
-   * Constants.
-   */
-  private static final Pattern STUDY_FILE_PATTERN = Pattern.compile(""
-      // Template: study/study.[study].xml
-      // Example : study/study.PCAWG.xml
-      + "study/study"
-      + "\\."
-      + "([^.]+)" // [study]
-      + "\\.xml");
+@NoArgsConstructor(access = PRIVATE)
+public final class EGAGnosFiles {
 
-  public EGAStudyFileReader(File repoDir) {
-    super(repoDir, STUDY_FILE_PATTERN);
+  public static ArrayNode getFiles(@NonNull EGAGnosFile gnosFile) {
+    return (ArrayNode) at(gnosFile, "/ResultSet/Result/files/file");
   }
 
-  @Override
-  protected EGAStudyFile createFile(Path path, Matcher matcher) {
-    return studyFile()
-        .study(matcher.group(1))
-        .contents(readFile(path))
-        .build();
+  public static long getFileSize(@NonNull JsonNode file) {
+    return file.get("filesize").longValue();
+  }
+
+  public static String getFileName(@NonNull JsonNode file) {
+    return file.get("filename").textValue();
+  }
+
+  private static JsonNode at(EGAGnosFile gnosFile, String path) {
+    return gnosFile.getContents().at(path);
   }
 
 }

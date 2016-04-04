@@ -15,13 +15,13 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.reader;
+package org.icgc.dcc.repository.ega.pcawg.reader;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.collect.Ordering.natural;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
-import static org.icgc.dcc.repository.ega.model.EGASubmission.submission;
+import static org.icgc.dcc.repository.ega.pcawg.model.EGASubmission.submission;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,12 +30,12 @@ import java.util.List;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.icgc.dcc.repository.core.util.TransferMetadataRepository;
-import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
-import org.icgc.dcc.repository.ega.model.EGAGnosFile;
-import org.icgc.dcc.repository.ega.model.EGAReceiptFile;
-import org.icgc.dcc.repository.ega.model.EGASampleFile;
-import org.icgc.dcc.repository.ega.model.EGAStudyFile;
-import org.icgc.dcc.repository.ega.model.EGASubmission;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAAnalysisFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAGnosFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAReceiptFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGASampleFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAStudyFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGASubmission;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.TreeMultimap;

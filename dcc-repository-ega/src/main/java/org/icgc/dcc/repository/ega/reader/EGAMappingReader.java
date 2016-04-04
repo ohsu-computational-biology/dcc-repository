@@ -34,7 +34,6 @@ import org.icgc.dcc.common.core.io.ForwardingInputStream;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 
-import lombok.Cleanup;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -43,7 +42,6 @@ public class EGAMappingReader {
 
   @SneakyThrows
   public List<ObjectNode> read(@NonNull String mappingId, @NonNull InputStream inputStream) {
-    @Cleanup
     val lines = readLines(inputStream);
 
     return lines
@@ -95,9 +93,7 @@ public class EGAMappingReader {
           "RUN_EGA_ID",
           "SUBMISSION_CENTER_NAME",
           "RUN_CENTER_NAME",
-          "EA_SAMPLE_ID"/*
-                         * , "SAMPLE_ALIAS", "BIOSAMPLE_ID", "EGA_SAMPLE_ID"
-                         */);
+          "EGA_SAMPLE_ID");
     } else if (mappingId.equals("Study_analysis_sample")) {
       return ImmutableList.of(
           "STUDY EGA_ID",

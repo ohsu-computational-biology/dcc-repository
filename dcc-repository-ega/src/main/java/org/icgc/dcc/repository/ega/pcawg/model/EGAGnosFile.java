@@ -15,47 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.reader;
+package org.icgc.dcc.repository.ega.pcawg.model;
 
-import static org.icgc.dcc.repository.ega.model.EGASampleFile.sampleFile;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import lombok.Builder;
+import lombok.Value;
 
-import org.icgc.dcc.repository.ega.model.EGASampleFile;
+@Value
+@Builder
+public class EGAGnosFile {
 
-public class EGASampleFileReader extends EGAFileReader<EGASampleFile> {
+  String projectId;
+  String type;
+  String study;
+  String workflow;
+  String analysisId;
+  ObjectNode contents;
 
-  /**
-   * Constants.
-   */
-  private static final Pattern SAMPLE_FILE_PATTERN = Pattern.compile(""
-      // Template: [projectId]/sample/sample.[projectId].[type]_[timestamp].xml`
-      // Example : BRCA-EU/sample/sample.BRCA-EU.wgs_1455048989.xml
-      + "([^/]+)" // [projectId]
-      + "/sample/sample"
-      + "\\."
-      + "[^.]+"
-      + "\\."
-      + "([^.]+)" // [type]
-      + "_"
-      + "([^.]+)" // [timestamp]
-      + "\\.xml");
-
-  public EGASampleFileReader(File repoDir) {
-    super(repoDir, SAMPLE_FILE_PATTERN);
-  }
-
-  @Override
-  protected EGASampleFile createFile(Path path, Matcher matcher) {
-    return sampleFile()
-        .projectId(matcher.group(1))
-        .type(matcher.group(2))
-        .timestamp(Long.parseLong(matcher.group(3)))
-        .contents(readFile(path))
-        .build();
+  public static EGAGnosFileBuilder gnosFile() {
+    return builder();
   }
 
 }

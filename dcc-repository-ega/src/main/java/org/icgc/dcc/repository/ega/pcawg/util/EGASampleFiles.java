@@ -15,20 +15,46 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.util;
+package org.icgc.dcc.repository.ega.pcawg.util;
 
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
-import org.icgc.dcc.repository.ega.model.EGAStudyFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGASampleFile;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
-public final class EGAStudyFiles {
+public final class EGASampleFiles {
 
-  public static String getAccession(@NonNull EGAStudyFile studyFile) {
-    return studyFile.getContents().at("/STUDY_SET/STUDY/accession").textValue();
+  public static JsonNode getSamples(@NonNull EGASampleFile sampleFile) {
+    return at(sampleFile, "/SAMPLE_SET/SAMPLE");
   }
 
+  public static String getSampleRefName(@NonNull JsonNode sampleRef) {
+    return sampleRef.path("refname").textValue();
+  }
+
+  public static String getSampleAlias(@NonNull JsonNode sample) {
+    return sample.get("alias").textValue();
+  }
+
+  public static ObjectNode getSampleAttributes(@NonNull JsonNode sample) {
+    val attributes = DEFAULT.createObjectNode();
+    val array = sample.at("/SAMPLE_ATTRIBUTES/SAMPLE_ATTRIBUTE");
+    for (val element : array) {
+      attributes.put(element.get("TAG").textValue(), element.get("VALUE").textValue());
+    }
+
+    return attributes;
+  }
+
+  private static JsonNode at(EGASampleFile sampleFile, String path) {
+    return sampleFile.getContents().at(path);
+  }
 }

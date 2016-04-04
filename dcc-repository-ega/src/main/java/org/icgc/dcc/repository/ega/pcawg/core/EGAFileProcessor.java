@@ -15,17 +15,17 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.core;
+package org.icgc.dcc.repository.ega.pcawg.core;
 
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
-import static org.icgc.dcc.repository.ega.util.EGAAnalysisFiles.getChecksum;
-import static org.icgc.dcc.repository.ega.util.EGAAnalysisFiles.getFiles;
-import static org.icgc.dcc.repository.ega.util.EGAAnalysisFiles.getSampleRef;
-import static org.icgc.dcc.repository.ega.util.EGASampleFiles.getSampleAlias;
-import static org.icgc.dcc.repository.ega.util.EGASampleFiles.getSampleRefName;
-import static org.icgc.dcc.repository.ega.util.EGAStudyFiles.getAccession;
+import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getChecksum;
+import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getFiles;
+import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getSampleRef;
+import static org.icgc.dcc.repository.ega.pcawg.util.EGASampleFiles.getSampleAlias;
+import static org.icgc.dcc.repository.ega.pcawg.util.EGASampleFiles.getSampleRefName;
+import static org.icgc.dcc.repository.ega.pcawg.util.EGAStudyFiles.getAccession;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,13 +44,13 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.ReferenceGenome;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Software;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
-import org.icgc.dcc.repository.ega.model.EGAAnalysisFile;
-import org.icgc.dcc.repository.ega.model.EGAGnosFile;
-import org.icgc.dcc.repository.ega.model.EGAStudyFile;
-import org.icgc.dcc.repository.ega.model.EGASubmission;
-import org.icgc.dcc.repository.ega.util.EGAAnalysisFiles;
-import org.icgc.dcc.repository.ega.util.EGAGnosFiles;
-import org.icgc.dcc.repository.ega.util.EGASampleFiles;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAAnalysisFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAGnosFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAStudyFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGASubmission;
+import org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles;
+import org.icgc.dcc.repository.ega.pcawg.util.EGAGnosFiles;
+import org.icgc.dcc.repository.ega.pcawg.util.EGASampleFiles;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

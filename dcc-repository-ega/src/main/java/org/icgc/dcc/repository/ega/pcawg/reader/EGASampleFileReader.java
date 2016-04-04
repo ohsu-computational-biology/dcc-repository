@@ -15,57 +15,46 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.reader;
+package org.icgc.dcc.repository.ega.pcawg.reader;
 
-import static org.icgc.dcc.repository.ega.model.EGAReceiptFile.receiptFile;
+import static org.icgc.dcc.repository.ega.pcawg.model.EGASampleFile.sampleFile;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.icgc.dcc.repository.ega.model.EGAReceiptFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGASampleFile;
 
-public class EGAReceiptFileReader extends EGAFileReader<EGAReceiptFile> {
+public class EGASampleFileReader extends EGAFileReader<EGASampleFile> {
 
   /**
    * Constants.
    */
-  private static final Pattern RECEIPT_FILE_PATTERN = Pattern.compile(""
-      // Template:
-      // [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].submission-[timestamp]_[id].xml
-      // Example :
-      // LICA-FR/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4884bd78-4002-4379-89f5-5855454ff858.submission-1455301216_2e9ffc2d-d824-449a-bb2f-b313f8fda985.xml
+  private static final Pattern SAMPLE_FILE_PATTERN = Pattern.compile(""
+      // Template: [projectId]/sample/sample.[projectId].[type]_[timestamp].xml`
+      // Example : BRCA-EU/sample/sample.BRCA-EU.wgs_1455048989.xml
       + "([^/]+)" // [projectId]
-      + "/analysis_"
+      + "/sample/sample"
+      + "\\."
+      + "[^.]+"
+      + "\\."
       + "([^.]+)" // [type]
-      + "\\."
-      + "([^_]+)" // [study]
       + "_"
-      + "([^/]+)" // [workflow]
-      + "/analysis/analysis"
-      + "\\."
-      + "([^.]+)" // [analysisId]
-      + "\\."
-      + "submission-"
-      + "(\\d+)" // [timestamp]
-      + "_[^.]+" // [id]
+      + "([^.]+)" // [timestamp]
       + "\\.xml");
 
-  public EGAReceiptFileReader(File repoDir) {
-    super(repoDir, RECEIPT_FILE_PATTERN);
+  public EGASampleFileReader(File repoDir) {
+    super(repoDir, SAMPLE_FILE_PATTERN);
   }
 
   @Override
-  protected EGAReceiptFile createFile(Path path, Matcher matcher) {
-    // Combine path metadata with file metadata
-    return receiptFile()
+  protected EGASampleFile createFile(Path path, Matcher matcher) {
+    return sampleFile()
         .projectId(matcher.group(1))
         .type(matcher.group(2))
-        .study(matcher.group(3))
-        .workflow(matcher.group(4))
-        .analysisId(matcher.group(5))
-        .timestamp(Long.parseLong(matcher.group(6)))
+        .timestamp(Long.parseLong(matcher.group(3)))
+        .contents(readFile(path))
         .build();
   }
 

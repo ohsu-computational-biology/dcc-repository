@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.model;
+package org.icgc.dcc.repository.ega.pcawg.model;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -24,12 +24,14 @@ import lombok.Value;
 
 @Value
 @Builder
-public class EGAStudyFile {
+public class EGASampleFile {
 
-  String study;
+  String projectId;
+  String type;
+  long timestamp;
   ObjectNode contents;
 
-  public static EGAStudyFileBuilder studyFile() {
+  public static EGASampleFileBuilder sampleFile() {
     return builder();
   }
 

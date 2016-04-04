@@ -26,9 +26,9 @@ import java.io.File;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.ega.core.EGAFileProcessor;
-import org.icgc.dcc.repository.ega.model.EGASubmission;
-import org.icgc.dcc.repository.ega.reader.EGASubmissionReader;
+import org.icgc.dcc.repository.ega.pcawg.core.EGAFileProcessor;
+import org.icgc.dcc.repository.ega.pcawg.model.EGASubmission;
+import org.icgc.dcc.repository.ega.pcawg.reader.EGASubmissionReader;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;

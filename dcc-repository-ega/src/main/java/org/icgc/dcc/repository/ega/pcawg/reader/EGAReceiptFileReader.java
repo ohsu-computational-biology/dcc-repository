@@ -15,24 +15,58 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.model;
+package org.icgc.dcc.repository.ega.pcawg.reader;
 
-import lombok.Builder;
-import lombok.Value;
+import static org.icgc.dcc.repository.ega.pcawg.model.EGAReceiptFile.receiptFile;
 
-@Value
-@Builder
-public class EGAReceiptFile {
+import java.io.File;
+import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-  String projectId;
-  String type;
-  String study;
-  String workflow;
-  String analysisId;
-  long timestamp;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAReceiptFile;
 
-  public static EGAReceiptFileBuilder receiptFile() {
-    return builder();
+public class EGAReceiptFileReader extends EGAFileReader<EGAReceiptFile> {
+
+  /**
+   * Constants.
+   */
+  private static final Pattern RECEIPT_FILE_PATTERN = Pattern.compile(""
+      // Template:
+      // [projectId]/analysis_[type].[study]_[workflow]/analysis/analysis.[analysisId].submission-[timestamp]_[id].xml
+      // Example :
+      // LICA-FR/analysis_alignment.PCAWG_WGS_BWA/analysis/analysis.4884bd78-4002-4379-89f5-5855454ff858.submission-1455301216_2e9ffc2d-d824-449a-bb2f-b313f8fda985.xml
+      + "([^/]+)" // [projectId]
+      + "/analysis_"
+      + "([^.]+)" // [type]
+      + "\\."
+      + "([^_]+)" // [study]
+      + "_"
+      + "([^/]+)" // [workflow]
+      + "/analysis/analysis"
+      + "\\."
+      + "([^.]+)" // [analysisId]
+      + "\\."
+      + "submission-"
+      + "(\\d+)" // [timestamp]
+      + "_[^.]+" // [id]
+      + "\\.xml");
+
+  public EGAReceiptFileReader(File repoDir) {
+    super(repoDir, RECEIPT_FILE_PATTERN);
+  }
+
+  @Override
+  protected EGAReceiptFile createFile(Path path, Matcher matcher) {
+    // Combine path metadata with file metadata
+    return receiptFile()
+        .projectId(matcher.group(1))
+        .type(matcher.group(2))
+        .study(matcher.group(3))
+        .workflow(matcher.group(4))
+        .analysisId(matcher.group(5))
+        .timestamp(Long.parseLong(matcher.group(6)))
+        .build();
   }
 
 }

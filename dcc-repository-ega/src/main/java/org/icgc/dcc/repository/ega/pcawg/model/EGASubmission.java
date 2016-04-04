@@ -15,35 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.util;
+package org.icgc.dcc.repository.ega.pcawg.model;
 
-import static lombok.AccessLevel.PRIVATE;
+import java.util.Set;
 
-import org.icgc.dcc.repository.ega.model.EGAGnosFile;
+import lombok.Builder;
+import lombok.Value;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+@Value
+@Builder
+public class EGASubmission {
 
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+  EGAStudyFile studyFile;
+  Set<EGASampleFile> sampleFiles;
 
-@NoArgsConstructor(access = PRIVATE)
-public final class EGAGnosFiles {
+  EGAGnosFile gnosFile;
+  EGAAnalysisFile analysisFile;
+  EGAReceiptFile receiptFile;
 
-  public static ArrayNode getFiles(@NonNull EGAGnosFile gnosFile) {
-    return (ArrayNode) at(gnosFile, "/ResultSet/Result/files/file");
-  }
-
-  public static long getFileSize(@NonNull JsonNode file) {
-    return file.get("filesize").longValue();
-  }
-
-  public static String getFileName(@NonNull JsonNode file) {
-    return file.get("filename").textValue();
-  }
-
-  private static JsonNode at(EGAGnosFile gnosFile, String path) {
-    return gnosFile.getContents().at(path);
+  public static EGASubmissionBuilder submission() {
+    return builder();
   }
 
 }

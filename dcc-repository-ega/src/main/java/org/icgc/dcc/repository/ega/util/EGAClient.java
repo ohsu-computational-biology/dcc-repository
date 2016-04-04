@@ -40,7 +40,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class EGAClient {
 
@@ -63,6 +65,8 @@ public class EGAClient {
   @NonNull
   private final String password;
 
+  private final boolean reconnect = true;
+
   /**
    * State.
    */
@@ -71,47 +75,55 @@ public class EGAClient {
   @SneakyThrows
   public boolean login() {
     val connection = openConnection("/users/login");
-
-    val request = createRequest();
-    request.put("username", userName);
-    request.put("password", password);
-    val body = "loginrequest=" + request.toString();
-
     connection.setRequestMethod("POST");
     connection.setRequestProperty(ACCEPT, "application/json");
     connection.setRequestProperty(CONTENT_TYPE, "application/json");
-    connection.setRequestProperty(CONTENT_LENGTH, Integer.toString(body.length()));
     connection.setDoOutput(true);
-    connection.getOutputStream().write(body.getBytes(UTF_8));
+
+    val request = createLoginRequest(userName, password);
+    connection.setRequestProperty(CONTENT_LENGTH, Integer.toString(request.length()));
+    connection.getOutputStream().write(request.getBytes(UTF_8));
 
     val response = readResponse(connection);
-    this.sessionId = response.path("response").path("result").path(1).textValue();
+    this.sessionId = getSessionId(response);
 
     return sessionId != null;
   }
 
   public List<String> getDatasetIds() {
-    checkState(sessionId != null, "You must login first before calling API methods.");
-    val connection = openConnection("/datasets?session=" + sessionId);
-    connection.setRequestProperty(ACCEPT, "application/json");
+    return get("/datasets", new TypeReference<List<String>>() {});
+  }
 
-    val response = readResponse(connection);
-    val code = response.path("header").path("code").asInt();
-    checkState(code == HTTP_OK, "Expected OK response, got %s: %s", code, response);
-
-    return DEFAULT.convertValue(response.path("response").path("result"), new TypeReference<List<String>>() {});
+  public List<ObjectNode> getDataset(@NonNull String datasetId) {
+    return get("/datasets/" + datasetId, new TypeReference<List<ObjectNode>>() {});
   }
 
   public List<ObjectNode> getFiles(@NonNull String datasetId) {
+    return get("/datasets/" + datasetId + "/files", new TypeReference<List<ObjectNode>>() {});
+  }
+
+  public ObjectNode getFile(@NonNull String fileId) {
+    return get("/files/" + fileId, new TypeReference<ObjectNode>() {});
+  }
+
+  private <T> T get(String path, TypeReference<T> responseType) {
     checkState(sessionId != null, "You must login first before calling API methods.");
-    val connection = openConnection("/datasets/" + datasetId + "/files" + "?session=" + sessionId);
+
+    val connection = openConnection(path + "?session=" + sessionId);
     connection.setRequestProperty(ACCEPT, "application/json");
 
     val response = readResponse(connection);
-    val code = response.path("header").path("code").asInt();
+    val code = getCode(response);
+    if (isSessionExpired(code) && reconnect) {
+      log.warn("Lost connection, reconnecting... {}", response);
+
+      checkState(login(), "Could not reconnect");
+      return get(path, responseType);
+    }
+
     checkState(code == HTTP_OK, "Expected OK response, got %s: %s", code, response);
 
-    return DEFAULT.convertValue(response.path("response").path("result"), new TypeReference<List<ObjectNode>>() {});
+    return DEFAULT.convertValue(response.path("response").path("result"), responseType);
   }
 
   @SneakyThrows
@@ -121,12 +133,27 @@ public class EGAClient {
   }
 
   @SneakyThrows
-  private JsonNode readResponse(URLConnection connection) {
+  private static JsonNode readResponse(URLConnection connection) {
     return DEFAULT.readTree(connection.getInputStream());
   }
 
-  private ObjectNode createRequest() {
-    return DEFAULT.createObjectNode();
+  private static String createLoginRequest(String userName, String password) {
+    val request = DEFAULT.createObjectNode();
+    request.put("username", userName);
+    request.put("password", password);
+    return "loginrequest=" + request.toString();
+  }
+
+  private static String getSessionId(JsonNode response) {
+    return response.path("response").path("result").path(1).textValue();
+  }
+
+  private static int getCode(JsonNode response) {
+    return response.path("header").path("code").asInt();
+  }
+
+  private static boolean isSessionExpired(final int code) {
+    return code == 991;
   }
 
 }

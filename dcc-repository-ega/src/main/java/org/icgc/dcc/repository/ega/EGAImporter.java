@@ -54,10 +54,15 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
       i++;
       if (datasetId.equals("EGAD00001001124")) {
         // Corrupted
+        log.warn("Skipping {} because it is corrupted!", datasetId);
         continue;
       }
 
       val metadata = reader.read(datasetId);
+      val files = client.getFiles(datasetId);
+      for (val file : files) {
+        log.info(" - {}", file);
+      }
       val projectCodes = EGAProjects.getDatasetProjectCodes(datasetId);
 
       log.info("{}. {} = {}", i, metadata.getDatasetId(), projectCodes);

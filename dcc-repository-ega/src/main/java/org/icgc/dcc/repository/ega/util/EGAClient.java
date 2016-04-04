@@ -97,9 +97,21 @@ public class EGAClient {
 
     val response = readResponse(connection);
     val code = response.path("header").path("code").asInt();
-    checkState(code == HTTP_OK, "Expected OK response, got: %s", response);
+    checkState(code == HTTP_OK, "Expected OK response, got %s: %s", code, response);
 
     return DEFAULT.convertValue(response.path("response").path("result"), new TypeReference<List<String>>() {});
+  }
+
+  public List<ObjectNode> getFiles(@NonNull String datasetId) {
+    checkState(sessionId != null, "You must login first before calling API methods.");
+    val connection = openConnection("/datasets/" + datasetId + "/files" + "?session=" + sessionId);
+    connection.setRequestProperty(ACCEPT, "application/json");
+
+    val response = readResponse(connection);
+    val code = response.path("header").path("code").asInt();
+    checkState(code == HTTP_OK, "Expected OK response, got %s: %s", code, response);
+
+    return DEFAULT.convertValue(response.path("response").path("result"), new TypeReference<List<ObjectNode>>() {});
   }
 
   @SneakyThrows

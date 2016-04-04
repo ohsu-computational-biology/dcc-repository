@@ -62,7 +62,7 @@ repository:
 
 # Imports
 imports:
-  mongoUri: mongodb://localhost/dcc-genome
+  mongoUri: mongodb://localhost/dcc-import
 
 # ID
 id:

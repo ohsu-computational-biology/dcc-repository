@@ -1,5 +1,5 @@
 # Gene MongoDB URI
-geneMongoUri: "mongodb://localhost/dcc-genome"
+geneMongoUri: "mongodb://localhost/dcc-import"
 
 # Repository MongoDB URI
 repoMongoUri: "mongodb://localhost/dcc-repo"

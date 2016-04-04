@@ -60,7 +60,7 @@ public final class RepositoryFileContextBuilder {
    */
   @Setter
   @Accessors(chain = true, fluent = true)
-  private MongoClientURI geneMongoUri = getLocalMongoClientUri("dcc-genome");
+  private MongoClientURI geneMongoUri = getLocalMongoClientUri("dcc-import");
   @Setter
   @Accessors(chain = true, fluent = true)
   private MongoClientURI repoMongoUri = getLocalMongoClientUri("dcc-repository");

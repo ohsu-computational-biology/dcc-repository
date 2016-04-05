@@ -19,16 +19,27 @@ package org.icgc.dcc.repository.ega;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.util.List;
+
+import org.icgc.dcc.common.core.json.Jackson;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
+import org.icgc.dcc.repository.ega.model.EGAMetadataArchive;
 import org.icgc.dcc.repository.ega.reader.EGAMetadataArchiveReader;
 import org.icgc.dcc.repository.ega.util.EGAClient;
 import org.icgc.dcc.repository.ega.util.EGAProjects;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,29 +54,31 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
   }
 
   @Override
+  @SneakyThrows
   protected Iterable<RepositoryFile> readFiles() {
     val reader = new EGAMetadataArchiveReader();
     val client = createEGAClient();
     val datasetIds = client.getDatasetIds();
 
+    @Cleanup
+    val writer = new FileWriter(new File(new File(System.getProperty("user.home")), "icgc-ega-datasets2.jsonl"));
+
+    val mapper = Jackson.DEFAULT.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
     int i = 0;
     val watch = Stopwatch.createStarted();
     for (val datasetId : datasetIds) {
       i++;
-      if (datasetId.equals("EGAD00001001124")) {
-        // Corrupted
-        log.warn("Skipping {} because it is corrupted!", datasetId);
-        continue;
-      }
 
       val metadata = reader.read(datasetId);
       val files = client.getFiles(datasetId);
-      for (val file : files) {
-        log.info(" - {}", file);
-      }
       val projectCodes = EGAProjects.getDatasetProjectCodes(datasetId);
 
       log.info("{}. {} = {}", i, metadata.getDatasetId(), projectCodes);
+      val record = new EGAMetadata(datasetId, projectCodes, files, metadata);
+
+      mapper.writeValue(writer, record);
+      writer.write("\n");
     }
 
     log.info("Finished reading {} data sets in {}", i, watch);
@@ -80,6 +93,17 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
 
     client.login();
     return client;
+  }
+
+  @Value
+  public class EGAMetadata {
+
+    String datasetId;
+    List<String> projectCodes;
+    List<ObjectNode> files;
+
+    EGAMetadataArchive metadata;
+
   }
 
 }

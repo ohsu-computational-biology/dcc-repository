@@ -32,7 +32,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
-import org.icgc.dcc.common.core.security.SSLCertificateValidation;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -52,8 +56,9 @@ public class EGAClient {
    * Constants
    */
   private static final String DEFAULT_API_URL = "https://ega.ebi.ac.uk/ega/rest/access/v2";
+  private static final SSLSocketFactory SSL_SOCKET_FACTORY = createSSLSocketFactory();
 
-  private static final int MAX_ATTEMPTS = 3;
+  private static final int MAX_ATTEMPTS = 10;
   private static final int READ_TIMEOUT = (int) SECONDS.toMillis(5);
 
   private static final String METHOD_POST = "POST";
@@ -83,7 +88,7 @@ public class EGAClient {
   @SneakyThrows
   public void login() {
     int attempts = 0;
-    while (++attempts < MAX_ATTEMPTS) {
+    while (++attempts <= MAX_ATTEMPTS) {
       try {
         val connection = openConnection("/users/login");
         connection.setRequestMethod(METHOD_POST);
@@ -126,13 +131,11 @@ public class EGAClient {
 
   @SneakyThrows
   private HttpURLConnection openConnection(String path) throws SocketTimeoutException {
-    // EGA uses self-signed certificates
-    SSLCertificateValidation.disable();
-
-    val connection = (HttpURLConnection) new URL(url + path).openConnection();
+    val connection = (HttpsURLConnection) new URL(url + path).openConnection();
     connection.setRequestProperty(ACCEPT, APPLICATION_JSON);
     connection.setReadTimeout(READ_TIMEOUT);
     connection.setConnectTimeout(READ_TIMEOUT);
+    connection.setSSLSocketFactory(SSL_SOCKET_FACTORY);
 
     return connection;
   }
@@ -145,7 +148,7 @@ public class EGAClient {
     checkState(isSessionActive(), "You must login first before calling API methods.");
 
     int attempts = 0;
-    while (++attempts < MAX_ATTEMPTS) {
+    while (++attempts <= MAX_ATTEMPTS) {
       try {
         val connection = openConnection(path + "?session=" + sessionId);
 
@@ -208,6 +211,18 @@ public class EGAClient {
 
   private static boolean isSessionExpired(int code) {
     return code == 991;
+  }
+
+  @SneakyThrows
+  private static SSLSocketFactory createSSLSocketFactory() {
+    val trustManagerFactory = TrustManagerFactory.getInstance("X509");
+    trustManagerFactory.init(EGACertificates.getKeyStore());
+    TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+    val context = SSLContext.getInstance("SSL");
+    context.init(null, trustManagers, null);
+
+    return context.getSocketFactory();
   }
 
 }

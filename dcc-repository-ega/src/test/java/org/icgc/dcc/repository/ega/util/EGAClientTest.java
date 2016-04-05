@@ -33,8 +33,7 @@ public class EGAClientTest {
   public void testDatasetIds() {
     val client = createClient();
 
-    val success = client.login();
-    assertThat(success).isTrue();
+    client.login();
 
     val datasetIds = client.getDatasetIds();
     assertThat(datasetIds).isNotEmpty();

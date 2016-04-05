@@ -23,9 +23,11 @@ import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
@@ -51,6 +53,12 @@ public class EGAClient {
    */
   private static final String DEFAULT_API_URL = "https://ega.ebi.ac.uk/ega/rest/access/v2";
 
+  private static final int MAX_ATTEMPTS = 3;
+  private static final int READ_TIMEOUT = (int) SECONDS.toMillis(5);
+
+  private static final String METHOD_POST = "POST";
+  private static final String APPLICATION_JSON = "application/json";
+
   public EGAClient(String userName, String password) {
     this(DEFAULT_API_URL, userName, password);
   }
@@ -73,21 +81,31 @@ public class EGAClient {
   private String sessionId;
 
   @SneakyThrows
-  public boolean login() {
-    val connection = openConnection("/users/login");
-    connection.setRequestMethod("POST");
-    connection.setRequestProperty(ACCEPT, "application/json");
-    connection.setRequestProperty(CONTENT_TYPE, "application/json");
-    connection.setDoOutput(true);
+  public void login() {
+    int attempts = 0;
+    while (++attempts < MAX_ATTEMPTS) {
+      try {
+        val connection = openConnection("/users/login");
+        connection.setRequestMethod(METHOD_POST);
+        connection.setRequestProperty(CONTENT_TYPE, APPLICATION_JSON);
+        connection.setDoOutput(true);
 
-    val request = createLoginRequest(userName, password);
-    connection.setRequestProperty(CONTENT_LENGTH, Integer.toString(request.length()));
-    connection.getOutputStream().write(request.getBytes(UTF_8));
+        val request = createLoginRequest(userName, password);
+        connection.setRequestProperty(CONTENT_LENGTH, Integer.toString(request.length()));
+        connection.getOutputStream().write(request.getBytes(UTF_8));
 
-    val response = readResponse(connection);
-    this.sessionId = getSessionId(response);
+        val response = readResponse(connection);
+        checkCode(response);
 
-    return sessionId != null;
+        this.sessionId = getSessionId(response);
+
+        return;
+      } catch (IllegalStateException e) {
+        log.warn("Invalid login after {} attempt(s): {}", attempts, e.getMessage());
+      }
+    }
+
+    throw new IllegalStateException("Could login with user " + userName);
   }
 
   public List<String> getDatasetIds() {
@@ -106,30 +124,54 @@ public class EGAClient {
     return get("/files/" + fileId, new TypeReference<ObjectNode>() {});
   }
 
-  private <T> T get(String path, TypeReference<T> responseType) {
-    checkState(sessionId != null, "You must login first before calling API methods.");
+  @SneakyThrows
+  private HttpURLConnection openConnection(String path) throws SocketTimeoutException {
+    // EGA uses self-signed certificates
+    SSLCertificateValidation.disable();
 
-    val connection = openConnection(path + "?session=" + sessionId);
-    connection.setRequestProperty(ACCEPT, "application/json");
+    val connection = (HttpURLConnection) new URL(url + path).openConnection();
+    connection.setRequestProperty(ACCEPT, APPLICATION_JSON);
+    connection.setReadTimeout(READ_TIMEOUT);
+    connection.setConnectTimeout(READ_TIMEOUT);
 
-    val response = readResponse(connection);
-    val code = getCode(response);
-    if (isSessionExpired(code) && reconnect) {
-      log.warn("Lost connection, reconnecting... {}", response);
-
-      checkState(login(), "Could not reconnect");
-      return get(path, responseType);
-    }
-
-    checkState(code == HTTP_OK, "Expected OK response, got %s: %s", code, response);
-
-    return DEFAULT.convertValue(response.path("response").path("result"), responseType);
+    return connection;
   }
 
-  @SneakyThrows
-  private HttpURLConnection openConnection(String path) {
-    SSLCertificateValidation.disable();
-    return (HttpURLConnection) new URL(url + path).openConnection();
+  private boolean isSessionActive() {
+    return sessionId != null;
+  }
+
+  private <T> T get(String path, TypeReference<T> responseType) {
+    checkState(isSessionActive(), "You must login first before calling API methods.");
+
+    int attempts = 0;
+    while (++attempts < MAX_ATTEMPTS) {
+      try {
+        val connection = openConnection(path + "?session=" + sessionId);
+
+        val response = readResponse(connection);
+        val code = getCode(response);
+
+        if ((isSessionExpired(code) || isNotAuthorized(code)) && reconnect) {
+          log.warn("Lost session, reconnecting... {}", response);
+          login();
+
+          return get(path, responseType);
+        }
+
+        checkCode(response);
+        return DEFAULT.convertValue(getResult(response), responseType);
+      } catch (SocketTimeoutException e) {
+        log.warn("Socket timeout for {} after {} attempt(s)", path, attempts);
+      }
+    }
+
+    throw new IllegalStateException("Could not get " + path);
+  }
+
+  private static void checkCode(JsonNode response) {
+    val code = getCode(response);
+    checkState(isOk(code), "Expected OK response, got %s: %s", code, response);
   }
 
   @SneakyThrows
@@ -145,14 +187,26 @@ public class EGAClient {
   }
 
   private static String getSessionId(JsonNode response) {
-    return response.path("response").path("result").path(1).textValue();
+    return getResult(response).path(1).textValue();
   }
 
   private static int getCode(JsonNode response) {
     return response.path("header").path("code").asInt();
   }
 
-  private static boolean isSessionExpired(final int code) {
+  private static JsonNode getResult(JsonNode response) {
+    return response.path("response").path("result");
+  }
+
+  private static boolean isOk(final int code) {
+    return code == HTTP_OK;
+  }
+
+  private static boolean isNotAuthorized(int code) {
+    return code == 401;
+  }
+
+  private static boolean isSessionExpired(int code) {
     return code == 991;
   }
 

@@ -17,9 +17,12 @@
  */
 package org.icgc.dcc.repository.ega.reader;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -37,7 +40,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class EGAMetadataArchiveReader {
 
@@ -45,6 +50,9 @@ public class EGAMetadataArchiveReader {
    * Constants.
    */
   public static final String DEFAULT_API_URL = "http://ega.ebi.ac.uk/ega/rest/download/v2";
+
+  private static final int MAX_ATTEMPTS = 3;
+  private static final int READ_TIMEOUT = (int) SECONDS.toMillis(5);
 
   private static final XMLObjectNodeReader XML_READER = new XMLObjectNodeReader();
   private static final EGAMappingReader MAPPING_READER = new EGAMappingReader();
@@ -99,13 +107,24 @@ public class EGAMetadataArchiveReader {
   }
 
   private TarArchiveInputStream readTarball(String datasetId) throws IOException {
-    try {
-      val url = getArchiveUrl(datasetId);
-      val gzip = new GZIPInputStream(url.openStream());
-      return new TarArchiveInputStream(gzip);
-    } catch (IOException e) {
-      throw new RuntimeException("Error reading tarball for dataset " + datasetId, e);
+    int attempts = 0;
+    while (++attempts < MAX_ATTEMPTS) {
+      try {
+        val url = getArchiveUrl(datasetId);
+        val connection = url.openConnection();
+        connection.setReadTimeout(READ_TIMEOUT);
+        connection.setConnectTimeout(READ_TIMEOUT);
+
+        val gzip = new GZIPInputStream(connection.getInputStream());
+        return new TarArchiveInputStream(gzip);
+      } catch (SocketTimeoutException e) {
+        log.warn("Socket timeout for {} after {} attempt(s)", datasetId, attempts);
+      } catch (IOException e) {
+        throw new RuntimeException("Error reading tarball for dataset " + datasetId, e);
+      }
     }
+
+    throw new IllegalStateException("Could not read " + datasetId);
   }
 
   @SneakyThrows

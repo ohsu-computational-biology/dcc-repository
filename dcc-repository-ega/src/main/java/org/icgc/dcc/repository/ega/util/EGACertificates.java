@@ -18,12 +18,13 @@
 package org.icgc.dcc.repository.ega.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.hash.Hashing.md5;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
@@ -31,7 +32,6 @@ import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.icgc.dcc.common.core.security.SSLCertificateValidation;
 
@@ -56,10 +56,12 @@ public final class EGACertificates {
   /**
    * Constants.
    */
-  private static final String HOST_URL = "https://ega.ebi.ac.uk";
+  private static final String HOST_NAME = "ega.ebi.ac.uk";
+  private static final String HOST_URL = "https://" + HOST_NAME;
+
   private static final String KEY_STORE_DIR = "src/main/resources";
-  private static final String KEY_STORE_FILE = "ega.ebi.ac.uk.keystore";
-  private static final String KEY_STORE_PASSWORD = "xsw2XSW@";
+  private static final String KEY_STORE_FILE = HOST_NAME + ".keystore";
+  private static final String KEY_STORE_PASSWORD = md5().hashString(KEY_STORE_FILE, UTF_8).toString();
 
   public static void main(String[] args) throws Exception {
     // Input
@@ -103,9 +105,11 @@ public final class EGACertificates {
     return new URL(HOST_URL);
   }
 
-  private static Certificate getCertificate(URL url) throws IOException, SSLPeerUnverifiedException {
+  @SneakyThrows
+  private static Certificate getCertificate(URL url) {
     // Needed for self signed certs
-    SSLCertificateValidation.disable();
+    @Cleanup
+    val session = SSLCertificateValidation.disable();
 
     val connection = (HttpsURLConnection) url.openConnection();
     connection.connect();

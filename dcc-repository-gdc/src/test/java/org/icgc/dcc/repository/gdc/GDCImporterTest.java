@@ -19,7 +19,6 @@ package org.icgc.dcc.repository.gdc;
 
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
-import org.icgc.dcc.repository.gdc.GDCImporter;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -31,8 +30,8 @@ public class GDCImporterTest {
   @Test
   public void testExecute() {
     val context = newLocalRepositoryFileContext();
-    val egaImporter = new GDCImporter(context);
-    egaImporter.execute();
+    val gdcImporter = new GDCImporter(context);
+    gdcImporter.execute();
   }
 
 }

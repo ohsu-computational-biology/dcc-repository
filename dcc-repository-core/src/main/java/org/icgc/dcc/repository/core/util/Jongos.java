@@ -20,10 +20,6 @@ package org.icgc.dcc.repository.core.util;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES;
 import static lombok.AccessLevel.PRIVATE;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
 
 import org.jongo.Jongo;
 import org.jongo.Mapper;
@@ -32,6 +28,11 @@ import org.jongo.marshall.jackson.JacksonMapper;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class Jongos {

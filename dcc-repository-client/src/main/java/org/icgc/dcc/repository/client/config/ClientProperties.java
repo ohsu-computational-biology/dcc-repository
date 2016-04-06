@@ -22,8 +22,6 @@ import java.util.Set;
 
 import javax.validation.Valid;
 
-import lombok.Data;
-
 import org.hibernate.validator.constraints.URL;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.icgc.dcc.repository.client.core.RepositoryImporter.Step;
@@ -34,6 +32,8 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
 import com.mongodb.MongoClientURI;
+
+import lombok.Data;
 
 @Data
 @Component

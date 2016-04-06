@@ -17,8 +17,6 @@
  */
 package org.icgc.dcc.repository.client.config;
 
-import lombok.val;
-
 import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.common.core.report.BufferedReport;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
@@ -28,6 +26,8 @@ import org.icgc.dcc.repository.pcawg.core.PCAWGDonorIdResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+
+import lombok.val;
 
 @Configuration
 public class ClientConfig {

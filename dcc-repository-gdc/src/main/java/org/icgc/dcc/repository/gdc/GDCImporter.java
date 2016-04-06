@@ -17,14 +17,19 @@
  */
 package org.icgc.dcc.repository.gdc;
 
+import static org.icgc.dcc.common.core.json.Jackson.from;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
+
+import java.util.List;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.gdc.util.GDCClient;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 
@@ -47,10 +52,18 @@ public class GDCImporter extends GenericRepositorySourceFileImporter {
     val watch = Stopwatch.createStarted();
     log.info("Reading files...");
     val client = new GDCClient();
-    val files = client.getFiles();
+    val mapping = client.getFilesMapping();
+
+    val expand = getExpand(mapping);
+    val files = client.getFiles(expand, 1, 1);
     log.info("Finished {} reading files in {}", formatCount(files), watch);
+    log.info("{}", files);
 
     return ImmutableList.of();
+  }
+
+  private static List<String> getExpand(JsonNode mapping) {
+    return from((ArrayNode) (mapping.get("expand")), String.class);
   }
 
 }

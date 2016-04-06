@@ -21,6 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -42,6 +45,10 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * http
+ * 'https://gdc-api.nci.nih.gov/files?size=1&expand=cases&filter={“op”:”in”,”content”:{“field”:”program”,”value":[TCGA]}
+ * }'
+ * 
  * @see https://gdc-docs.nci.nih.gov/API/Users_Guide/Search_and_Retrieval/#files-endpoint
  */
 @Slf4j
@@ -55,8 +62,10 @@ public class GDCClient {
 
   private static final int MAX_ATTEMPTS = 10;
   private static final int READ_TIMEOUT = (int) SECONDS.toMillis(60);
-
   private static final String APPLICATION_JSON = "application/json";
+
+  private static final String TCGA_PROGRAM = "TCGA";
+  private static final int PAGE_SIZE = 200;
 
   public GDCClient() {
     this(DEFAULT_API_URL);
@@ -68,14 +77,24 @@ public class GDCClient {
   @NonNull
   private final String url;
 
+  public JsonNode getFilesMapping() {
+    return getMapping("/files");
+  }
+
   public List<ObjectNode> getFiles() {
-    val size = 25000;
-    int from = 1;
+    return getFiles(ImmutableList.of());
+  }
+
+  public List<ObjectNode> getFiles(@NonNull List<String> expand) {
+    return getFiles(expand, PAGE_SIZE, 1);
+  }
+
+  public List<ObjectNode> getFiles(@NonNull List<String> expand, int size, int from) {
+    Pagination pagination = null;
 
     val results = ImmutableList.<ObjectNode> builder();
-    Pagination pagination = null;
     do {
-      val response = getFiles(size, from);
+      val response = readFiles(expand, size, from);
       val hits = getHits(response);
       pagination = getPagination(response);
       log.info("{}", pagination);
@@ -95,29 +114,50 @@ public class GDCClient {
     return files;
   }
 
-  private JsonNode getFiles(int size, int from) {
-    val resource = "/files?size=" + size + "&from=" + from;
+  private JsonNode readFiles(@NonNull List<String> expand, int size, int from) {
+    val filters = createFilter(TCGA_PROGRAM);
+    val request = "/files?size=" + size + "&from=" + from + "&filters=" + filters + "&expand=" + COMMA.join(expand);
 
     int attempts = 0;
     while (++attempts <= MAX_ATTEMPTS) {
       try {
-        val connection = openConnection(resource);
+        val connection = openConnection(request);
 
         val response = readResponse(connection);
         checkWarnings(response);
 
         return response;
       } catch (SocketTimeoutException e) {
-        log.warn("Socket timeout for {} after {} attempt(s)", resource, attempts);
+        log.warn("Socket timeout for {} after {} attempt(s)", request, attempts);
       }
     }
 
-    throw new IllegalStateException("Could not get " + resource);
+    throw new IllegalStateException("Could not get " + request);
+  }
+
+  @SneakyThrows
+  private JsonNode getMapping(String path) {
+    val connection = openConnection(path + "/_mapping");
+
+    return readResponse(connection);
+  }
+
+  private static ObjectNode createFilter(String program) {
+    return object("op", "and")
+        .with("content",
+            array(
+                object("op", "in")
+                    .with("content",
+                        object("field", "cases.project.program.name").with("value", array(program)))))
+        .end();
   }
 
   @SneakyThrows
   private HttpURLConnection openConnection(String path) throws SocketTimeoutException {
-    val connection = (HttpsURLConnection) new URL(url + path).openConnection();
+    val request = new URL(url + path);
+
+    log.info("Request: {}", request);
+    val connection = (HttpsURLConnection) request.openConnection();
     connection.setRequestProperty(ACCEPT, APPLICATION_JSON);
     connection.setReadTimeout(READ_TIMEOUT);
     connection.setConnectTimeout(READ_TIMEOUT);

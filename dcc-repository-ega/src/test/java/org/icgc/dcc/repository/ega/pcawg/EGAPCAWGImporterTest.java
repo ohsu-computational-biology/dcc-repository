@@ -19,7 +19,6 @@ package org.icgc.dcc.repository.ega.pcawg;
 
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
-import org.icgc.dcc.repository.ega.pcawg.EGAPCAWGImporter;
 import org.junit.Ignore;
 import org.junit.Test;
 

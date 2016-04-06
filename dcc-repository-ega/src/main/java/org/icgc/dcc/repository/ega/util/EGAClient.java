@@ -25,6 +25,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -183,10 +184,7 @@ public class EGAClient {
   }
 
   private static String createLoginRequest(String userName, String password) {
-    val request = DEFAULT.createObjectNode();
-    request.put("username", userName);
-    request.put("password", password);
-    return "loginrequest=" + request.toString();
+    return "loginrequest=" + object("username", userName, "password", password);
   }
 
   private static String getSessionId(JsonNode response) {
@@ -215,11 +213,11 @@ public class EGAClient {
 
   @SneakyThrows
   private static SSLSocketFactory createSSLSocketFactory() {
-    val trustManagerFactory = TrustManagerFactory.getInstance("X509");
+    val trustManagerFactory = TrustManagerFactory.getInstance("X509"); // Returns a new instance
     trustManagerFactory.init(EGACertificates.getKeyStore());
     TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
 
-    val context = SSLContext.getInstance("SSL");
+    val context = SSLContext.getInstance("SSL"); // Returns a new instance
     context.init(null, trustManagers, null);
 
     return context.getSocketFactory();

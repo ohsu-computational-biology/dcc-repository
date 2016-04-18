@@ -27,6 +27,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -166,7 +167,10 @@ public class EGAClient {
         checkCode(response);
         return DEFAULT.convertValue(getResult(response), responseType);
       } catch (SocketTimeoutException e) {
-        log.warn("Socket timeout for {} after {} attempt(s)", path, attempts);
+        log.warn("Socket timeout requesting {} after {} attempt(s)", path, attempts);
+      } catch (@SuppressWarnings("hiding") IOException e) {
+        // This could happen due to 500 in the reading of the json response. Seems transient...
+        log.warn("Error requesting {} after {} attempt(s): {}", path, attempts, e.getMessage());
       }
     }
 

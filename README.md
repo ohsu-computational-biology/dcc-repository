@@ -32,6 +32,7 @@ These modules collect various data sources.
 - [Collab](dcc-repository-collab/README.md)
 - [CGHub](dcc-repository-cghub/README.md)
 - [EGA](dcc-repository-ega/README.md)
+- [GDC](dcc-repository-gdc/README.md)
 - [PCAWG](dcc-repository-pcawg/README.md)
 - [TCGA](dcc-repository-tcga/README.md)
 

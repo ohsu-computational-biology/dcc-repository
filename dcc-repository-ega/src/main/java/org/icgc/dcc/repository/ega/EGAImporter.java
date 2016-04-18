@@ -61,7 +61,7 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
     val datasetIds = client.getDatasetIds();
 
     @Cleanup
-    val writer = new FileWriter(new File(new File(System.getProperty("user.home")), "icgc-ega-datasets2.jsonl"));
+    val writer = new FileWriter(new File(new File(System.getProperty("user.home")), "icgc-ega-datasets-updated.jsonl"));
 
     val mapper = Jackson.DEFAULT.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 

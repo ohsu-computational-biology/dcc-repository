@@ -29,9 +29,14 @@ public class EGAImporterTest {
 
   @Test
   public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val egaImporter = new EGAImporter(context);
+    val egaImporter = createImporter();
     egaImporter.execute();
+  }
+
+  private EGAImporter createImporter() {
+    val context = newLocalRepositoryFileContext();
+
+    return new EGAImporter(context);
   }
 
 }

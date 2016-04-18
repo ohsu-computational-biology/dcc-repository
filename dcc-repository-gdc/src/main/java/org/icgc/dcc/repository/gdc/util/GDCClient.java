@@ -143,12 +143,12 @@ public class GDCClient {
   }
 
   private static ObjectNode createFilter(String program) {
-    return object("op", "and")
+    return object()
+        .with("op", "in")
         .with("content",
-            array(
-                object("op", "in")
-                    .with("content",
-                        object("field", "cases.project.program.name").with("value", array(program)))))
+            object()
+                .with("field", "cases.project.program.name")
+                .with("value", array(program)))
         .end();
   }
 

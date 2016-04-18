@@ -29,9 +29,13 @@ public class GDCImporterTest {
 
   @Test
   public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val gdcImporter = new GDCImporter(context);
+    val gdcImporter = createImporter();
     gdcImporter.execute();
+  }
+
+  private GDCImporter createImporter() {
+    val context = newLocalRepositoryFileContext();
+    return new GDCImporter(context);
   }
 
 }

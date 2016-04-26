@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -33,6 +34,7 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -44,6 +46,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -60,7 +63,7 @@ public class EGAClient {
   private static final String DEFAULT_API_URL = "https://ega.ebi.ac.uk/ega/rest/access/v2";
   private static final SSLSocketFactory SSL_SOCKET_FACTORY = createSSLSocketFactory();
 
-  private static final int MAX_ATTEMPTS = 10;
+  private static final int MAX_ATTEMPTS = 50;
   private static final int READ_TIMEOUT = (int) SECONDS.toMillis(5);
 
   private static final String METHOD_POST = "POST";
@@ -86,6 +89,12 @@ public class EGAClient {
    * State.
    */
   private String sessionId;
+  @Getter
+  private int timeoutCount;
+  @Getter
+  private int reconnectCount;
+  @Getter
+  private int errorCount;
 
   @SneakyThrows
   public void login() {
@@ -159,6 +168,7 @@ public class EGAClient {
 
         if ((isSessionExpired(code) || isNotAuthorized(code)) && reconnect) {
           log.warn("Lost session, reconnecting... {}", response);
+          reconnectCount++;
           login();
 
           return get(path, responseType);
@@ -167,11 +177,16 @@ public class EGAClient {
         checkCode(response);
         return DEFAULT.convertValue(getResult(response), responseType);
       } catch (SocketTimeoutException e) {
+        timeoutCount++;
         log.warn("Socket timeout requesting {} after {} attempt(s)", path, attempts);
       } catch (@SuppressWarnings("hiding") IOException e) {
         // This could happen due to 500 in the reading of the json response. Seems transient...
+        errorCount++;
         log.warn("Error requesting {} after {} attempt(s): {}", path, attempts, e.getMessage());
       }
+
+      // Let tensions settle...
+      sleepUninterruptibly(attempts * 100, TimeUnit.MILLISECONDS);
     }
 
     throw new IllegalStateException("Could not get " + path);

@@ -15,46 +15,21 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
+package org.icgc.dcc.repository.ega.model;
 
-import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
+import java.util.List;
 
-import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.ega.util.EGAClient;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import com.google.common.collect.ImmutableList;
+import lombok.Value;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+@Value
+public class EGAMetadata {
 
-/**
- * @see https://www.ebi.ac.uk/ega/dacs/EGAC00001000010
- */
-@Slf4j
-public class EGAImporter extends GenericRepositorySourceFileImporter {
+  String datasetId;
+  List<String> projectCodes;
+  List<ObjectNode> files;
 
-  public EGAImporter(RepositoryFileContext context) {
-    super(EGA, context, log);
-  }
-
-  @Override
-  @SneakyThrows
-  protected Iterable<RepositoryFile> readFiles() {
-    // TODO: Implement
-    return ImmutableList.of();
-  }
-
-  @SuppressWarnings("unused")
-  private EGAClient createEGAClient() {
-    val userName = System.getProperty("ega.username");
-    val password = System.getProperty("ega.password");
-    val client = new EGAClient(userName, password);
-
-    client.login();
-    return client;
-  }
+  EGAMetadataArchive metadata;
 
 }

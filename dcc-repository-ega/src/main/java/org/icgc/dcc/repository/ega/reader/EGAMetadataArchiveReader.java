@@ -75,27 +75,42 @@ public class EGAMetadataArchiveReader {
     TarArchiveEntry entry = null;
     val archive = new EGAMetadataArchive(datasetId);
     while ((entry = tarball.getNextTarEntry()) != null) {
-      if (isMappingFile(entry)) {
-        val mappingId = getMappingId(entry);
-        val mapping = parseMapping(mappingId, tarball);
-        archive.getMappings().put(mappingId, mapping);
-      } else if (isXmlFile(entry)) {
-        val xml = parseXml(tarball);
-        if (isStudy(entry)) {
-          archive.getStudies().put(getStudyId(entry), xml);
-        } else if (isSample(entry)) {
-          archive.getSamples().put(getSampleId(entry), xml);
-        } else if (isExperiment(entry)) {
-          archive.getExperiments().put(getExperimentId(entry), xml);
-        } else if (isRun(entry)) {
-          archive.getRuns().put(getRunId(entry), xml);
-        } else if (isAnalysis(entry)) {
-          archive.getAnalysis().put(getAnalysisId(entry), xml);
+      try {
+        if (isMappingFile(entry)) {
+          readMappingEntry(tarball, entry, archive);
+        } else if (isXmlFile(entry)) {
+          readXmlEntry(tarball, entry, archive);
         }
+      } catch (Exception e) {
+        throw new IllegalStateException("Error processing entry " + entry.getName() + " in data set " + datasetId, e);
       }
     }
 
     return archive;
+  }
+
+  private static void readMappingEntry(TarArchiveInputStream tarball, TarArchiveEntry entry,
+      EGAMetadataArchive archive) {
+    val mappingId = getMappingId(entry);
+    val mapping = parseMapping(mappingId, tarball);
+
+    archive.getMappings().put(mappingId, mapping);
+  }
+
+  private static void readXmlEntry(TarArchiveInputStream tarball, TarArchiveEntry entry, EGAMetadataArchive archive) {
+    val xml = parseXml(tarball);
+
+    if (isStudy(entry)) {
+      archive.getStudies().put(getStudyId(entry), xml);
+    } else if (isSample(entry)) {
+      archive.getSamples().put(getSampleId(entry), xml);
+    } else if (isExperiment(entry)) {
+      archive.getExperiments().put(getExperimentId(entry), xml);
+    } else if (isRun(entry)) {
+      archive.getRuns().put(getRunId(entry), xml);
+    } else if (isAnalysis(entry)) {
+      archive.getAnalysis().put(getAnalysisId(entry), xml);
+    }
   }
 
   private static ObjectNode parseXml(InputStream inputStream) {
@@ -103,14 +118,15 @@ public class EGAMetadataArchiveReader {
   }
 
   private static List<ObjectNode> parseMapping(String mappingId, InputStream inputStream) {
+    // Prevent close by wrapping with non-closing forwarding stream
     return MAPPING_READER.read(mappingId, new ForwardingInputStream(inputStream, false));
   }
 
   private TarArchiveInputStream readTarball(String datasetId) throws IOException {
     int attempts = 0;
+    val url = getArchiveUrl(datasetId);
     while (++attempts <= MAX_ATTEMPTS) {
       try {
-        val url = getArchiveUrl(datasetId);
         val connection = url.openConnection();
         connection.setReadTimeout(READ_TIMEOUT);
         connection.setConnectTimeout(READ_TIMEOUT);
@@ -120,11 +136,11 @@ public class EGAMetadataArchiveReader {
       } catch (SocketTimeoutException e) {
         log.warn("Socket timeout for {} after {} attempt(s)", datasetId, attempts);
       } catch (IOException e) {
-        throw new RuntimeException("Error reading tarball for dataset " + datasetId, e);
+        throw new IllegalStateException("Error reading tarball for dataset " + datasetId + " from " + url, e);
       }
     }
 
-    throw new IllegalStateException("Could not read " + datasetId);
+    throw new IllegalStateException("Could not read " + datasetId + " from " + url);
   }
 
   @SneakyThrows

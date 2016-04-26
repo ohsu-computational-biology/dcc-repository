@@ -15,46 +15,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
+package org.icgc.dcc.repository.ega.util;
 
-import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
+import java.io.File;
 
-import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.ega.util.EGAClient;
+import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
-
-import lombok.SneakyThrows;
 import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
-/**
- * @see https://www.ebi.ac.uk/ega/dacs/EGAC00001000010
- */
-@Slf4j
-public class EGAImporter extends GenericRepositorySourceFileImporter {
+//@Ignore("For development only")
+public class EGAMetadataWriterTest {
 
-  public EGAImporter(RepositoryFileContext context) {
-    super(EGA, context, log);
+  @Test
+  public void testWrite() {
+    val file = new File(getHomeDir(), "icgc-ega-datasets-updated3.jsonl");
+
+    val writer = new EGAMetadataWriter();
+    writer.write(file);
   }
 
-  @Override
-  @SneakyThrows
-  protected Iterable<RepositoryFile> readFiles() {
-    // TODO: Implement
-    return ImmutableList.of();
-  }
-
-  @SuppressWarnings("unused")
-  private EGAClient createEGAClient() {
-    val userName = System.getProperty("ega.username");
-    val password = System.getProperty("ega.password");
-    val client = new EGAClient(userName, password);
-
-    client.login();
-    return client;
+  private static File getHomeDir() {
+    return new File(System.getProperty("user.home"));
   }
 
 }

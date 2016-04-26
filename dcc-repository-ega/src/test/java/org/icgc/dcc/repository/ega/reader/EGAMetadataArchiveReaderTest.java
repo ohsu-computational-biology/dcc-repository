@@ -31,7 +31,7 @@ public class EGAMetadataArchiveReaderTest {
   public void testRead() {
     val reader = new EGAMetadataArchiveReader();
 
-    val datasetId = "EGAD00001000371";
+    val datasetId = "EGAD00001001595";
     val metadata = reader.read(datasetId);
 
     log.info("Finished: {}", metadata);

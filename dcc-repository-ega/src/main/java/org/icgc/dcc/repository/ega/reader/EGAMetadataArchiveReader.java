@@ -18,6 +18,7 @@
 package org.icgc.dcc.repository.ega.reader;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class EGAMetadataArchiveReader {
   private final String apiUrl;
 
   public EGAMetadataArchiveReader() {
-    this.apiUrl = DEFAULT_API_URL;
+    this(DEFAULT_API_URL);
   }
 
   @SneakyThrows
@@ -82,7 +83,10 @@ public class EGAMetadataArchiveReader {
           readXmlEntry(tarball, entry, archive);
         }
       } catch (Exception e) {
-        throw new IllegalStateException("Error processing entry " + entry.getName() + " in data set " + datasetId, e);
+        throw new IllegalStateException(
+            "Error processing entry " + entry.getName() + " from " + getArchiveUrl(datasetId) + " after reading "
+                + formatCount(tarball.getBytesRead()) + " bytes",
+            e);
       }
     }
 

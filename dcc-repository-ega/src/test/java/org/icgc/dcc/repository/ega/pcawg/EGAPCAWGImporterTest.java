@@ -24,10 +24,10 @@ import org.junit.Test;
 
 import lombok.val;
 
+@Ignore("For development only")
 public class EGAPCAWGImporterTest {
 
   @Test
-  @Ignore("For development only")
   public void testExecute() {
     val context = newLocalRepositoryFileContext();
     val egaImporter = new EGAPCAWGImporter(context);

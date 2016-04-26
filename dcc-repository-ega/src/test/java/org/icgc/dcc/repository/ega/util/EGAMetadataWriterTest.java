@@ -19,11 +19,12 @@ package org.icgc.dcc.repository.ega.util;
 
 import java.io.File;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-//@Ignore("For development only")
+@Ignore("For development only")
 public class EGAMetadataWriterTest {
 
   @Test

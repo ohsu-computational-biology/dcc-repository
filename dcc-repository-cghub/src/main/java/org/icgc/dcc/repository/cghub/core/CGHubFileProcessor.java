@@ -145,8 +145,8 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
         .setFileSize(getFileSize(file))
         .setFileMd5sum(getChecksum(file))
         .setLastModified(resolveLastModified(result))
-        .setRepoDataBundleId(null) // TODO: Resolve
-        .setRepoFileId(null) // TODO: Resolve
+        .setRepoDataBundleId(analysisId)
+        .setRepoFileId(null) // GNOS does not have individual file ids
         .setRepoType(cghubServer.getType().getId())
         .setRepoOrg(cghubServer.getSource().getId())
         .setRepoName(cghubServer.getName())
@@ -162,6 +162,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
       fileCopy.getIndexFile()
           .setId(context.ensureFileId(baiObjectId))
           .setObjectId(baiObjectId)
+          .setRepoFileId(null) // TODO: Resolve
           .setFileName(baiFileName)
           .setFileFormat(FileFormat.BAI)
           .setFileSize(getFileSize(baiFile.get()))

@@ -213,8 +213,8 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
           .setFileSize(fileSize)
           .setFileMd5sum(resolveMd5sum(workflowFile))
           .setLastModified(resolveLastModified(workflow))
-          .setRepoDataBundleId(null) // TODO: Resolve
-          .setRepoFileId(null) // TODO: Resolve
+          .setRepoDataBundleId(gnosId)
+          .setRepoFileId(null) // GNOS does not have individual file ids
           .setRepoType(pcawgServer.getType().getId())
           .setRepoOrg(pcawgServer.getSource().getId())
           .setRepoName(pcawgServer.getName())
@@ -230,6 +230,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
         fileCopy.getIndexFile()
             .setId(context.ensureFileId(baiObjectId))
             .setObjectId(baiObjectId)
+            .setRepoFileId(null) // TODO: Resolve
             .setFileName(baiFileName)
             .setFileFormat(FileFormat.BAI)
             .setFileSize(getFileSize(baiFile.get()))

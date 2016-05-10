@@ -15,61 +15,53 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
+package org.icgc.dcc.repository.ega.reader;
 
-import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getEGAServer;
-import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
+import static com.google.common.collect.Sets.newTreeSet;
+import static org.icgc.dcc.repository.ega.util.EGAProjects.getDatasetProjectCodes;
 
 import java.util.stream.Stream;
 
-import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.ega.core.EGAFileProcessor;
 import org.icgc.dcc.repository.ega.model.EGAMetadata;
-import org.icgc.dcc.repository.ega.reader.EGAMetadataReader;
+import org.icgc.dcc.repository.ega.model.EGAMetadataArchive;
 import org.icgc.dcc.repository.ega.util.EGAClient;
 
-import lombok.SneakyThrows;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * @see https://www.ebi.ac.uk/ega/dacs/EGAC00001000010
- */
 @Slf4j
-public class EGAImporter extends GenericRepositorySourceFileImporter {
+@RequiredArgsConstructor
+public class EGAMetadataReader {
 
-  public EGAImporter(RepositoryFileContext context) {
-    super(EGA, context, log);
+  /**
+   * Dependencies.
+   */
+  @NonNull
+  private final EGAClient client;
+  private final EGAMetadataArchiveReader archiveReader = new EGAMetadataArchiveReader();
+
+  public Stream<EGAMetadata> readMetadata() {
+    val datasetIds = client.getDatasetIds();
+    val effectiveDatasetIds = newTreeSet(datasetIds);
+    if (effectiveDatasetIds.size() != datasetIds.size()) {
+      log.warn("Data sets include duplicates: {}", datasetIds);
+    }
+
+    return effectiveDatasetIds.stream().map(this::readDataset);
   }
 
-  @Override
-  @SneakyThrows
-  protected Iterable<RepositoryFile> readFiles() {
-    val client = createEGAClient();
-    val metadata = readMetadata(client);
-    val files = processFiles(metadata);
+  public EGAMetadata readDataset(String datasetId) {
+    val metadata = readArchive(datasetId);
+    val files = client.getFiles(datasetId);
+    val projectCodes = getDatasetProjectCodes(datasetId);
 
-    return files.collect(toList());
+    return new EGAMetadata(datasetId, projectCodes, files, metadata);
   }
 
-  private Stream<EGAMetadata> readMetadata(EGAClient client) {
-    return new EGAMetadataReader(client).readMetadata();
-  }
-
-  private Stream<RepositoryFile> processFiles(Stream<EGAMetadata> metadata) {
-    return new EGAFileProcessor(context, getEGAServer()).process(metadata);
-  }
-
-  private EGAClient createEGAClient() {
-    val userName = System.getProperty("ega.username");
-    val password = System.getProperty("ega.password");
-    val client = new EGAClient(userName, password);
-
-    client.login();
-    return client;
+  private EGAMetadataArchive readArchive(String datasetId) {
+    return archiveReader.read(datasetId);
   }
 
 }

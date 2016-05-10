@@ -15,61 +15,63 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega;
-
-import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getEGAServer;
-import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
+package org.icgc.dcc.repository.ega.core;
 
 import java.util.stream.Stream;
 
+import org.elasticsearch.common.collect.Lists;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.ega.core.EGAFileProcessor;
+import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.ega.model.EGAMetadata;
-import org.icgc.dcc.repository.ega.reader.EGAMetadataReader;
-import org.icgc.dcc.repository.ega.util.EGAClient;
 
-import lombok.SneakyThrows;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * @see https://www.ebi.ac.uk/ega/dacs/EGAC00001000010
- */
 @Slf4j
-public class EGAImporter extends GenericRepositorySourceFileImporter {
+public class EGAFileProcessor extends RepositoryFileProcessor {
 
-  public EGAImporter(RepositoryFileContext context) {
-    super(EGA, context, log);
+  /**
+   * Metadata.
+   */
+  @NonNull
+  private final RepositoryServer egaServer;
+
+  public EGAFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer egaServer) {
+    super(context);
+    this.egaServer = egaServer;
   }
 
-  @Override
-  @SneakyThrows
-  protected Iterable<RepositoryFile> readFiles() {
-    val client = createEGAClient();
-    val metadata = readMetadata(client);
-    val files = processFiles(metadata);
-
-    return files.collect(toList());
+  public Stream<RepositoryFile> process(Stream<EGAMetadata> metadata) {
+    return metadata.flatMap(this::createFiles);
   }
 
-  private Stream<EGAMetadata> readMetadata(EGAClient client) {
-    return new EGAMetadataReader(client).readMetadata();
+  private Stream<RepositoryFile> createFiles(EGAMetadata metadata) {
+    val files = Lists.<RepositoryFile> newArrayList();
+    for (val file : metadata.getFiles()) {
+      files.add(createFile(metadata, file));
+    }
+
+    return files.stream();
   }
 
-  private Stream<RepositoryFile> processFiles(Stream<EGAMetadata> metadata) {
-    return new EGAFileProcessor(context, getEGAServer()).process(metadata);
+  private RepositoryFile createFile(EGAMetadata metadata, ObjectNode f) {
+    val file = new RepositoryFile();
+
+    file.addFileCopy()
+        .setRepoFileId(resolveRepoFileId(f));
+
+    log.info("File: {}", file);
+
+    return file;
   }
 
-  private EGAClient createEGAClient() {
-    val userName = System.getProperty("ega.username");
-    val password = System.getProperty("ega.password");
-    val client = new EGAClient(userName, password);
-
-    client.login();
-    return client;
+  private static String resolveRepoFileId(ObjectNode file) {
+    return file.get("fileID").textValue();
   }
 
 }

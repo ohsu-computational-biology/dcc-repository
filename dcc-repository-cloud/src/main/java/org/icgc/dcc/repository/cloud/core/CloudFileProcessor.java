@@ -129,8 +129,8 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
         .setFileSize(objectSummary.getSize())
         .setFileMd5sum(getFileMd5sum(file))
         .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
-        .setRepoDataBundleId(null) // TODO: Resolve
-        .setRepoFileId(null) // TODO: Resolve
+        .setRepoDataBundleId(null) // ICGC Storage has no concept
+        .setRepoFileId(objectId)
         .setRepoType(server.getType().getId())
         .setRepoOrg(server.getSource().getId())
         .setRepoName(server.getName())
@@ -151,6 +151,7 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
       fileCopy.getIndexFile()
           .setId(context.ensureFileId(baiObjectId))
           .setObjectId(baiObjectId)
+          .setRepoFileId(null) // TODO: Resolve
           .setFileName(baiFileName)
           .setFileFormat(FileFormat.BAI)
           .setFileSize(getFileSize(baiFile.get()))

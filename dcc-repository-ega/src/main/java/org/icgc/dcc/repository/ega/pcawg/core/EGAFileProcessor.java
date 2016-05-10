@@ -140,8 +140,8 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
           .setFileSize(resolveFileSize(fileName, gnosFile))
           .setFileMd5sum(getChecksum(file))
           .setLastModified(resolveLastModified(submission))
-          .setRepoDataBundleId(null) // TODO: Resolve
-          .setRepoFileId(null) // TODO: Resolve
+          .setRepoDataBundleId(null) // TODO: Resolve from publish file
+          .setRepoFileId(null) // TODO: Resolve from publish file
           .setRepoType(egaServer.getType().getId())
           .setRepoOrg(egaServer.getSource().getId())
           .setRepoName(egaServer.getName())

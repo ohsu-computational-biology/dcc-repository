@@ -18,6 +18,8 @@
 package org.icgc.dcc.repository.ega.util;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,7 +31,8 @@ public class EGAMetadataWriterTest {
 
   @Test
   public void testWrite() {
-    val file = new File(getHomeDir(), "icgc-ega-datasets-updated3.jsonl");
+    val date = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").format(LocalDateTime.now());
+    val file = new File(getHomeDir(), "icgc-ega-datasets." + date + ".jsonl");
 
     val writer = new EGAMetadataWriter();
     writer.write(file);

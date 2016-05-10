@@ -158,6 +158,8 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setFileMd5sum(archiveClinicalFile.getFileMd5())
         .setLastModified(archiveClinicalFile.getLastModified())
         .setIndexFile(null) // N/A
+        .setRepoDataBundleId(null) // TODO: Resolve
+        .setRepoFileId(null) // TODO: Resolve
         .setRepoType(tcgaServer.getType().getId())
         .setRepoOrg(tcgaServer.getSource().getId())
         .setRepoName(tcgaServer.getName())

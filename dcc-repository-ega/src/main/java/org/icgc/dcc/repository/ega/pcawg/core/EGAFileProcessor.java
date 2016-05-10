@@ -140,6 +140,8 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
           .setFileSize(resolveFileSize(fileName, gnosFile))
           .setFileMd5sum(getChecksum(file))
           .setLastModified(resolveLastModified(submission))
+          .setRepoDataBundleId(null) // TODO: Resolve
+          .setRepoFileId(null) // TODO: Resolve
           .setRepoType(egaServer.getType().getId())
           .setRepoOrg(egaServer.getSource().getId())
           .setRepoName(egaServer.getName())
@@ -155,6 +157,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
         fileCopy.getIndexFile()
             .setId(context.ensureFileId(baiObjectId))
             .setObjectId(baiObjectId)
+            .setRepoFileId(null) // TODO: Resolve
             .setFileName(baiFileName)
             .setFileFormat(FileFormat.BAI)
             .setFileSize(resolveFileSize(baiFileName, gnosFile))

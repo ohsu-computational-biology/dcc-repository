@@ -30,6 +30,7 @@ import lombok.experimental.UtilityClass;
  * Repository file.
  * 
  * @see https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories
+ * @see https://wiki.oicr.on.ca/pages/viewpage.action?pageId=66946440
  */
 @Data
 @Accessors(chain = true)
@@ -121,6 +122,9 @@ public class RepositoryFile {
     Long lastModified;
     IndexFile indexFile = new IndexFile();
 
+    String repoDataBundleId;
+    String repoFileId;
+
     String repoType;
     String repoOrg;
     String repoName;
@@ -142,6 +146,8 @@ public class RepositoryFile {
     String fileFormat;
     Long fileSize;
     String fileMd5sum;
+
+    String repoFileId;
 
   }
 

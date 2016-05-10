@@ -213,6 +213,8 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
           .setFileSize(fileSize)
           .setFileMd5sum(resolveMd5sum(workflowFile))
           .setLastModified(resolveLastModified(workflow))
+          .setRepoDataBundleId(null) // TODO: Resolve
+          .setRepoFileId(null) // TODO: Resolve
           .setRepoType(pcawgServer.getType().getId())
           .setRepoOrg(pcawgServer.getSource().getId())
           .setRepoName(pcawgServer.getName())

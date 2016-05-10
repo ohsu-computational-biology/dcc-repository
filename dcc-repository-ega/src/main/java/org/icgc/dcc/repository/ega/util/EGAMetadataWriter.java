@@ -19,6 +19,8 @@ package org.icgc.dcc.repository.ega.util;
 
 import static com.fasterxml.jackson.core.JsonGenerator.Feature.AUTO_CLOSE_TARGET;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Sets.newTreeSet;
+import static java.lang.System.lineSeparator;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 
 import java.io.File;
@@ -61,17 +63,21 @@ public class EGAMetadataWriter {
     val writer = new FileWriter(file);
     val client = createEGAClient();
     val datasetIds = client.getDatasetIds();
+    val effectiveDatasetIds = newTreeSet(datasetIds);
+    if (effectiveDatasetIds.size() != datasetIds.size()) {
+      log.warn("Data sets include duplicates: {}", datasetIds);
+    }
 
     int i = 1;
     val n = datasetIds.size();
-    val errors = Lists.newArrayList();
+    val errors = Lists.<Exception> newArrayList();
 
-    log.info("Writing {} data sets to ...", n, file);
-    for (val datasetId : datasetIds) {
+    log.info("Writing {} data sets to {}...", n, file);
+    for (val datasetId : effectiveDatasetIds) {
       try {
         log.info("[{}/{}] Processing data set: {}", i++, n, datasetId);
         writeDataset(datasetId, client, writer);
-        writer.write("\n");
+        writer.write(lineSeparator());
       } catch (Exception e) {
         log.error("Error processing data set {}: {}", datasetId, e);
         errors.add(e);
@@ -80,6 +86,10 @@ public class EGAMetadataWriter {
 
     log.info("Finished writing {} data sets in {} with {} client timeouts, {} client reconnects and {} client errors",
         i, watch, client.getTimeoutCount(), client.getReconnectCount(), client.getErrorCount());
+
+    for (val error : errors) {
+      log.error("- {}", error.getMessage());
+    }
 
     checkState(errors.isEmpty(), "Error writing %s: %s", file, errors);
   }

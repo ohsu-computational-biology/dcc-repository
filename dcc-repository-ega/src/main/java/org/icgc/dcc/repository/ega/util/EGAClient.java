@@ -178,11 +178,11 @@ public class EGAClient {
         return DEFAULT.convertValue(getResult(response), responseType);
       } catch (SocketTimeoutException e) {
         timeoutCount++;
-        log.warn("Socket timeout requesting {} after {} attempt(s)", path, attempts);
+        log.warn("*** Attempt [{}/{}] failed: Socket timeout requesting {}", attempts, MAX_ATTEMPTS, path);
       } catch (@SuppressWarnings("hiding") IOException e) {
         // This could happen due to 500 in the reading of the json response. Seems transient...
         errorCount++;
-        log.warn("Error requesting {} after {} attempt(s): {}", path, attempts, e.getMessage());
+        log.warn("*** Attempt [{}/{}] failed: Error requesting {}: {}", attempts, MAX_ATTEMPTS, path, e.getMessage());
       }
 
       // Let tensions settle...

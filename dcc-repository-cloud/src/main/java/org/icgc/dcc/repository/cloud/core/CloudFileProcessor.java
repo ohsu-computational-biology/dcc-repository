@@ -129,6 +129,8 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
         .setFileSize(objectSummary.getSize())
         .setFileMd5sum(getFileMd5sum(file))
         .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
+        .setRepoDataBundleId(null) // TODO: Resolve
+        .setRepoFileId(null) // TODO: Resolve
         .setRepoType(server.getType().getId())
         .setRepoOrg(server.getSource().getId())
         .setRepoName(server.getName())

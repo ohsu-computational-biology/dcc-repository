@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -52,7 +53,7 @@ public class EGAMetadataArchiveReader {
    */
   public static final String DEFAULT_API_URL = "http://ega.ebi.ac.uk/ega/rest/download/v2";
 
-  private static final int MAX_ATTEMPTS = 10;
+  private static final int MAX_ATTEMPTS = 100;
   private static final int READ_TIMEOUT = (int) SECONDS.toMillis(5);
 
   private static final XMLObjectNodeReader XML_READER = new XMLObjectNodeReader();
@@ -83,10 +84,9 @@ public class EGAMetadataArchiveReader {
           readXmlEntry(tarball, entry, archive);
         }
       } catch (Exception e) {
-        throw new IllegalStateException(
-            "Error processing entry " + entry.getName() + " from " + getArchiveUrl(datasetId) + " after reading "
-                + formatCount(tarball.getBytesRead()) + " bytes",
-            e);
+        val message = MessageFormat.format("Error processing entry {0} from {1} after reading {2} bytes",
+            entry.getName(), getArchiveUrl(datasetId), formatCount(tarball.getBytesRead()));
+        throw new IllegalStateException(message, e);
       }
     }
 
@@ -138,9 +138,11 @@ public class EGAMetadataArchiveReader {
         val gzip = new GZIPInputStream(connection.getInputStream());
         return new TarArchiveInputStream(gzip);
       } catch (SocketTimeoutException e) {
-        log.warn("Socket timeout for {} after {} attempt(s)", datasetId, attempts);
+        log.warn("*** Attempt [{}/{}] failed: Socket timeout for {} after {} attempt(s)",
+            attempts, MAX_ATTEMPTS, datasetId, attempts);
       } catch (IOException e) {
-        throw new IllegalStateException("Error reading tarball for dataset " + datasetId + " from " + url, e);
+        log.warn("*** Attempt [{}/{}] failed: Error reading tarball for dataset {} from {}: {}",
+            attempts, MAX_ATTEMPTS, datasetId, url, e.getMessage());
       }
     }
 

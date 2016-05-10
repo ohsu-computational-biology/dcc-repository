@@ -145,6 +145,8 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
         .setFileSize(getFileSize(file))
         .setFileMd5sum(getChecksum(file))
         .setLastModified(resolveLastModified(result))
+        .setRepoDataBundleId(null) // TODO: Resolve
+        .setRepoFileId(null) // TODO: Resolve
         .setRepoType(cghubServer.getType().getId())
         .setRepoOrg(cghubServer.getSource().getId())
         .setRepoName(cghubServer.getName())

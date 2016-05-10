@@ -19,7 +19,6 @@ package org.icgc.dcc.repository.ega.core;
 
 import java.util.stream.Stream;
 
-import org.elasticsearch.common.collect.Lists;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
@@ -27,6 +26,7 @@ import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.ega.model.EGAMetadata;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 import lombok.NonNull;
 import lombok.val;
@@ -59,15 +59,16 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
     return files.stream();
   }
 
-  private RepositoryFile createFile(EGAMetadata metadata, ObjectNode f) {
-    val file = new RepositoryFile();
+  private RepositoryFile createFile(EGAMetadata metadata, ObjectNode file) {
+    val egaFile = new RepositoryFile();
 
-    file.addFileCopy()
-        .setRepoFileId(resolveRepoFileId(f));
+    egaFile.addFileCopy()
+        .setRepoDataBundleId(metadata.getDatasetId())
+        .setRepoFileId(resolveRepoFileId(file));
 
-    log.info("File: {}", file);
+    log.info("File: {}", egaFile);
 
-    return file;
+    return egaFile;
   }
 
   private static String resolveRepoFileId(ObjectNode file) {

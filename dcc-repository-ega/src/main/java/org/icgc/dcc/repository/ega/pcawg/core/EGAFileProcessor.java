@@ -124,6 +124,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
         continue;
       }
 
+      val baseFileName = resolveBaseFileName(file);
       val objectId = resolveObjectId(analysisId, file);
 
       // TODO: Add support for *.tbi, *.idx as they come online
@@ -138,7 +139,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
       egaFile.getDataBundle()
           .setDataBundleId(analysisId);
 
-      egaFile.setDataCategorization(resolveDataCategorization(analysisFile, fileName));
+      egaFile.setDataCategorization(resolveDataCategorization(analysisFile, baseFileName));
 
       egaFile.setAnalysisMethod(resolveAnalysisMethod(analysisFile));
 
@@ -147,7 +148,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
       val fileCopy = egaFile.addFileCopy()
           .setFileName(fileName)
           .setFileFormat(resolveFileFormat(file))
-          .setFileSize(resolveFileSize(fileName, gnosFile))
+          .setFileSize(resolveFileSize(baseFileName, gnosFile))
           .setFileMd5sum(getChecksum(file))
           .setLastModified(resolveLastModified(submission))
           .setRepoDataBundleId(publishedFile.get().getAnalysisId())
@@ -299,7 +300,11 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   }
 
   private static String resolveObjectId(String analysisId, JsonNode file) {
-    return resolveObjectId(analysisId, getFileName(file).split("/")[1]);
+    return resolveObjectId(analysisId, resolveBaseFileName(file));
+  }
+
+  private static String resolveBaseFileName(JsonNode file) {
+    return getFileName(file).split("/")[1];
   }
 
   private static String resolveFileName(JsonNode file) {

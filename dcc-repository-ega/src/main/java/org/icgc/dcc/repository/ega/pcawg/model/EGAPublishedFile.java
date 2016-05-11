@@ -17,38 +17,25 @@
  */
 package org.icgc.dcc.repository.ega.pcawg.model;
 
-import java.util.List;
-
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.Singular;
 import lombok.Value;
 
 @Value
 @Builder
-public class EGAPublishFile {
+public class EGAPublishedFile {
 
   @NonNull
-  @Singular
-  List<EGAPublishedFile> files;
+  String datasetId;
+  @NonNull
+  String analysisId;
+  @NonNull
+  String fileId;
+  @NonNull
+  String fileName;
 
-  public static EGAPublishFileBuilder publishFile() {
+  public static EGAPublishedFileBuilder publishedFile() {
     return builder();
-  }
-
-  @Value
-  @Builder
-  public static class EGAPublishedFile {
-
-    @NonNull
-    String egaz;
-    @NonNull
-    String egad;
-    @NonNull
-    String egaf;
-    @NonNull
-    String fileName;
-
   }
 
 }

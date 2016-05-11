@@ -17,27 +17,34 @@
  */
 package org.icgc.dcc.repository.ega.pcawg.reader;
 
-import static org.icgc.dcc.repository.ega.pcawg.model.EGAPublishFile.publishFile;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.Splitters.TAB;
+import static org.icgc.dcc.repository.ega.pcawg.model.EGAPublishedFile.publishedFile;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.icgc.dcc.repository.ega.pcawg.model.EGAPublishFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAPublishedFile;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.io.Resources;
 
-public class EGAPublishFileReader extends EGAFileReader<EGAPublishFile> {
+import lombok.SneakyThrows;
+import lombok.val;
+
+public class EGAPublishFileReader extends EGAFileReader<List<EGAPublishedFile>> {
 
   /**
    * Constants.
    */
   private static final Pattern PUBLISH_FILE_PATTERN = Pattern.compile(""
       // Template:
-      // [projectId]/analysis_[type].[study]_[workflow]/TODO.tsv
+      // [projectId]/analysis_[type].[study]_[workflow]/[datasetId].files.tsv
       // Example :
-      // LICA-FR/analysis_alignment.PCAWG_WGS_BWA/analysis/TODO.tsv
+      // LICA-FR/analysis_alignment.PCAWG_WGS_BWA/EGAD00001002016.files.tsv
       + "([^/]+)" // [projectId]
       + "/analysis_"
       + "([^.]+)" // [type]
@@ -46,25 +53,27 @@ public class EGAPublishFileReader extends EGAFileReader<EGAPublishFile> {
       + "_"
       + "([^/]+)" // [workflow]
       + "/"
-      + "TODO.tsv");
+      + "([^.]+)" // [datasetId]
+      + ".files.tsv");
 
   public EGAPublishFileReader(File repoDir) {
     super(repoDir, PUBLISH_FILE_PATTERN);
   }
 
   @Override
-  protected ObjectNode readFile(Path path) {
-    // TODO: Parse CSV
-    return null;
-  }
-
-  @Override
-  protected EGAPublishFile createFile(Path path, Matcher matcher) {
-    // val contents = readFile(path);
-
-    // TODO:
-    return publishFile()
-        .build();
+  @SneakyThrows
+  protected List<EGAPublishedFile> createFile(Path path, Matcher matcher) {
+    val lines = Resources.readLines(path.toUri().toURL(), UTF_8);
+    return lines.stream()
+        .skip(1)
+        .map(TAB::splitToList)
+        .map(values -> publishedFile()
+            .datasetId(values.get(0))
+            .analysisId(values.get(1))
+            .fileId(values.get(2))
+            .fileName(values.get(3))
+            .build())
+        .collect(toList());
   }
 
 }

@@ -20,6 +20,7 @@ package org.icgc.dcc.repository.ega.pcawg.reader;
 import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.collect.Ordering.natural;
+import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.repository.ega.pcawg.model.EGASubmission.submission;
 
@@ -32,6 +33,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.icgc.dcc.repository.core.util.TransferMetadataRepository;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAAnalysisFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAGnosFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAPublishedFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAReceiptFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGASampleFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAStudyFile;
@@ -72,6 +74,7 @@ public class EGASubmissionReader {
 
   private List<EGASubmission> createSubmissions() {
     // Read sources
+    val publishedFiles = readPublishedFiles();
     val studyFiles = readStudyFiles();
     val sampleFiles = readSampleFiles();
     val gnosFiles = readGnosFiles();
@@ -91,6 +94,7 @@ public class EGASubmissionReader {
     // Combine both files into a merged record
     return analysisFiles.stream()
         .map(f -> submission()
+            .publishedFiles(publishedFiles)
             .studyFile(studyIndex.get(f.getStudy()))
             .sampleFiles(sampleIndex.get(f.getProjectId()))
             .gnosFile(gnosIndex.get(f.getAnalysisId()))
@@ -98,6 +102,10 @@ public class EGASubmissionReader {
             .analysisFile(f)
             .build())
         .collect(toImmutableList());
+  }
+
+  private List<EGAPublishedFile> readPublishedFiles() {
+    return new EGAPublishFileReader(repoDir).readFiles().stream().flatMap(List::stream).collect(toList());
   }
 
   private List<EGAStudyFile> readStudyFiles() {

@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.ega.pcawg.model;
 
+import java.util.List;
 import java.util.Set;
 
 import lombok.Builder;
@@ -26,6 +27,7 @@ import lombok.Value;
 @Builder
 public class EGASubmission {
 
+  List<EGAPublishedFile> publishedFiles;
   EGAStudyFile studyFile;
   Set<EGASampleFile> sampleFiles;
 

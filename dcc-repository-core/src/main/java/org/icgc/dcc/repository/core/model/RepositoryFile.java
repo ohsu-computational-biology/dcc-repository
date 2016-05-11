@@ -124,6 +124,7 @@ public class RepositoryFile {
 
     String repoDataBundleId;
     String repoFileId;
+    List<String> repoDataSetIds = Lists.newArrayList();
 
     String repoType;
     String repoOrg;

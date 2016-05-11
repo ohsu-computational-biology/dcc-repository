@@ -17,10 +17,12 @@
  */
 package org.icgc.dcc.repository.ega.pcawg.core;
 
+import static java.util.Collections.singletonList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getChecksum;
+import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getFileName;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getFiles;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getSampleRef;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGASampleFiles.getSampleAlias;
@@ -46,6 +48,7 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAAnalysisFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAGnosFile;
+import org.icgc.dcc.repository.ega.pcawg.model.EGAPublishedFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAStudyFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGASubmission;
 import org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles;
@@ -105,6 +108,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
     val egaFiles = ImmutableList.<RepositoryFile> builder();
     for (val file : files) {
       if (isExcludedFile(file)) {
+        // We exclude things like bai and gz files
         continue;
       }
 
@@ -114,7 +118,13 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
       }
 
       val fileName = resolveFileName(file);
-      val objectId = resolveObjectId(analysisId, fileName);
+      val publishedFile = resolvePublishedFile(submission, fileName);
+      if (!publishedFile.isPresent()) {
+        // Only include published files
+        continue;
+      }
+
+      val objectId = resolveObjectId(analysisId, file);
 
       // TODO: Add support for *.tbi, *.idx as they come online
       val baiFile = resolveBaiFile(files, file);
@@ -140,8 +150,9 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
           .setFileSize(resolveFileSize(fileName, gnosFile))
           .setFileMd5sum(getChecksum(file))
           .setLastModified(resolveLastModified(submission))
-          .setRepoDataBundleId(null) // TODO: Resolve from publish file
-          .setRepoFileId(null) // TODO: Resolve from publish file
+          .setRepoDataBundleId(publishedFile.get().getAnalysisId())
+          .setRepoDataSetIds(singletonList(publishedFile.get().getDatasetId()))
+          .setRepoFileId(publishedFile.get().getFileId())
           .setRepoType(egaServer.getType().getId())
           .setRepoOrg(egaServer.getSource().getId())
           .setRepoName(egaServer.getName())
@@ -153,11 +164,13 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
 
       if (baiFile.isPresent()) {
         val baiFileName = resolveFileName(baiFile.get());
-        val baiObjectId = resolveObjectId(analysisId, baiFileName);
+        val baiObjectId = resolveObjectId(analysisId, baiFile.get());
+        val baiPublishedFile = resolvePublishedFile(submission, baiFileName);
+
         fileCopy.getIndexFile()
             .setId(context.ensureFileId(baiObjectId))
             .setObjectId(baiObjectId)
-            .setRepoFileId(null) // TODO: Resolve
+            .setRepoFileId(baiPublishedFile.get().getFileId())
             .setFileName(baiFileName)
             .setFileFormat(FileFormat.BAI)
             .setFileSize(resolveFileSize(baiFileName, gnosFile))
@@ -225,6 +238,14 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
     return analysisFile.getType().equals("alignment") && analysisFile.getWorkflow().equals("WGS_BWA");
   }
 
+  //
+  // Utilities
+  //
+
+  private static Optional<EGAPublishedFile> resolvePublishedFile(EGASubmission submission, String fileName) {
+    return submission.getPublishedFiles().stream().filter(p -> p.getFileName().equals(fileName)).findFirst();
+  }
+
   private static List<String> resolveStudies(EGAStudyFile studyFile) {
     return studies(studyFile.getStudy(), getAccession(studyFile));
   }
@@ -277,9 +298,12 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
     return analysisMethod;
   }
 
+  private static String resolveObjectId(String analysisId, JsonNode file) {
+    return resolveObjectId(analysisId, getFileName(file).split("/")[1]);
+  }
+
   private static String resolveFileName(JsonNode file) {
-    val analysisAndFileName = EGAAnalysisFiles.getFileName(file);
-    return analysisAndFileName.split("/")[1];
+    return EGAAnalysisFiles.getFileName(file);
   }
 
   private static String resolveFileFormat(JsonNode file) {

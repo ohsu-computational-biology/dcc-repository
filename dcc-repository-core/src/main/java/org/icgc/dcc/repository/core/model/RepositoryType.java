@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public enum RepositoryType implements Identifiable {
 
   S3("S3", "/oicr.icgc.meta/metadata", "/oicr.icgc/data"),
-  EGA_ARCHIVE("EGA", "", ""),
+  EGA_ARCHIVE("EGA", "/rest/download/v2/metadata/", ""),
   GNOS("GNOS", "/cghub/metadata/analysisFull/", "/cghub/data/analysis/download/"),
   WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/");
 

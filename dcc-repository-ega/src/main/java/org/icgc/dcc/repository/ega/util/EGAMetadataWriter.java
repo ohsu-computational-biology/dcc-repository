@@ -98,7 +98,7 @@ public class EGAMetadataWriter {
       throws IOException, JsonGenerationException, JsonMappingException {
     val metadata = readDataset(datasetId);
     val files = client.getFiles(datasetId);
-    val projectCodes = EGAProjects.getDatasetProjectCodes(datasetId);
+    val projectCodes = EGAProjectDatasets.getDatasetProjectCodes(datasetId);
 
     val record = new EGAMetadata(datasetId, projectCodes, files, metadata);
     MAPPER.writeValue(writer, record);

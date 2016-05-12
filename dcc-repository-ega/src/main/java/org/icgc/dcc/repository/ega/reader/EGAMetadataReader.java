@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.ega.reader;
 
 import static com.google.common.collect.Sets.newTreeSet;
-import static org.icgc.dcc.repository.ega.util.EGAProjects.getDatasetProjectCodes;
+import static org.icgc.dcc.repository.ega.util.EGAProjectDatasets.getDatasetProjectCodes;
 
 import java.util.stream.Stream;
 

@@ -146,7 +146,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
       egaFile.setReferenceGenome(ReferenceGenome.PCAWG);
 
       val fileCopy = egaFile.addFileCopy()
-          .setFileName(fileName)
+          .setFileName(baseFileName)
           .setFileFormat(resolveFileFormat(file))
           .setFileSize(resolveFileSize(baseFileName, gnosFile))
           .setFileMd5sum(getChecksum(file))

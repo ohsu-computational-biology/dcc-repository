@@ -25,7 +25,6 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Value;
 
 @NoArgsConstructor(access = PRIVATE)
@@ -190,16 +189,16 @@ public final class EGAProjectDatasets {
 
   }
 
-  public static List<String> getStudyProjectCodes(@NonNull String studyId) {
+  public static List<String> getStudyProjectCodes(String studyId) {
     return DATASETS.stream()
-        .filter(r -> r.getStudyId().equals(studyId))
+        .filter(r -> studyId.equals(r.getStudyId()))
         .map(Record::getProjectCode)
         .collect(toImmutableList());
   }
 
-  public static List<String> getDatasetProjectCodes(@NonNull String datasetId) {
+  public static List<String> getDatasetProjectCodes(String datasetId) {
     return DATASETS.stream()
-        .filter(r -> r.getDatasetId().equals(datasetId))
+        .filter(r -> datasetId.equals(r.getDatasetId()))
         .map(Record::getProjectCode)
         .collect(toImmutableList());
   }

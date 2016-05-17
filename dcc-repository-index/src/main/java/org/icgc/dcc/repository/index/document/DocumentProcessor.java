@@ -23,7 +23,7 @@ import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import java.util.function.Consumer;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
+import org.icgc.dcc.repository.core.model.RepositoryCollection;
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
 import org.icgc.dcc.repository.index.model.DocumentType;
 
@@ -62,7 +62,7 @@ public abstract class DocumentProcessor extends AbstractJongoComponent {
   abstract public int process();
 
   protected int eachFile(Consumer<ObjectNode> consumer) {
-    return eachDocument(RepositoryFileCollection.FILE, consumer);
+    return eachDocument(RepositoryCollection.FILE, consumer);
   }
 
   protected void addDocument(String id, ObjectNode document) {

@@ -41,6 +41,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.icgc.dcc.repository.index.document.DonorTextDocumentProcessor;
 import org.icgc.dcc.repository.index.document.FileCentricDocumentProcessor;
 import org.icgc.dcc.repository.index.document.FileTextDocumentProcessor;
+import org.icgc.dcc.repository.index.document.RepositoryDocumentProcessor;
 import org.icgc.dcc.repository.index.model.DocumentType;
 import org.icgc.dcc.repository.index.util.LoggingBulkListener;
 
@@ -143,6 +144,8 @@ public class RepositoryFileIndexer implements Closeable {
     @Cleanup
     val bulkProcessor = createBulkProcessor();
 
+    log.info("Indexing repository documents...");
+    val repositoryCount = indexRepositoryDocuments(bulkProcessor);
     log.info("Indexing file documents...");
     val fileCount = indexFileDocuments(bulkProcessor);
     log.info("Indexing file text documents...");
@@ -150,8 +153,16 @@ public class RepositoryFileIndexer implements Closeable {
     log.info("Indexing file donor documents...");
     val fileDonorCount = indexFileDonorDocuments(bulkProcessor);
 
-    log.info("Finished indexing {} file, {} file text and {} file donor documents in {}",
-        formatCount(fileCount), formatCount(fileTextCount), formatCount(fileDonorCount), watch);
+    log.info("Finished indexing {}, repository, {} file, {} file text and {} file donor documents in {}",
+        formatCount(repositoryCount), formatCount(fileCount), formatCount(fileTextCount), formatCount(fileDonorCount),
+        watch);
+  }
+
+  @SneakyThrows
+  private int indexRepositoryDocuments(BulkProcessor bulkProcessor) {
+    @Cleanup
+    val processor = new RepositoryDocumentProcessor(mongoUri, indexName, bulkProcessor);
+    return processor.process();
   }
 
   @SneakyThrows

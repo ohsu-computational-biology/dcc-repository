@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
+import org.icgc.dcc.repository.core.model.RepositoryCollection;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 import org.jongo.MongoCursor;
@@ -63,7 +63,7 @@ public abstract class AbstractJongoComponent implements Closeable {
     jongo.getDatabase().getMongo().close();
   }
 
-  protected MongoCollection getCollection(@NonNull RepositoryFileCollection fileCollection) {
+  protected MongoCollection getCollection(@NonNull RepositoryCollection fileCollection) {
     return getCollection(fileCollection.getId());
   }
 
@@ -71,7 +71,7 @@ public abstract class AbstractJongoComponent implements Closeable {
     return jongo.getCollection(collectionName);
   }
 
-  protected MongoCursor<ObjectNode> readDocuments(@NonNull RepositoryFileCollection fileCollection) {
+  protected MongoCursor<ObjectNode> readDocuments(@NonNull RepositoryCollection fileCollection) {
     return readDocuments(fileCollection.getId());
   }
 
@@ -79,7 +79,7 @@ public abstract class AbstractJongoComponent implements Closeable {
     return getCollection(collectionName).find().as(ObjectNode.class);
   }
 
-  protected void clearDocuments(@NonNull RepositoryFileCollection fileCollection) {
+  protected void clearDocuments(@NonNull RepositoryCollection fileCollection) {
     val collection = getCollection(fileCollection);
 
     log.info("Clearing documents in collection '{}'", collection.getName());
@@ -90,8 +90,8 @@ public abstract class AbstractJongoComponent implements Closeable {
         formatCount(result.getN()), collection.getName());
   }
 
-  protected int eachDocument(@NonNull RepositoryFileCollection fileCollection, @NonNull Consumer<ObjectNode> handler) {
-    return eachDocument(fileCollection.getId(), handler);
+  protected int eachDocument(@NonNull RepositoryCollection collection, @NonNull Consumer<ObjectNode> handler) {
+    return eachDocument(collection.getId(), handler);
   }
 
   protected int eachDocument(@NonNull String collectionName, @NonNull Consumer<ObjectNode> handler) {
@@ -105,7 +105,7 @@ public abstract class AbstractJongoComponent implements Closeable {
     return documentCount;
   }
 
-  protected <T> List<T> mapDocument(@NonNull RepositoryFileCollection fileCollection,
+  protected <T> List<T> mapDocument(@NonNull RepositoryCollection fileCollection,
       @NonNull Function<ObjectNode, T> mapping) {
     val results = ImmutableList.<T> builder();
     for (val document : readDocuments(fileCollection)) {

@@ -15,7 +15,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.index.model;
+package org.icgc.dcc.repository.core.model;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -24,17 +24,34 @@ import org.icgc.dcc.common.core.model.Identifiable;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-@Getter
 @RequiredArgsConstructor(access = PRIVATE)
-public enum DocumentType implements Identifiable {
+public enum RepositoryCollection implements Identifiable {
 
-  REPOSITORY("repository"),
-  FILE_CENTRIC("file-centric"),
-  FILE_TEXT("file-text"),
-  DONOR_TEXT("donor-text");
+  FILE("File", null),
+  EGA_FILE("EGAFile", RepositorySource.EGA),
+  CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
+  TCGA_FILE("TCGAFile", RepositorySource.TCGA),
+  PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
+  AWS_FILE("AWSFile", RepositorySource.AWS),
+  COLLAB_FILE("CollabFile", RepositorySource.COLLAB);
 
+  @Getter
   @NonNull
   private final String id;
+
+  @Getter
+  private final RepositorySource source;
+
+  public static RepositoryCollection forSource(@NonNull RepositorySource source) {
+    for (val value : values()) {
+      if (source == value.getSource()) {
+        return value;
+      }
+    }
+
+    return null;
+  }
 
 }

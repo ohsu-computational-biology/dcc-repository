@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.repository.core.reader;
 
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
+import org.icgc.dcc.repository.core.model.RepositoryCollection;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import com.mongodb.MongoClientURI;
@@ -25,7 +25,7 @@ import com.mongodb.MongoClientURI;
 public class RepositorySourceFileReader extends RepositoryFileReader {
 
   public RepositorySourceFileReader(MongoClientURI mongoUri, RepositorySource source) {
-    super(mongoUri, RepositoryFileCollection.forSource(source));
+    super(mongoUri, RepositoryCollection.forSource(source));
   }
 
 }

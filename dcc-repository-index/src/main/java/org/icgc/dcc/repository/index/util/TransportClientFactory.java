@@ -40,7 +40,7 @@ public final class TransportClientFactory {
   /**
    * Constants.
    */
-  private static final boolean DEFAULT_CLIENT_TRANSPORT_SNIFF = true;
+  private static final boolean DEFAULT_CLIENT_TRANSPORT_SNIFF = false;
 
   static {
     // Ensure slf4j is used for all ElasticSearch logging
@@ -71,16 +71,16 @@ public final class TransportClientFactory {
   private static Builder createSettings(boolean sniff) {
     return ImmutableSettings.settingsBuilder()
 
-    // Increase the ping timeout from the 5s (default) to something larger to prevent transient
-    // NoNodeAvailableExceptions
+        // Increase the ping timeout from the 5s (default) to something larger to prevent transient
+        // NoNodeAvailableExceptions
         .put("client.transport.ping_timeout", "20s")
 
-    // The time to wait for a ping response from a node. Defaults to 5s.
+        // The time to wait for a ping response from a node. Defaults to 5s.
         .put("client.transport.nodes_sampler_interval", "10s")
 
-    // Enable / disable the client to sniff the rest of the cluster, and add those into its list of machines to use.
-    // In this case, note that the IP addresses used will be the ones that the other nodes were started with (the
-    // "publish" address)
+        // Enable / disable the client to sniff the rest of the cluster, and add those into its list of machines to use.
+        // In this case, note that the IP addresses used will be the ones that the other nodes were started with (the
+        // "publish" address)
         .put("client.transport.sniff", sniff);
   }
 

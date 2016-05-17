@@ -17,7 +17,7 @@
  */
 package org.icgc.dcc.repository.core.writer;
 
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
+import org.icgc.dcc.repository.core.model.RepositoryCollection;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import com.mongodb.MongoClientURI;
@@ -35,7 +35,7 @@ public class RepositorySourceFileWriter extends RepositoryFileWriter {
   private final RepositorySource source;
 
   public RepositorySourceFileWriter(MongoClientURI mongoUri, RepositorySource source) {
-    super(mongoUri, RepositoryFileCollection.forSource(source));
+    super(mongoUri, RepositoryCollection.forSource(source));
     this.source = source;
   }
 

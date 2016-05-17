@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.core.reader;
 
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFileCollection;
+import org.icgc.dcc.repository.core.model.RepositoryCollection;
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
 import org.jongo.MongoCollection;
 
@@ -36,7 +36,7 @@ public class RepositoryFileReader extends AbstractJongoComponent {
    */
   @Getter
   @NonNull
-  private final RepositoryFileCollection fileCollection;
+  private final RepositoryCollection fileCollection;
 
   /**
    * Dependencies.
@@ -45,10 +45,10 @@ public class RepositoryFileReader extends AbstractJongoComponent {
   protected final MongoCollection collection;
 
   public RepositoryFileReader(MongoClientURI mongoUri) {
-    this(mongoUri, RepositoryFileCollection.FILE);
+    this(mongoUri, RepositoryCollection.FILE);
   }
 
-  protected RepositoryFileReader(MongoClientURI mongoUri, @NonNull RepositoryFileCollection fileCollection) {
+  protected RepositoryFileReader(MongoClientURI mongoUri, @NonNull RepositoryCollection fileCollection) {
     super(mongoUri);
     this.fileCollection = fileCollection;
     this.collection = getCollection(fileCollection);

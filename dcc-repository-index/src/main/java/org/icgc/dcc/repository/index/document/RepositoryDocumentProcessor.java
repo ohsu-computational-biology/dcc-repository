@@ -15,43 +15,51 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.index.document;
 
-import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import org.elasticsearch.action.bulk.BulkProcessor;
+import org.icgc.dcc.repository.core.model.RepositoryServers;
+import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
+import org.icgc.dcc.repository.index.model.DocumentType;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mongodb.MongoClientURI;
+
 import lombok.val;
 
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryFileCollection implements Identifiable {
+public class RepositoryDocumentProcessor extends DocumentProcessor {
 
-  FILE("File", null),
-  EGA_FILE("EGAFile", RepositorySource.EGA),
-  CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
-  TCGA_FILE("TCGAFile", RepositorySource.TCGA),
-  PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
-  AWS_FILE("AWSFile", RepositorySource.AWS),
-  COLLAB_FILE("CollabFile", RepositorySource.COLLAB);
+  public RepositoryDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
+    super(mongoUri, indexName, DocumentType.REPOSITORY, processor);
+  }
 
-  @Getter
-  @NonNull
-  private final String id;
-
-  @Getter
-  private final RepositorySource source;
-
-  public static RepositoryFileCollection forSource(@NonNull RepositorySource source) {
-    for (val value : values()) {
-      if (source == value.getSource()) {
-        return value;
-      }
+  @Override
+  public int process() {
+    int count = 0;
+    for (val server : RepositoryServers.getServers()) {
+      val id = server.getCode();
+      val document = createDocument(server);
+      addDocument(id, document);
+      count++;
     }
 
-    return null;
+    return count;
+  }
+
+  private ObjectNode createDocument(RepositoryServer server) {
+    return object()
+        .with("id", server.getCode())
+        .with("code", server.getCode())
+        .with("type", server.getType().getId())
+        .with("name", server.getName())
+        .with("source", server.getSource().getId())
+        .with("country", server.getCountry())
+        .with("baseUrl", server.getBaseUrl())
+        .with("dataPath", server.getType().getDataPath())
+        .with("metadataPath", server.getType().getMetadataPath())
+        .end();
   }
 
 }

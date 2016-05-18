@@ -17,9 +17,9 @@
  */
 package org.icgc.dcc.repository.ega.core;
 
+import static com.google.common.collect.Iterables.getFirst;
 import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 import static java.util.Collections.singletonList;
-import static org.elasticsearch.common.collect.Iterables.getFirst;
 import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingDataSetId;
 import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingFileId;
 import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingFileName;

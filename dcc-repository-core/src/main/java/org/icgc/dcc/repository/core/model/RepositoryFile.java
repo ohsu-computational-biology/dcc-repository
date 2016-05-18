@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.repository.core.model;
 
+import static java.util.Collections.singletonList;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -134,6 +136,10 @@ public class RepositoryFile {
     String repoBaseUrl;
     String repoDataPath;
     String repoMetadataPath;
+
+    public FileCopy setRepoDataSetId(String dataSetID) {
+      return this.setRepoDataSetIds(singletonList(dataSetID));
+    }
 
   }
 

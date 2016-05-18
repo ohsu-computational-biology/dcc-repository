@@ -17,16 +17,36 @@
  */
 package org.icgc.dcc.repository.ega.core;
 
+import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
+import static java.util.Collections.singletonList;
+import static org.elasticsearch.common.collect.Iterables.getFirst;
+import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingDataSetId;
+import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingFileId;
+import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingFileName;
+import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingFileSize;
+import static org.icgc.dcc.repository.ega.util.EGARuns.getRunChecksum;
+import static org.icgc.dcc.repository.ega.util.EGARuns.getRunDate;
+import static org.icgc.dcc.repository.ega.util.EGARuns.getRunFile;
+import static org.icgc.dcc.repository.ega.util.EGARuns.getRunFileName;
+import static org.icgc.dcc.repository.ega.util.EGARuns.getRunFileType;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import org.icgc.dcc.common.core.util.Formats;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.ega.model.EGAMetadata;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import lombok.NonNull;
 import lombok.val;
@@ -34,6 +54,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class EGAFileProcessor extends RepositoryFileProcessor {
+
+  public static Set<String> formats = Sets.newTreeSet();
+  public static int count = 0;
 
   /**
    * Metadata.
@@ -51,28 +74,84 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   }
 
   private Stream<RepositoryFile> createFiles(EGAMetadata metadata) {
-    val files = Lists.<RepositoryFile> newArrayList();
-    for (val file : metadata.getFiles()) {
-      files.add(createFile(metadata, file));
-    }
-
-    return files.stream();
+    return metadata.getFiles().stream().map(file -> createFile(metadata, file));
   }
 
   private RepositoryFile createFile(EGAMetadata metadata, ObjectNode file) {
     val egaFile = new RepositoryFile();
 
-    egaFile.addFileCopy()
-        .setRepoDataBundleId(metadata.getDatasetId())
-        .setRepoFileId(resolveRepoFileId(file));
+    egaFile.getDataBundle()
+        .setDataBundleId(metadata.getDatasetId());
 
-    log.info("File: {}", egaFile);
+    val fileCopy = egaFile.addFileCopy()
+        .setRepoDataBundleId(metadata.getDatasetId())
+        .setRepoFileId(getMappingFileId(file))
+        .setRepoDataSetId(getMappingDataSetId(file))
+        .setFileSize(getMappingFileSize(file))
+        .setFileName(null) // Set from run
+        .setRepoType(egaServer.getType().getId())
+        .setRepoOrg(egaServer.getSource().getId())
+        .setRepoName(egaServer.getName())
+        .setRepoCode(egaServer.getCode())
+        .setRepoCountry(egaServer.getCountry())
+        .setRepoBaseUrl(egaServer.getBaseUrl())
+        .setRepoMetadataPath(egaServer.getType().getMetadataPath())
+        .setRepoDataPath(egaServer.getType().getDataPath());
+
+    updateFileCopy(fileCopy, getMappingFileName(file), metadata);
+
+    egaFile.addDonor()
+        .setProjectCode(getFirst(metadata.getProjectCodes(), null));
+
+    val fileFormat = egaFile.getFileCopies().get(0).getFileFormat();
+    formats.add(fileFormat == null ? "<empty>" : fileFormat);
+
+    log.info("[{}] formats: {}", Formats.formatCount(++count), formats);
 
     return egaFile;
   }
 
-  private static String resolveRepoFileId(ObjectNode file) {
-    return file.get("fileID").textValue();
+  private void updateFileCopy(FileCopy fileCopy, String fileName, EGAMetadata metadata) {
+
+    for (val root : metadata.getMetadata().getRuns().values()) {
+      val files = resolveRunFiles(root);
+      for (val file : files) {
+        val match = resolveFileFormat(fileName).contains(getRunFileName(file));
+        if (match) {
+          fileCopy
+              .setFileName(getRunFileName(file))
+              .setFileFormat(resolveFileFormat(getRunFileType(file)))
+              .setFileMd5sum(getRunChecksum(file))
+              .setLastModified(resolveLastModified(getRunDate(root)));
+        }
+      }
+    }
+  }
+
+  private static String resolveFileFormat(String fileType) {
+    if ("bam".equals(fileType)) {
+      return FileFormat.BAM;
+    }
+    if ("fastq".equals(fileType)) {
+      return FileFormat.FASTQ;
+    }
+
+    return fileType;
+  }
+
+  private static Long resolveLastModified(String runDate) {
+    if (runDate == null) {
+      return null;
+    }
+
+    val dateTime = LocalDateTime.parse(resolveFileFormat(runDate), ISO_DATE_TIME);
+    val egaTimeZone = ZoneId.of("Europe/London");
+    return dateTime.atZone(egaTimeZone).toInstant().toEpochMilli();
+  }
+
+  private static Iterable<JsonNode> resolveRunFiles(JsonNode root) {
+    val values = getRunFile(root);
+    return values.isArray() ? values : singletonList(values);
   }
 
 }

@@ -19,6 +19,7 @@ package org.icgc.dcc.repository.gdc.reader;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.repository.gdc.util.GDCProjects.getProjectsIds;
 
 import java.util.List;
 
@@ -80,8 +81,8 @@ public class GDCFileReader {
           .with("op", "in")
           .with("content",
               object()
-                  .with("field", "cases.project.program.name")
-                  .with("value", array("TCGA", "TARGET")))
+                  .with("field", "cases.project.project_id")
+                  .with("value", array().with(getProjectsIds())))
           .end();
 
   /**

@@ -39,6 +39,7 @@ import static org.icgc.dcc.repository.gdc.util.GDCFiles.getIndexFiles;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getIndexMd5sum;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getMd5sum;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getUpdatedDatetime;
+import static org.icgc.dcc.repository.gdc.util.GDCProjects.getProjectCode;
 
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -167,7 +168,8 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
   }
 
   private static String resolveProjectCode(@NonNull JsonNode caze) {
-    return getCaseProjectId(caze);
+    val projectId = getCaseProjectId(caze);
+    return getProjectCode(projectId);
   }
 
 }

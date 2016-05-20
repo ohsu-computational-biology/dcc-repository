@@ -115,7 +115,7 @@ public final class GDCFiles {
   }
 
   public static String getCaseProjectId(JsonNode caze) {
-    return GDCFiles.getCaseProject(caze).path("project_id").textValue();
+    return getCaseProject(caze).path("project_id").textValue();
   }
 
 }

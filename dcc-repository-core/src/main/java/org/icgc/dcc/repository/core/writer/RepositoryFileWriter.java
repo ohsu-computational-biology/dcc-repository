@@ -20,8 +20,8 @@ package org.icgc.dcc.repository.core.writer;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.model.RepositoryCollection.FILE;
 
-import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryCollection;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.AbstractJongoWriter;
 import org.jongo.MongoCollection;
 
@@ -63,15 +63,18 @@ public class RepositoryFileWriter extends AbstractJongoWriter<Iterable<Repositor
     log.info("Clearing '{}' documents...", collection.getName());
     clearFiles();
 
-    log.info("Writing '{}' '{}' documents...", formatCount(files), collection.getName());
+    log.info("Writing {} '{}' documents...", formatCount(files), collection.getName());
     int writeCount = 0;
     for (val file : files) {
       saveFile(file);
 
       writeCount++;
+      if (writeCount % 10000 == 0) {
+        log.info("Wrote {} '{}' documents", formatCount(writeCount), collection.getName());
+      }
     }
 
-    log.info("Wrote '{}' '{}' documents", formatCount(writeCount), collection.getName());
+    log.info("Finished writing {} '{}' documents", formatCount(writeCount), collection.getName());
   }
 
   public void clearFiles() {

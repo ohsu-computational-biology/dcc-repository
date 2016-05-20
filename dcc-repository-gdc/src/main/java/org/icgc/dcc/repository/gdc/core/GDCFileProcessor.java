@@ -17,9 +17,12 @@
  */
 package org.icgc.dcc.repository.gdc.core;
 
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAccess;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalysisId;
+import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalysisWorkflowType;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseId;
+import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCases;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getDataCategory;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getDataFormat;
@@ -38,7 +41,6 @@ import static org.icgc.dcc.repository.gdc.util.GDCFiles.getMd5sum;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getUpdatedDatetime;
 
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -46,7 +48,6 @@ import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.ReferenceGenome;
 import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
-import org.icgc.dcc.repository.gdc.util.GDCFiles;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -80,7 +81,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
   }
 
   public Stream<RepositoryFile> process(Stream<ObjectNode> files) {
-    return files.map(file -> createFile(file));
+    return files.map(this::createFile);
   }
 
   private RepositoryFile createFile(ObjectNode file) {
@@ -126,7 +127,8 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     for (val indexFile : getIndexFiles(file)) {
       val indexFileId = getIndexFileId(indexFile);
       fileCopy.getIndexFile()
-          .setId(context.ensureFileId(indexFileId))
+          .setId("FI" + indexFileId) // TODO: Enable this when business key is defined
+                                     // .setId(context.ensureFileId(indexFileId))
           .setObjectId(null) // N/A
           .setRepoFileId(indexFileId)
           .setFileName(getIndexFileName(indexFile))
@@ -137,6 +139,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
     for (val caze : getCases(file)) {
       gdcFile.addDonor()
+          .setDonorId(getCaseId(caze)) // Set this here for now as it is needed by the combiner
           .setSubmittedDonorId(getCaseId(caze))
           .setProjectCode(resolveProjectCode(caze));
     }
@@ -144,8 +147,8 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     return gdcFile;
   }
 
-  private static String resolveProjectCode(@NonNull JsonNode caze) {
-    return GDCFiles.getCaseProjectId(caze);
+  private static String resolveAnalysisType(@NonNull ObjectNode file) {
+    return getAnalysisWorkflowType(file);
   }
 
   private static String resolveDataBundleId(@NonNull ObjectNode file) {
@@ -156,15 +159,15 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     return getDataCategory(file) + " " + getDataType(file);
   }
 
-  private static String resolveAnalysisType(@NonNull ObjectNode file) {
-    return GDCFiles.getAnalysisWorkflowType(file);
-  }
-
   private static Long resolveLastModified(@NonNull ObjectNode file) {
     val text = getUpdatedDatetime(file);
-    val accessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(text);
+    val temporal = ISO_OFFSET_DATE_TIME.parse(text);
 
-    return Instant.from(accessor).getEpochSecond();
+    return Instant.from(temporal).getEpochSecond();
+  }
+
+  private static String resolveProjectCode(@NonNull JsonNode caze) {
+    return getCaseProjectId(caze);
   }
 
 }

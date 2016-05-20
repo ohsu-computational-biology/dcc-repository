@@ -15,48 +15,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.gdc.util;
+package org.icgc.dcc.repository.gdc.reader;
 
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectId;
+import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCases;
 
-import java.util.List;
-
-import org.icgc.dcc.common.core.json.Jackson;
-import org.icgc.dcc.repository.gdc.util.GDCClient.Query;
+import org.icgc.dcc.repository.gdc.util.GDCClient;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.Sets;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Ignore("For development only")
-public class GDCClientTest {
+public class GDCFileReaderTest {
 
   @Test
-  public void getFiles() {
-    val client = new GDCClient();
-    val expands = getExpand(client.getFilesMapping());
-    val query = Query.builder().filters(object()
-        .with("op", "in")
-        .with("content",
-            object()
-                .with("field", "cases.project.project_id")
-                .with("value", array("TCGA-LAML")))
-        .end()).expands(expands).size(1).from(1).build();
+  public void testReadFiles() {
+    val reader = createReader();
+    val files = reader.readFiles();
 
-    val files = client.getFilesPage(query);
+    val projectCodes = Sets.<String> newTreeSet();
     for (val file : files) {
       log.info(" - {}", file);
+
+      for (val caze : getCases(file)) {
+        val projectCode = getCaseProjectId(caze);
+        projectCodes.add(projectCode);
+      }
     }
+
+    log.info("{}", projectCodes);
   }
 
-  private static List<String> getExpand(JsonNode mapping) {
-    return Jackson.from((ArrayNode) (mapping.get("expand")), String.class);
+  private GDCFileReader createReader() {
+    return new GDCFileReader(new GDCClient());
   }
 
 }

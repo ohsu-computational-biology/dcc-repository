@@ -28,6 +28,7 @@ import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.gdc.core.GDCFileProcessor;
+import org.icgc.dcc.repository.gdc.reader.GDCFileReader;
 import org.icgc.dcc.repository.gdc.util.GDCClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,6 +38,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * Imports files from GDC.
  */
 @Slf4j
 public class GDCImporter extends GenericRepositorySourceFileImporter {
@@ -56,7 +58,7 @@ public class GDCImporter extends GenericRepositorySourceFileImporter {
   }
 
   private List<ObjectNode> readFiles(GDCClient client) {
-    return client.getFiles();
+    return new GDCFileReader(client).readFiles();
   }
 
   private Stream<RepositoryFile> processFiles(Stream<ObjectNode> files) {

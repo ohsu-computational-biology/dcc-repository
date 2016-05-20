@@ -17,12 +17,11 @@
  */
 package org.icgc.dcc.repository.gdc.util;
 
+import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
-import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 
 import java.net.HttpURLConnection;
@@ -35,19 +34,21 @@ import javax.net.ssl.HttpsURLConnection;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * http
- * 'https://gdc-api.nci.nih.gov/files?size=1&expand=cases&filter={“op”:”in”,”content”:{“field”:”program”,”value":[TCGA]}
- * }'
+ * GDC API client wrapper.
  * 
  * @see https://gdc-docs.nci.nih.gov/API/Users_Guide/Search_and_Retrieval/#files-endpoint
  */
@@ -59,15 +60,12 @@ public class GDCClient {
    * Constants
    */
   private static final String DEFAULT_API_URL = "https://gdc-api.nci.nih.gov";
+  private static final int DEFAULT_PAGE_SIZE = 500;
 
   private static final int MAX_ATTEMPTS = 10;
   private static final int READ_TIMEOUT = (int) SECONDS.toMillis(60);
-  private static final String APPLICATION_JSON = "application/json";
 
-  private static final List<String> ICGC_PROGRAMS = ImmutableList.of("TCGA", "TARGET");
-  private static final int PAGE_SIZE = 5000;
-  private static final String FIELD_NAMES =
-      "access,state,file_name,data_type,data_category,md5sum,updated_datetime,data_format,file_size,file_id,platform,annotations.annotation_id,archive.archive_id,experimental_strategy,center.name,submitter_id,cases.case_id,cases.project.project_id,cases.project.name,index_files.file_id,index_files.data_format,index_files.file_size,index_files.file_name,index_files.md5sum,index_files.updated_datetime,analysis.workflow_type,analysis.analysis_id,analysis.updated_datetime";
+  private static final String APPLICATION_JSON = "application/json";
 
   public GDCClient() {
     this(DEFAULT_API_URL);
@@ -84,42 +82,66 @@ public class GDCClient {
   }
 
   public List<ObjectNode> getFiles() {
-    return getFiles(ImmutableList.of());
+    return getFiles(Query.builder().build());
   }
 
-  public List<ObjectNode> getFiles(@NonNull List<String> expand) {
-    return getFiles(expand, PAGE_SIZE, 1);
-  }
-
-  public List<ObjectNode> getFiles(@NonNull List<String> expand, int size, int from) {
+  public List<ObjectNode> getFiles(@NonNull Query query) {
     Pagination pagination = null;
-
+  
     val results = ImmutableList.<ObjectNode> builder();
+  
+    int from = query.getFrom();
+    int size = query.getSize();
+  
     do {
-      val response = readFiles(expand, size, from);
+      val response = readFiles(query, size, from);
       val hits = getHits(response);
       pagination = getPagination(response);
       log.info("{}", pagination);
-
+  
       for (val hit : hits) {
         results.add((ObjectNode) hit);
       }
-
+  
       from += size;
     } while (pagination.getPage() < pagination.getPages());
-
+  
     val files = results.build();
     checkState(pagination.getTotal() == files.size(),
         "Pagination size (%s) not equal to files size (%s). There is a either a logic error or new files have been added while iterating",
         pagination.getCount(), files.size());
-
+  
     return files;
   }
 
-  private JsonNode readFiles(@NonNull List<String> expand, int size, int from) {
-    val filters = createFilter(ICGC_PROGRAMS);
-    val request = "/files?size=" + size + "&from=" + from + "&fields=" + FIELD_NAMES + "&filters=" + filters
-        + (expand.isEmpty() ? "" : "&expand=" + COMMA.join(expand));
+  public List<ObjectNode> getFilesPage(@NonNull Query query) {
+    val response = readFiles(query, query.getSize(), query.getFrom());
+    val hits = getHits(response);
+
+    val results = ImmutableList.<ObjectNode> builder();
+    for (val hit : hits) {
+      results.add((ObjectNode) hit);
+    }
+
+    return results.build();
+  }
+
+  private JsonNode readFiles(Query query, int size, int from) {
+    val params = Maps.<String, Object> newLinkedHashMap();
+
+    params.put("size", size);
+    params.put("from", from);
+    if (query.getFields() != null) {
+      params.put("fields", COMMA.join(query.getFields()));
+    }
+    if (query.getFilters() != null) {
+      params.put("filters", query.getFilters());
+    }
+    if (query.getExpands() != null) {
+      params.put("expand", COMMA.join(query.getExpands()));
+    }
+
+    val request = "/files" + "?" + Joiner.on('&').withKeyValueSeparator("=").join(params);
 
     int attempts = 0;
     while (++attempts <= MAX_ATTEMPTS) {
@@ -145,21 +167,11 @@ public class GDCClient {
     return readResponse(connection);
   }
 
-  private static ObjectNode createFilter(List<String> programs) {
-    return object()
-        .with("op", "in")
-        .with("content",
-            object()
-                .with("field", "cases.project.program.name")
-                .with("value", array().with(programs)))
-        .end();
-  }
-
   @SneakyThrows
   private HttpURLConnection openConnection(String path) throws SocketTimeoutException {
     val request = new URL(url + path);
 
-    log.info("Request: {}", request);
+    log.debug("Request: {}", request);
     val connection = (HttpsURLConnection) request.openConnection();
     connection.setRequestProperty(ACCEPT, APPLICATION_JSON);
     connection.setReadTimeout(READ_TIMEOUT);
@@ -186,6 +198,27 @@ public class GDCClient {
 
   private static Pagination getPagination(JsonNode response) {
     return DEFAULT.convertValue(response.path("data").path("pagination"), Pagination.class);
+  }
+
+  @Value
+  @Builder
+  public static class Query {
+
+    Integer from;
+    Integer size;
+
+    ObjectNode filters;
+    List<String> expands;
+    List<String> fields;
+
+    public Integer getFrom() {
+      return firstNonNull(from, 1);
+    }
+
+    public Integer getSize() {
+      return firstNonNull(size, DEFAULT_PAGE_SIZE);
+    }
+
   }
 
   @Data

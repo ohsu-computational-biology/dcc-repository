@@ -17,21 +17,20 @@
  */
 package org.icgc.dcc.repository.gdc;
 
-import static org.icgc.dcc.common.core.json.Jackson.from;
-import static org.icgc.dcc.common.core.util.Formats.formatCount;
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.repository.core.model.RepositoryServers.getGDCServer;
 import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
+import org.icgc.dcc.repository.gdc.core.GDCFileProcessor;
 import org.icgc.dcc.repository.gdc.util.GDCClient;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.SneakyThrows;
 import lombok.val;
@@ -49,21 +48,19 @@ public class GDCImporter extends GenericRepositorySourceFileImporter {
   @Override
   @SneakyThrows
   protected Iterable<RepositoryFile> readFiles() {
-    val watch = Stopwatch.createStarted();
-    log.info("Reading files...");
     val client = new GDCClient();
-    val mapping = client.getFilesMapping();
+    val files = readFiles(client);
+    val results = processFiles(files.stream());
 
-    val expand = getExpand(mapping);
-    val files = client.getFiles(expand, 1, 1);
-    log.info("Finished {} reading files in {}", formatCount(files), watch);
-    log.info("{}", files);
-
-    return ImmutableList.of();
+    return results.collect(toList());
   }
 
-  private static List<String> getExpand(JsonNode mapping) {
-    return from((ArrayNode) (mapping.get("expand")), String.class);
+  private List<ObjectNode> readFiles(GDCClient client) {
+    return client.getFiles();
+  }
+
+  private Stream<RepositoryFile> processFiles(Stream<ObjectNode> files) {
+    return new GDCFileProcessor(context, getGDCServer()).process(files);
   }
 
 }

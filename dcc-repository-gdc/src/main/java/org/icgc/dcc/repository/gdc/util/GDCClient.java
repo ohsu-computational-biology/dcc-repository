@@ -64,8 +64,10 @@ public class GDCClient {
   private static final int READ_TIMEOUT = (int) SECONDS.toMillis(60);
   private static final String APPLICATION_JSON = "application/json";
 
-  private static final String TCGA_PROGRAM = "TCGA";
-  private static final int PAGE_SIZE = 200;
+  private static final List<String> ICGC_PROGRAMS = ImmutableList.of("TCGA", "TARGET");
+  private static final int PAGE_SIZE = 5000;
+  private static final String FIELD_NAMES =
+      "access,state,file_name,data_type,data_category,md5sum,updated_datetime,data_format,file_size,file_id,platform,annotations.annotation_id,archive.archive_id,experimental_strategy,center.name,submitter_id,cases.case_id,cases.project.project_id,cases.project.name,index_files.file_id,index_files.data_format,index_files.file_size,index_files.file_name,index_files.md5sum,index_files.updated_datetime,analysis.workflow_type,analysis.analysis_id,analysis.updated_datetime";
 
   public GDCClient() {
     this(DEFAULT_API_URL);
@@ -115,8 +117,9 @@ public class GDCClient {
   }
 
   private JsonNode readFiles(@NonNull List<String> expand, int size, int from) {
-    val filters = createFilter(TCGA_PROGRAM);
-    val request = "/files?size=" + size + "&from=" + from + "&filters=" + filters + "&expand=" + COMMA.join(expand);
+    val filters = createFilter(ICGC_PROGRAMS);
+    val request = "/files?size=" + size + "&from=" + from + "&fields=" + FIELD_NAMES + "&filters=" + filters
+        + (expand.isEmpty() ? "" : "&expand=" + COMMA.join(expand));
 
     int attempts = 0;
     while (++attempts <= MAX_ATTEMPTS) {
@@ -142,13 +145,13 @@ public class GDCClient {
     return readResponse(connection);
   }
 
-  private static ObjectNode createFilter(String program) {
+  private static ObjectNode createFilter(List<String> programs) {
     return object()
         .with("op", "in")
         .with("content",
             object()
                 .with("field", "cases.project.program.name")
-                .with("value", array(program)))
+                .with("value", array().with(programs)))
         .end();
   }
 

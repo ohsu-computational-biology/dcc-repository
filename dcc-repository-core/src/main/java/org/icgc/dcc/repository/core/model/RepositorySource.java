@@ -33,13 +33,13 @@ import lombok.experimental.Accessors;
 @RequiredArgsConstructor(access = PRIVATE)
 public enum RepositorySource implements Identifiable {
 
+  AWS("AWS"),
   CGHUB("CGHub"),
+  COLLAB("Collaboratory"),
   EGA("EGA"),
   GDC("GDC"),
-  TCGA("TCGA"),
   PCAWG("PCAWG"),
-  AWS("AWS"),
-  COLLAB("Collaboratory");
+  TCGA("TCGA");
 
   @Getter
   @NonNull

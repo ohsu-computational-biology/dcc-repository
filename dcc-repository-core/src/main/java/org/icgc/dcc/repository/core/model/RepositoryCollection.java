@@ -32,6 +32,7 @@ public enum RepositoryCollection implements Identifiable {
   FILE("File", null),
   EGA_FILE("EGAFile", RepositorySource.EGA),
   CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
+  GDC_FILE("GDCFile", RepositorySource.GDC),
   TCGA_FILE("TCGAFile", RepositorySource.TCGA),
   PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
   AWS_FILE("AWSFile", RepositorySource.AWS),

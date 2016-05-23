@@ -166,7 +166,7 @@ public class EGAClient {
         val response = readResponse(connection);
         val code = getCode(response);
 
-        if ((isSessionExpired(code) /* || isNotAuthorized(code) */) && reconnect) {
+        if ((isSessionExpired(code) || isNotAuthorized(code)) && reconnect) {
           log.warn("Lost session, reconnecting... {}", response);
           reconnectCount++;
           login();
@@ -222,7 +222,6 @@ public class EGAClient {
     return code == HTTP_OK;
   }
 
-  @SuppressWarnings("unused")
   private static boolean isNotAuthorized(int code) {
     return code == 401;
   }

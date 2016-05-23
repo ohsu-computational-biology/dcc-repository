@@ -17,12 +17,14 @@
  */
 package org.icgc.dcc.repository.gdc.core;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAccess;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalysisId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalysisWorkflowType;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectId;
+import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectName;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCases;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getDataCategory;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getDataFormat;
@@ -42,6 +44,7 @@ import static org.icgc.dcc.repository.gdc.util.GDCFiles.getUpdatedDatetime;
 import static org.icgc.dcc.repository.gdc.util.GDCProjects.getProjectCode;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -52,6 +55,7 @@ import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 
 import lombok.NonNull;
 import lombok.val;
@@ -88,7 +92,8 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
   private RepositoryFile createFile(ObjectNode file) {
     val fileId = getFileId(file);
     val gdcFile = new RepositoryFile()
-        .setId("FI" + fileId) // TODO: Enable this when business key is defined .setId(context.ensureFileId(fileId))
+        .setId("FI-TODO") // TODO: Enable this when business key is defined .setId(context.ensureFileId(fileId))
+        .setStudy(resolveStudies(file))
         .setObjectId(null);
 
     gdcFile.setAccess(getAccess(file));
@@ -128,8 +133,8 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     for (val indexFile : getIndexFiles(file)) {
       val indexFileId = getIndexFileId(indexFile);
       fileCopy.getIndexFile()
-          .setId("FI" + indexFileId) // TODO: Enable this when business key is defined
-                                     // .setId(context.ensureFileId(indexFileId))
+          .setId("FI-TODO") // TODO: Enable this when business key is defined
+                            // .setId(context.ensureFileId(indexFileId))
           .setObjectId(null) // N/A
           .setRepoFileId(indexFileId)
           .setFileName(getIndexFileName(indexFile))
@@ -146,6 +151,15 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     }
 
     return gdcFile;
+  }
+
+  private static List<String> resolveStudies(@NonNull ObjectNode file) {
+    val values = Sets.<String> newLinkedHashSet();
+    for (val caze : getCases(file)) {
+      values.add(getCaseProjectName(caze));
+    }
+
+    return newArrayList(values);
   }
 
   private static String resolveAnalysisType(@NonNull ObjectNode file) {

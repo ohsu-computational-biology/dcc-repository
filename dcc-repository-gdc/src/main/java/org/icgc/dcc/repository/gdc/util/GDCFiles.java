@@ -118,4 +118,8 @@ public final class GDCFiles {
     return getCaseProject(caze).path("project_id").textValue();
   }
 
+  public static String getCaseProjectName(JsonNode caze) {
+    return getCaseProject(caze).path("name").textValue();
+  }
+
 }

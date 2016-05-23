@@ -18,15 +18,14 @@
 package org.icgc.dcc.repository.client.core;
 
 import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.function.Predicates.distinctByKey;
 import static org.icgc.dcc.repository.core.util.RepositoryFiles.inPCAWGOrder;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -154,11 +153,6 @@ public class RepositoryFileCombiner {
 
   private static <T> List<T> getAll(Collection<RepositoryFile> files, Function<RepositoryFile, List<T>> getter) {
     return files.stream().flatMap(file -> getter.apply(file).stream()).collect(toList());
-  }
-
-  private static <T> Predicate<T> distinctByKey(@NonNull Function<? super T, Object> keyExtractor) {
-    val seen = new ConcurrentHashMap<Object, Boolean>();
-    return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
   }
 
 }

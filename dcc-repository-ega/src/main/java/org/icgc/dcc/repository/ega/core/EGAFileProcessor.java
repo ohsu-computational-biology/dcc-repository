@@ -18,8 +18,14 @@
 package org.icgc.dcc.repository.ega.core;
 
 import static com.google.common.collect.Iterables.getFirst;
+import static com.google.common.io.Files.getNameWithoutExtension;
 import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 import static java.util.Collections.singletonList;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
+import static org.icgc.dcc.repository.ega.util.EGAAnalyses.getAnalysisChecksum;
+import static org.icgc.dcc.repository.ega.util.EGAAnalyses.getAnalysisFile;
+import static org.icgc.dcc.repository.ega.util.EGAAnalyses.getAnalysisFileName;
+import static org.icgc.dcc.repository.ega.util.EGAAnalyses.getAnalysisFileType;
 import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingDataSetId;
 import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingFileId;
 import static org.icgc.dcc.repository.ega.util.EGAMappings.getMappingFileName;
@@ -30,12 +36,11 @@ import static org.icgc.dcc.repository.ega.util.EGARuns.getRunFile;
 import static org.icgc.dcc.repository.ega.util.EGARuns.getRunFileName;
 import static org.icgc.dcc.repository.ega.util.EGARuns.getRunFileType;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Set;
 import java.util.stream.Stream;
 
-import org.icgc.dcc.common.core.util.Formats;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
@@ -55,14 +60,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EGAFileProcessor extends RepositoryFileProcessor {
 
-  public static Set<String> formats = Sets.newTreeSet();
-  public static int count = 0;
-
   /**
    * Metadata.
    */
   @NonNull
   private final RepositoryServer egaServer;
+
+  /**
+   * State.
+   */
+  private int count = 0;
 
   public EGAFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer egaServer) {
     super(context);
@@ -74,7 +81,8 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   }
 
   private Stream<RepositoryFile> createFiles(EGAMetadata metadata) {
-    return metadata.getFiles().stream().map(file -> createFile(metadata, file));
+    log.info("Processing dataset {}", metadata.getDatasetId());
+    return metadata.getFiles().stream().map(file -> createFile(metadata, file)).filter(file -> file != null);
   }
 
   private RepositoryFile createFile(EGAMetadata metadata, ObjectNode file) {
@@ -88,7 +96,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
         .setRepoFileId(getMappingFileId(file))
         .setRepoDataSetId(getMappingDataSetId(file))
         .setFileSize(getMappingFileSize(file))
-        .setFileName(null) // Set from run
+        .setFileName(null) // Set from run/analysis later on
         .setRepoType(egaServer.getType().getId())
         .setRepoOrg(egaServer.getSource().getId())
         .setRepoName(egaServer.getName())
@@ -100,40 +108,92 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
 
     updateFileCopy(fileCopy, getMappingFileName(file), metadata);
 
+    if (fileCopy.getFileName() == null) {
+      return null;
+    }
+
     egaFile.addDonor()
-        .setProjectCode(getFirst(metadata.getProjectCodes(), null));
+        .setProjectCode(getFirst(metadata.getProjectCodes(), null))
+        .setSubmittedSampleId(resolveSubmittedSampleId(metadata, fileCopy.getRepoFileId()));
 
-    val fileFormat = egaFile.getFileCopies().get(0).getFileFormat();
-    formats.add(fileFormat == null ? "<empty>" : fileFormat);
-
-    log.info("[{}] formats: {}", Formats.formatCount(++count), formats);
+    if (++count % 1000 == 0) {
+      log.info("Processed {} files", formatCount(count));
+    }
 
     return egaFile;
   }
 
   private void updateFileCopy(FileCopy fileCopy, String fileName, EGAMetadata metadata) {
+    // First try runs
+    val runFileNames = Sets.<String> newHashSet();
+    {
+      val runs = metadata.getMetadata().getRuns().values();
+      for (val run : runs) {
+        val files = resolveRunFiles(run);
 
-    for (val root : metadata.getMetadata().getRuns().values()) {
-      val files = resolveRunFiles(root);
-      for (val file : files) {
-        val match = resolveFileFormat(fileName).contains(getRunFileName(file));
-        if (match) {
-          fileCopy
-              .setFileName(getRunFileName(file))
-              .setFileFormat(resolveFileFormat(getRunFileType(file)))
-              .setFileMd5sum(getRunChecksum(file))
-              .setLastModified(resolveLastModified(getRunDate(root)));
+        for (val file : files) {
+          val runFile = new File(getRunFileName(file));
+          val runFileName = runFile.getName();
+          runFileNames.add(runFileName);
+
+          if (isFileNameMatch(fileName, runFileName)) {
+            fileCopy
+                .setFileName(runFileName)
+                .setFileFormat(resolveFileFormat(getRunFileType(file)))
+                .setFileMd5sum(getRunChecksum(file))
+                .setLastModified(resolveLastModified(getRunDate(run)));
+
+            return;
+          }
         }
       }
     }
+
+    // Next try analysis
+    val analysisFileNames = Sets.<String> newHashSet();
+    {
+      val analyses = metadata.getMetadata().getAnalysis().values();
+      for (val analysis : analyses) {
+        val files = resolveAnalysisFiles(analysis);
+
+        for (val file : files) {
+          val analysisFile = new File(getAnalysisFileName(file));
+          val analysisFileName = analysisFile.getName();
+          analysisFileNames.add(analysisFileName);
+
+          if (isFileNameMatch(fileName, analysisFileName)) {
+            fileCopy
+                .setFileName(analysisFileName)
+                .setFileFormat(resolveFileFormat(getAnalysisFileType(file)))
+                .setFileMd5sum(getAnalysisChecksum(file))
+                .setLastModified(null); // TODO
+
+            return;
+          }
+        }
+      }
+    }
+
+    log.warn("No match for file {} in dataset {} (array-based?: {}) with run file names: {}, analysis file names: {}",
+        fileName, metadata.getDatasetId(), isArrayBased(metadata.getDatasetId()), runFileNames, analysisFileNames);
   }
 
   private static String resolveFileFormat(String fileType) {
+    // See http://www.ncbi.nlm.nih.gov/books/NBK47538/#_SRA_DataBlock_BK_sec3_
     if ("bam".equals(fileType)) {
       return FileFormat.BAM;
     }
     if ("fastq".equals(fileType)) {
       return FileFormat.FASTQ;
+    }
+    if ("srf".equals(fileType)) {
+      return FileFormat.SRF;
+    }
+    if ("cram".equals(fileType)) {
+      return FileFormat.CRAM;
+    }
+    if ("vcf".equals(fileType)) {
+      return FileFormat.VCF;
     }
 
     return fileType;
@@ -145,13 +205,70 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
     }
 
     val dateTime = LocalDateTime.parse(resolveFileFormat(runDate), ISO_DATE_TIME);
-    val egaTimeZone = ZoneId.of("Europe/London");
+
+    // EGA location is Barcelona. This is the closet zone id (I could find)
+    val egaTimeZone = ZoneId.of("Europe/Madrid");
     return dateTime.atZone(egaTimeZone).toInstant().toEpochMilli();
   }
 
   private static Iterable<JsonNode> resolveRunFiles(JsonNode root) {
     val values = getRunFile(root);
     return values.isArray() ? values : singletonList(values);
+  }
+
+  private static Iterable<JsonNode> resolveAnalysisFiles(JsonNode root) {
+    val values = getAnalysisFile(root);
+    return values.isArray() ? values : singletonList(values);
+  }
+
+  private static String resolveSubmittedSampleId(EGAMetadata metadata, String repoFileId) {
+    try {
+      return metadata
+          .getMetadata()
+          .getMappings()
+          .get("Sample_File").stream()
+          .filter(record -> record.get("FILE_ACCESSION").textValue().equals(repoFileId))
+          .findFirst().get()
+          .path("SAMPLE_ALIAS").textValue();
+    } catch (Exception e) {
+      log.warn("Could not resolve submitted sample id for file {} in dataset {}", repoFileId, metadata.getDatasetId());
+      return null;
+    }
+  }
+
+  private static boolean isFileNameMatch(String f1, String f2) {
+    // Remove paths
+    val x1 = new File(f1).getName();
+    val y1 = new File(f2).getName();
+
+    // Remove extension
+    val x2 = getNameWithoutExtension(x1);
+    val y2 = getNameWithoutExtension(y1);
+
+    return x1.startsWith(y1)
+        || x1.startsWith(y2)
+        || x2.startsWith(y1)
+        || x2.startsWith(y2)
+
+        || y1.startsWith(x1)
+        || y1.startsWith(x2)
+        || y2.startsWith(x1)
+        || y2.startsWith(x2);
+  }
+
+  /**
+   * Note that AF datasets (containing Array-based files) do not have metadata associated. The EGA only provides the
+   * files (normally the metadata is included in these files) for this kind of datasets at the moment.
+   * 
+   * This is also the case for datasets mentioned in your ticket #528548: EGAD00010000915, EGAD00010000916,
+   * EGAD00010000917
+   * 
+   * Let me share a tip for you to spot the AF datasets (with no metadata associated). EGAD0001* datasets are AF whilst
+   * EGAD00001* datasets are sequence/analysis datasets (e.g. https://ega-archive.org/datasets/EGAD00010000238 vs
+   * https://ega-archive.org/datasets/EGAD00001002016).
+   */
+  private static boolean isArrayBased(String datasetId) {
+    return datasetId.startsWith("EGAD0001");
   }
 
 }

@@ -245,6 +245,8 @@ public class RepositoryFile {
     public final String XML = "XML";
     public final String VCF = "VCF";
     public final String FASTQ = "FASTQ";
+    public final String CRAM = "CRAM";
+    public final String SRF = "SRF";
 
   }
 

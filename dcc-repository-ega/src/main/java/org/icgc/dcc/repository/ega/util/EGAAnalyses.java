@@ -15,63 +15,35 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.ega.reader;
+package org.icgc.dcc.repository.ega.util;
 
-import static com.google.common.collect.Sets.newTreeSet;
-import static org.icgc.dcc.repository.ega.util.EGAProjectDatasets.getDatasetProjectCodes;
+import static lombok.AccessLevel.PRIVATE;
 
-import java.util.stream.Stream;
+import com.fasterxml.jackson.databind.JsonNode;
 
-import org.icgc.dcc.repository.ega.model.EGAMetadata;
-import org.icgc.dcc.repository.ega.model.EGAMetadataArchive;
-import org.icgc.dcc.repository.ega.util.EGAClient;
+import lombok.NoArgsConstructor;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+@NoArgsConstructor(access = PRIVATE)
+public final class EGAAnalyses {
 
-@Slf4j
-@RequiredArgsConstructor
-public class EGAMetadataReader {
-
-  /**
-   * Dependencies.
-   */
-  @NonNull
-  private final EGAClient client;
-  private final EGAMetadataArchiveReader archiveReader = new EGAMetadataArchiveReader();
-
-  public Stream<EGAMetadata> readMetadata() {
-    val datasetIds = client.getDatasetIds();
-    val effectiveDatasetIds = newTreeSet(datasetIds);
-    if (effectiveDatasetIds.size() != datasetIds.size()) {
-      log.warn("Data sets include duplicates: {}", datasetIds);
-    }
-
-    return effectiveDatasetIds.stream().map(this::readDataset).filter(this::isNonNull);
+  public static JsonNode getAnalysis(JsonNode root) {
+    return root.path("ANALYSIS_SET").path("ANALYSIS");
   }
 
-  public EGAMetadata readDataset(String datasetId) {
-    try {
-      val metadata = readArchive(datasetId);
-      val files = client.getFiles(datasetId);
-      val projectCodes = getDatasetProjectCodes(datasetId);
-
-      return new EGAMetadata(datasetId, projectCodes, files, metadata);
-    } catch (Exception e) {
-      log.error("Exception reading dataset " + datasetId, e);
-    }
-
-    return null;
+  public static JsonNode getAnalysisFile(JsonNode root) {
+    return getAnalysis(root).path("FILES").path("FILE");
   }
 
-  private EGAMetadataArchive readArchive(String datasetId) {
-    return archiveReader.read(datasetId);
+  public static String getAnalysisFileType(JsonNode file) {
+    return file.path("filetype").textValue();
   }
 
-  private boolean isNonNull(EGAMetadata metadata) {
-    return metadata != null;
+  public static String getAnalysisFileName(JsonNode file) {
+    return file.path("filename").textValue();
+  }
+
+  public static String getAnalysisChecksum(JsonNode file) {
+    return file.path("checksum").textValue();
   }
 
 }

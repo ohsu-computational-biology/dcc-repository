@@ -19,6 +19,7 @@ package org.icgc.dcc.repository.gdc.core;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAccess;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalysisId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalysisWorkflowType;
@@ -59,12 +60,14 @@ import com.google.common.collect.Sets;
 
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Maps GDC files to ICGC repository file model.
  * 
  * @see https://wiki.oicr.on.ca/pages/viewpage.action?pageId=66946440
  */
+@Slf4j
 public class GDCFileProcessor extends RepositoryFileProcessor {
 
   /**
@@ -80,6 +83,11 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
   @NonNull
   private final RepositoryServer gdcServer;
 
+  /**
+   * State.
+   */
+  private int fileCount = 0;
+
   public GDCFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer gdcServer) {
     super(context);
     this.gdcServer = gdcServer;
@@ -91,8 +99,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
   private RepositoryFile createFile(ObjectNode file) {
     val fileId = getFileId(file);
-    val analysisId = getAnalysisId(file);
-    val objectId = resolveObjectId(analysisId, fileId);
+    val objectId = resolveObjectId(fileId);
 
     val gdcFile = new RepositoryFile()
         .setId(context.ensureFileId(objectId))
@@ -135,7 +142,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
     for (val indexFile : getIndexFiles(file)) {
       val indexFileId = getIndexFileId(indexFile);
-      val indexObjectId = resolveObjectId(analysisId, indexFileId);
+      val indexObjectId = resolveObjectId(indexFileId);
       fileCopy.getIndexFile()
           .setId(context.ensureFileId(indexObjectId))
           .setObjectId(null) // N/A
@@ -144,6 +151,9 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
           .setFileFormat(getIndexDataFormat(indexFile))
           .setFileSize(getIndexFileSize(indexFile))
           .setFileMd5sum(getIndexMd5sum(indexFile));
+
+      // Only one for now
+      break;
     }
 
     for (val caze : getCases(file)) {
@@ -151,6 +161,10 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
           .setDonorId(getCaseId(caze)) // Set this here for now as it is needed by the combiner
           .setSubmittedDonorId(getCaseId(caze))
           .setProjectCode(resolveProjectCode(caze));
+    }
+
+    if (++fileCount % 1000 == 0) {
+      log.info("Processed {} files", formatCount(fileCount));
     }
 
     return gdcFile;

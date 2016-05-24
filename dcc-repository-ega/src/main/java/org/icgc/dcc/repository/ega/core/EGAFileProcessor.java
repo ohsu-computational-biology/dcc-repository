@@ -69,7 +69,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   /**
    * State.
    */
-  private int count = 0;
+  private int fileCount = 0;
 
   public EGAFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer egaServer) {
     super(context);
@@ -116,8 +116,8 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
         .setProjectCode(getFirst(metadata.getProjectCodes(), null))
         .setSubmittedSampleId(resolveSubmittedSampleId(metadata, fileCopy.getRepoFileId()));
 
-    if (++count % 1000 == 0) {
-      log.info("Processed {} files", formatCount(count));
+    if (++fileCount % 1000 == 0) {
+      log.info("Processed {} files", formatCount(fileCount));
     }
 
     return egaFile;

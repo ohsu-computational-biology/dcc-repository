@@ -91,10 +91,13 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
   private RepositoryFile createFile(ObjectNode file) {
     val fileId = getFileId(file);
+    val analysisId = getAnalysisId(file);
+    val objectId = resolveObjectId(analysisId, fileId);
+
     val gdcFile = new RepositoryFile()
-        .setId("FI-TODO") // TODO: Enable this when business key is defined .setId(context.ensureFileId(fileId))
+        .setId(context.ensureFileId(objectId))
         .setStudy(resolveStudies(file))
-        .setObjectId(null);
+        .setObjectId(null); // N/A
 
     gdcFile.setAccess(getAccess(file));
 
@@ -132,9 +135,9 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
     for (val indexFile : getIndexFiles(file)) {
       val indexFileId = getIndexFileId(indexFile);
+      val indexObjectId = resolveObjectId(analysisId, indexFileId);
       fileCopy.getIndexFile()
-          .setId("FI-TODO") // TODO: Enable this when business key is defined
-                            // .setId(context.ensureFileId(indexFileId))
+          .setId(context.ensureFileId(indexObjectId))
           .setObjectId(null) // N/A
           .setRepoFileId(indexFileId)
           .setFileName(getIndexFileName(indexFile))

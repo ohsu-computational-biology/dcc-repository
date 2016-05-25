@@ -53,6 +53,7 @@ public final class RepositoryProjects {
       project().projectCode("BRCA-UK").diseaseCode(null)  .program(null)    .country("United Kingdom").build(),
       project().projectCode("BRCA-US").diseaseCode("BRCA").program("TCGA")  .country("United States").build(),
       project().projectCode("BTCA-SG").diseaseCode(null)  .program(null)    .country("Singapore").build(),
+      project().projectCode("CCSK-US").diseaseCode("CCSK").program("TARGET").country("United States").build(),
       project().projectCode("CESC-US").diseaseCode("CESC").program("TCGA")  .country("United States").build(),
       project().projectCode("CLLE-ES").diseaseCode(null)  .program(null)    .country("Spain").build(),
       project().projectCode("CMDI-UK").diseaseCode(null)  .program(null)    .country("United Kingdom").build(),

@@ -28,13 +28,21 @@ import lombok.NonNull;
 @NoArgsConstructor
 public final class GDCProjects {
 
+  /**
+   * @see https://wiki.oicr.on.ca/pages/viewpage.action?pageId=66946440#
+   * ICGCrepositorymetadataJSONmodelupdatetoaccommodateEGA/GDCintegration-ProjectMapping
+   */
   private static final Map<String, String> PROJECTS = ImmutableMap.<String, String> builder()
-      .put("TARGET-ALL", "ALL-US") // ?
+      // TARGET
+      .put("TARGET-ALL-P1", "ALL-US")
+      .put("TARGET-ALL-P2", "ALL-US")
       .put("TARGET-AML", "AML-US")
-      .put("TARGET-CCSK", "CCSK-US") // ?
+      .put("TARGET-CCSK", "CCSK-US")
       .put("TARGET-NBL", "NBL-US")
       .put("TARGET-RT", "RT-US")
       .put("TARGET-WT", "WT-US")
+
+      // TCGA
       .put("TCGA-BLCA", "BLCA-US")
       .put("TCGA-BRCA", "BRCA-US")
       .put("TCGA-CESC", "CESC-US")
@@ -59,6 +67,7 @@ public final class GDCProjects {
       .put("TCGA-STAD", "STAD-US")
       .put("TCGA-THCA", "THCA-US")
       .put("TCGA-UCEC", "UCEC-US")
+
       .build();
 
   public static Set<String> getProjectsIds() {

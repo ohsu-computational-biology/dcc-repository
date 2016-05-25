@@ -110,16 +110,56 @@ public final class GDCFiles {
     return caze.path("case_id").textValue();
   }
 
-  public static JsonNode getCaseProject(JsonNode caze) {
+  public static JsonNode getCaseProject(@NonNull JsonNode caze) {
     return caze.path("project");
   }
 
-  public static String getCaseProjectId(JsonNode caze) {
+  public static String getCaseProjectId(@NonNull JsonNode caze) {
     return getCaseProject(caze).path("project_id").textValue();
   }
 
-  public static String getCaseProjectName(JsonNode caze) {
+  public static String getCaseProjectPrimarySite(@NonNull JsonNode caze) {
+    return getCaseProject(caze).path("primary_site").textValue();
+  }
+
+  public static String getCaseProjectName(@NonNull JsonNode caze) {
     return getCaseProject(caze).path("name").textValue();
+  }
+
+  public static JsonNode getCaseSamples(@NonNull JsonNode caze) {
+    return caze.path("samples");
+  }
+
+  public static String getCaseSampleId(@NonNull JsonNode caseSample) {
+    return caseSample.path("sample_id").textValue();
+  }
+
+  public static String getCaseSampleType(@NonNull JsonNode caseSample) {
+    return caseSample.path("sample_type").textValue();
+  }
+
+  public static String getSampleSubmitterId(@NonNull JsonNode sample) {
+    return sample.get("submitter_id").textValue();
+  }
+
+  public static JsonNode getSamplePortions(@NonNull JsonNode sample) {
+    return sample.path("portions");
+  }
+
+  public static JsonNode getPortionAnalytes(@NonNull JsonNode portion) {
+    return portion.path("analytes");
+  }
+
+  public static JsonNode getAnalyteAliquots(@NonNull JsonNode analyte) {
+    return analyte.path("aliquots");
+  }
+
+  public static String getAliquotId(@NonNull JsonNode aliquot) {
+    return aliquot.path("aliquot_id").textValue();
+  }
+
+  public static String getAliquotSubmitterId(@NonNull JsonNode aliquot) {
+    return aliquot.path("submitter_id").textValue();
   }
 
 }

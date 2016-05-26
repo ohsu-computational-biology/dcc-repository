@@ -28,8 +28,8 @@ import lombok.val;
 
 public class PDCBucketReader extends CloudS3BucketReader {
 
-  public PDCBucketReader(String prefix, AmazonS3 s3) {
-    super("" /* Not used */, prefix, s3);
+  public PDCBucketReader(AmazonS3 s3) {
+    super("" /* Not used */, "" /* Not used */, s3);
   }
 
   @Override
@@ -37,7 +37,7 @@ public class PDCBucketReader extends CloudS3BucketReader {
     val bucketNames = ImmutableSet.<String> builder();
 
     for (val bucketBucket : s3.listBuckets()) {
-      if (bucketBucket.getName().startsWith(prefix)) {
+      if (bucketBucket.getName().startsWith("pcawg")) {
         bucketNames.add(bucketBucket.getName());
       }
     }

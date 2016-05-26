@@ -39,11 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PDCImporter extends GenericRepositorySourceFileImporter {
 
-  /**
-   * Constants.
-   */
-  private static final String BUCKET_NAME_PREFIX = "pcawg.";
-
   public PDCImporter(@NonNull RepositoryFileContext context) {
     super(PDC, context, log);
   }
@@ -63,7 +58,7 @@ public class PDCImporter extends GenericRepositorySourceFileImporter {
 
   private List<S3ObjectSummary> readObjectSummaries() {
     val s3 = AWSClientFactory.createS3Client();
-    val bucketReader = new PDCBucketReader(BUCKET_NAME_PREFIX, s3);
+    val bucketReader = new PDCBucketReader(s3);
     return bucketReader.readSummaries();
   }
 

@@ -17,7 +17,10 @@
  */
 package org.icgc.dcc.repository.core.model;
 
+import static com.google.common.base.Preconditions.checkState;
 import static lombok.AccessLevel.PRIVATE;
+
+import java.util.Arrays;
 
 import org.icgc.dcc.common.core.model.Identifiable;
 
@@ -33,6 +36,7 @@ public enum RepositoryCollection implements Identifiable {
   EGA_FILE("EGAFile", RepositorySource.EGA),
   CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
   GDC_FILE("GDCFile", RepositorySource.GDC),
+  PDC_FILE("PDCFile", RepositorySource.PDC),
   TCGA_FILE("TCGAFile", RepositorySource.TCGA),
   PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
   AWS_FILE("AWSFile", RepositorySource.AWS),
@@ -51,6 +55,9 @@ public enum RepositoryCollection implements Identifiable {
         return value;
       }
     }
+
+    checkState(false, "Could not find collection for repository source %s. Possible values are: %s",
+        source, Arrays.toString(values()));
 
     return null;
   }

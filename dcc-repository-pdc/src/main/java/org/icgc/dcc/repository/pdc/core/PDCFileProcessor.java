@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.repository.pdc.core;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -28,7 +30,9 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import lombok.NonNull;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PDCFileProcessor extends RepositoryFileProcessor {
 
   /**
@@ -43,11 +47,11 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
   }
 
   public Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
-    return () -> objectSummaries.stream().map(this::createFile).iterator();
+    return objectSummaries.stream().map(this::createFile).collect(toList());
   }
 
   private RepositoryFile createFile(S3ObjectSummary objectSummary) {
-    val objectId = objectSummary.getKey();
+    val objectId = resolveObjectId(objectSummary);
 
     val objectFile = new RepositoryFile()
         .setId(context.ensureFileId(objectId))
@@ -66,6 +70,18 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
         .setRepoDataPath(objectSummary.getBucketName() + server.getType().getDataPath() + objectId);
 
     return objectFile;
+  }
+
+  private static String resolveObjectId(S3ObjectSummary objectSummary) {
+    val key = objectSummary.getKey();
+
+    // TODO: Remove. Only for development
+    if (key.equals("testfile")) {
+      log.warn("*** TEMP: mapping!!!!");
+      return "9320a69f-296d-5967-a816-3f53d986f59a";
+    }
+
+    return key;
   }
 
 }

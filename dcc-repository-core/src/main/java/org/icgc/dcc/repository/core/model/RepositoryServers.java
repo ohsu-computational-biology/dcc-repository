@@ -25,10 +25,12 @@ import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
 import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
+import static org.icgc.dcc.repository.core.model.RepositorySource.PDC;
 import static org.icgc.dcc.repository.core.model.RepositorySource.TCGA;
 import static org.icgc.dcc.repository.core.model.RepositoryType.EGA_ARCHIVE;
 import static org.icgc.dcc.repository.core.model.RepositoryType.GDC_ARCHIVE;
 import static org.icgc.dcc.repository.core.model.RepositoryType.GNOS;
+import static org.icgc.dcc.repository.core.model.RepositoryType.PDC_S3;
 import static org.icgc.dcc.repository.core.model.RepositoryType.S3;
 import static org.icgc.dcc.repository.core.model.RepositoryType.WEB_ARCHIVE;
 
@@ -49,6 +51,7 @@ public final class RepositoryServers {
     public static final String CGHUB = "cghub";
     public static final String EGA = "ega";
     public static final String GDC = "gdc";
+    public static final String PDC = "pdc";
     public static final String TCGA = "tcga";
     public static final String PCAWG_BARCELONA = "pcawg-barcelona";
     public static final String PCAWG_CGHUB = "pcawg-cghub";
@@ -67,6 +70,7 @@ public final class RepositoryServers {
   public static final List<RepositoryServer> SERVERS = ImmutableList.of(
       server().source(EGA)   .type(EGA_ARCHIVE).name("EGA - Hinxton")          .code(RepositoryCodes.EGA)               .country("UK").baseUrl("http://ega.ebi.ac.uk/ega/").build(),
       server().source(GDC)   .type(GDC_ARCHIVE).name("GDC - Chicago")          .code(RepositoryCodes.GDC)               .country("US").baseUrl("https://gdc-api.nci.nih.gov/").build(),
+      server().source(PDC)   .type(PDC_S3)     .name("PDC - Chicago")          .code(RepositoryCodes.PDC)               .country("US").baseUrl("https://bionimbus-objstore.opensciencedatacloud.org/").build(),
       server().source(TCGA)  .type(WEB_ARCHIVE).name("TCGA DCC - Bethesda")    .code(RepositoryCodes.TCGA)              .country("US").baseUrl("https://tcga-data.nci.nih.gov/").build(),
       server().source(CGHUB) .type(GNOS)       .name("CGHub - Santa Cruz")     .code(RepositoryCodes.CGHUB)             .country("US").baseUrl("https://cghub.ucsc.edu/").build(),
       server().source(PCAWG) .type(GNOS)       .name("PCAWG - Barcelona")      .code(RepositoryCodes.PCAWG_BARCELONA)   .country("ES").baseUrl("https://gtrepo-bsc.annailabs.com/").build(),
@@ -104,6 +108,10 @@ public final class RepositoryServers {
 
   public static RepositoryServer getGDCServer() {
     return findServer(server -> server.getSource() == GDC);
+  }
+
+  public static RepositoryServer getPDCServer() {
+    return findServer(server -> server.getSource() == PDC);
   }
 
   public static RepositoryServer getAWSServer() {

@@ -102,6 +102,7 @@ public final class RepositoryProjects {
       project().projectCode("PACA-CA").diseaseCode(null)  .program(null)    .country("Canada").build(),
       project().projectCode("PACA-CN").diseaseCode(null)  .program(null)    .country("China").build(),
       project().projectCode("PACA-IT").diseaseCode(null)  .program(null)    .country("India").build(),
+      project().projectCode("PAEN-IT").diseaseCode(null)  .program(null)    .country("India").build(),
       project().projectCode("PAEN-AU").diseaseCode(null)  .program(null)    .country("Australia").build(),
       project().projectCode("PBCA-DE").diseaseCode(null)  .program(null)    .country("Germany").build(),
       project().projectCode("PEME-CA").diseaseCode(null)  .program(null)    .country("Canada").build(),

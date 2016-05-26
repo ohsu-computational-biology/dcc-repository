@@ -15,32 +15,36 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.pdc.s3;
 
-import static lombok.AccessLevel.PRIVATE;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.SignerFactory;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.internal.S3Signer;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import lombok.val;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+public class AWSClientFactory {
 
-@Getter
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryType implements Identifiable {
+  /**
+   * Constants.
+   */
+  private static final String PDC_S3_ENDPOINT = "https://bionimbus-objstore.opensciencedatacloud.org";
 
-  S3("S3", "/oicr.icgc.meta/metadata", "/oicr.icgc/data"),
-  PDC_S3("PDC", null, "/"),
-  EGA_ARCHIVE("EGA", "/rest/download/v2/metadata/", ""),
-  GNOS("GNOS", "/cghub/metadata/analysisFull/", "/cghub/data/analysis/download/"),
-  GDC_ARCHIVE("GDC", "/files/", "/auth/api/data"),
-  WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/");
+  public static AmazonS3 createS3Client() {
+    // Required for current version of Rados Gateway
+    SignerFactory.registerSigner("S3Signer", S3Signer.class);
 
-  @NonNull
-  private final String id;
+    val s3 = new AmazonS3Client(
+        new ProfileCredentialsProvider("pdc"),
+        new ClientConfiguration().withSignerOverride("S3Signer"));
+    s3.setEndpoint(PDC_S3_ENDPOINT);
+    s3.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
-  // Optional
-  private final String metadataPath;
-  private final String dataPath;
+    return s3;
+  }
 
 }

@@ -15,32 +15,23 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.pdc;
 
-import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-@Getter
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryType implements Identifiable {
+@Ignore("For development only")
+public class PDCImporterTest {
 
-  S3("S3", "/oicr.icgc.meta/metadata", "/oicr.icgc/data"),
-  PDC_S3("PDC", null, "/"),
-  EGA_ARCHIVE("EGA", "/rest/download/v2/metadata/", ""),
-  GNOS("GNOS", "/cghub/metadata/analysisFull/", "/cghub/data/analysis/download/"),
-  GDC_ARCHIVE("GDC", "/files/", "/auth/api/data"),
-  WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/");
-
-  @NonNull
-  private final String id;
-
-  // Optional
-  private final String metadataPath;
-  private final String dataPath;
+  @Test
+  public void testExecute() {
+    val context = newLocalRepositoryFileContext();
+    val collabImporter = new PDCImporter(context);
+    collabImporter.execute();
+  }
 
 }

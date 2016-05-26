@@ -40,6 +40,7 @@ import org.icgc.dcc.repository.ega.pcawg.model.EGAStudyFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGASubmission;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.TreeMultimap;
 
 import lombok.NonNull;
@@ -83,7 +84,7 @@ public class EGASubmissionReader {
 
     // Index sources for lookup in combine step
     val studyIndex = uniqueIndex(studyFiles, EGAStudyFile::getStudy);
-    val gnosIndex = uniqueIndex(gnosFiles, EGAGnosFile::getAnalysisId);
+    val gnosIndex = Multimaps.index(gnosFiles, EGAGnosFile::getAnalysisId);
 
     val sampleIndex = HashMultimap.<String, EGASampleFile> create();
     sampleFiles.forEach(f -> sampleIndex.put(f.getProjectId(), f));
@@ -97,7 +98,7 @@ public class EGASubmissionReader {
             .publishedFiles(publishedFiles)
             .studyFile(studyIndex.get(f.getStudy()))
             .sampleFiles(sampleIndex.get(f.getProjectId()))
-            .gnosFile(gnosIndex.get(f.getAnalysisId()))
+            .gnosFile(gnosIndex.get(f.getAnalysisId()).get(0))
             .receiptFile(getLatestReceipt(receiptIndex, f.getAnalysisId()))
             .analysisFile(f)
             .build())

@@ -37,6 +37,7 @@ import org.icgc.dcc.repository.ega.pcawg.EGAPCAWGImporter;
 import org.icgc.dcc.repository.gdc.GDCImporter;
 import org.icgc.dcc.repository.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.pcawg.PCAWGImporter;
+import org.icgc.dcc.repository.pdc.PDCImporter;
 import org.icgc.dcc.repository.tcga.TCGAImporter;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -242,6 +243,7 @@ public class RepositoryImporter {
     return ImmutableList.of(
         new PCAWGImporter(context),
         new GDCImporter(context),
+        new PDCImporter(context),
         new EGAPCAWGImporter(context),
         new AWSImporter(context),
         new CollabImporter(context),

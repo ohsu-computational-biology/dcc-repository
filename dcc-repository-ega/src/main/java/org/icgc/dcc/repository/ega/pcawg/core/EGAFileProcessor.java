@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.ega.pcawg.core;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.singletonList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
@@ -99,7 +100,9 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
 
     val files = getFiles(analysisFile);
     val sampleAttributes = resolveSampleAttributes(submission);
-    val project = getProjectCodeProject(projectCode).get();
+    val project = getProjectCodeProject(projectCode);
+
+    checkState(project.isPresent(), "Could not resolve project with code '%s'", projectCode);
 
     //
     // Create
@@ -181,7 +184,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
       egaFile.addDonor()
           .setPrimarySite(context.getPrimarySite(projectCode))
           .setProjectCode(projectCode)
-          .setProgram(project.getProgram())
+          .setProgram(project.get().getProgram())
           .setStudy(Study.PCAWG)
           .setDonorId(resolveDonorId(sampleAttributes))
           .setSpecimenId(resolveSpecimenId(sampleAttributes))

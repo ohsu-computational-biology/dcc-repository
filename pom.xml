@@ -44,6 +44,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     <module>dcc-repository-tcga</module>
     <module>dcc-repository-ega</module>
     <module>dcc-repository-gdc</module>
+    <module>dcc-repository-pdc</module>
 
     <module>dcc-repository-index</module>
 

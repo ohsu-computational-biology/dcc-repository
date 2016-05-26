@@ -15,32 +15,57 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.pdc.core;
 
-import static lombok.AccessLevel.PRIVATE;
+import java.util.List;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
-import lombok.Getter;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.val;
 
-@Getter
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryType implements Identifiable {
+public class PDCFileProcessor extends RepositoryFileProcessor {
 
-  S3("S3", "/oicr.icgc.meta/metadata", "/oicr.icgc/data"),
-  PDC_S3("PDC", null, "/"),
-  EGA_ARCHIVE("EGA", "/rest/download/v2/metadata/", ""),
-  GNOS("GNOS", "/cghub/metadata/analysisFull/", "/cghub/data/analysis/download/"),
-  GDC_ARCHIVE("GDC", "/files/", "/auth/api/data"),
-  WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/");
-
+  /**
+   * Metadata.
+   */
   @NonNull
-  private final String id;
+  private final RepositoryServer server;
 
-  // Optional
-  private final String metadataPath;
-  private final String dataPath;
+  public PDCFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer pdcServer) {
+    super(context);
+    this.server = pdcServer;
+  }
+
+  public Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
+    return () -> objectSummaries.stream().map(this::createFile).iterator();
+  }
+
+  private RepositoryFile createFile(S3ObjectSummary objectSummary) {
+    val objectId = objectSummary.getKey();
+
+    val objectFile = new RepositoryFile()
+        .setId(context.ensureFileId(objectId))
+        .setObjectId(objectId);
+
+    objectFile.addFileCopy()
+        .setFileSize(objectSummary.getSize())
+        .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
+        .setRepoFileId(objectId)
+        .setRepoType(server.getType().getId())
+        .setRepoOrg(server.getSource().getId())
+        .setRepoName(server.getName())
+        .setRepoCode(server.getCode())
+        .setRepoCountry(server.getCountry())
+        .setRepoBaseUrl(server.getBaseUrl())
+        .setRepoDataPath(objectSummary.getBucketName() + server.getType().getDataPath() + objectId);
+
+    return objectFile;
+  }
 
 }

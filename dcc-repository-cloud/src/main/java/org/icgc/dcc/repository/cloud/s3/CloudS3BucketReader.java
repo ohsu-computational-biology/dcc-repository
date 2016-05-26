@@ -45,13 +45,13 @@ public class CloudS3BucketReader {
   @NonNull
   private final String bucketName;
   @NonNull
-  private final String prefix;
+  protected final String prefix;
 
   /**
    * Dependencies.
    */
   @NonNull
-  private final AmazonS3 s3;
+  protected final AmazonS3 s3;
 
   public List<S3ObjectSummary> readSummaries() {
     val objectSummaries = ImmutableList.<S3ObjectSummary> builder();
@@ -66,7 +66,7 @@ public class CloudS3BucketReader {
     return objectSummaries.build();
   }
 
-  private void readBucket(String bucketName, String prefix, Consumer<S3ObjectSummary> callback) {
+  protected void readBucket(String bucketName, String prefix, Consumer<S3ObjectSummary> callback) {
     val request = new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix);
     log.info("Reading summaries from '{}/{}'...", bucketName, prefix);
 
@@ -81,7 +81,7 @@ public class CloudS3BucketReader {
     } while (listing.isTruncated());
   }
 
-  private Set<String> getBucketNames() {
+  protected Set<String> getBucketNames() {
     val bucketNames = ImmutableSet.<String> builder();
 
     for (val bucketPartition : s3.listBuckets()) {

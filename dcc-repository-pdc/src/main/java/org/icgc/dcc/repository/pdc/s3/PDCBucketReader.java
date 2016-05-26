@@ -15,32 +15,34 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.pdc.s3;
 
-import static lombok.AccessLevel.PRIVATE;
+import java.util.Set;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import com.amazonaws.services.s3.AmazonS3;
+import com.google.common.collect.ImmutableSet;
 
-@Getter
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryType implements Identifiable {
+import lombok.val;
 
-  S3("S3", "/oicr.icgc.meta/metadata", "/oicr.icgc/data"),
-  PDC_S3("PDC", null, "/"),
-  EGA_ARCHIVE("EGA", "/rest/download/v2/metadata/", ""),
-  GNOS("GNOS", "/cghub/metadata/analysisFull/", "/cghub/data/analysis/download/"),
-  GDC_ARCHIVE("GDC", "/files/", "/auth/api/data"),
-  WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/");
+public class PDCBucketReader extends CloudS3BucketReader {
 
-  @NonNull
-  private final String id;
+  public PDCBucketReader(String prefix, AmazonS3 s3) {
+    super("" /* Not used */, prefix, s3);
+  }
 
-  // Optional
-  private final String metadataPath;
-  private final String dataPath;
+  @Override
+  protected Set<String> getBucketNames() {
+    val bucketNames = ImmutableSet.<String> builder();
+
+    for (val bucketBucket : s3.listBuckets()) {
+      if (bucketBucket.getName().startsWith(prefix)) {
+        bucketNames.add(bucketBucket.getName());
+      }
+    }
+
+    return bucketNames.build();
+  }
 
 }

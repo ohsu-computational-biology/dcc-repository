@@ -36,6 +36,7 @@ public enum RepositorySource implements Identifiable {
   AWS("AWS"),
   CGHUB("CGHub"),
   COLLAB("Collaboratory"),
+  PDC("PDC"),
   EGA("EGA"),
   GDC("GDC"),
   PCAWG("PCAWG"),

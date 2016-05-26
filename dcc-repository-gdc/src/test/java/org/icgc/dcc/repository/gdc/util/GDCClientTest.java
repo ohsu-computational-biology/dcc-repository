@@ -19,11 +19,11 @@ package org.icgc.dcc.repository.gdc.util;
 
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.repository.gdc.util.GDCClient.Query.query;
 
 import java.util.List;
 
 import org.icgc.dcc.common.core.json.Jackson;
-import org.icgc.dcc.repository.gdc.util.GDCClient.Query;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -41,16 +41,22 @@ public class GDCClientTest {
   public void getFiles() {
     val client = new GDCClient();
     val expands = getExpand(client.getFilesMapping());
-    val query = Query.builder().filters(object()
-        .with("op", "in")
-        .with("content",
+    val query = query()
+        .filters(
             object()
-                .with("field", "cases.project.project_id")
-                .with("value", array("TCGA-LAML")))
-        .end()).expands(expands).size(1).from(1).build();
+                .with("op", "in")
+                .with("content",
+                    object()
+                        .with("field", "cases.project.project_id")
+                        .with("value", array("TCGA-LAML")))
+                .end())
+        .expands(expands)
+        .size(1)
+        .from(1)
+        .build();
 
-    val files = client.getFilesPage(query);
-    for (val file : files) {
+    val result = client.getFiles(query);
+    for (val file : result.getHits()) {
       log.info(" - {}", file);
     }
   }

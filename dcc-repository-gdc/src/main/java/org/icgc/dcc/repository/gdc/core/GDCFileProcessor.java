@@ -17,7 +17,6 @@
  */
 package org.icgc.dcc.repository.gdc.core;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
@@ -30,7 +29,6 @@ import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalysisWorkflowType;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAnalyteAliquots;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectId;
-import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectName;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectPrimarySite;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseSampleId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseSampleType;
@@ -57,7 +55,6 @@ import static org.icgc.dcc.repository.gdc.util.GDCFiles.getUpdatedDatetime;
 import static org.icgc.dcc.repository.gdc.util.GDCProjects.getProjectCode;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -69,7 +66,6 @@ import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
 
 import lombok.NonNull;
 import lombok.val;
@@ -122,7 +118,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
     val gdcFile = new RepositoryFile()
         .setId(context.ensureFileId(objectId))
-        .setStudy(resolveStudies(file))
+        .setStudy(null) // N/A
         .setObjectId(null); // N/A
 
     gdcFile.setAccess(getAccess(file));
@@ -214,15 +210,6 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     }
 
     return getCaseProjectPrimarySite(caze);
-  }
-
-  private static List<String> resolveStudies(@NonNull ObjectNode file) {
-    val values = Sets.<String> newLinkedHashSet();
-    for (val caze : getCases(file)) {
-      values.add(getCaseProjectName(caze));
-    }
-
-    return newArrayList(values);
   }
 
   private static String resolveAnalysisType(@NonNull ObjectNode file) {

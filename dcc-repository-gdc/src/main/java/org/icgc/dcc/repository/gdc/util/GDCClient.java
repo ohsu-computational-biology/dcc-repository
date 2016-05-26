@@ -18,7 +18,6 @@
 package org.icgc.dcc.repository.gdc.util;
 
 import static com.google.common.base.Objects.firstNonNull;
-import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
@@ -81,41 +80,10 @@ public class GDCClient {
     return getMapping("/files");
   }
 
-  public List<ObjectNode> getFiles() {
-    return getFiles(Query.builder().build());
-  }
-
-  public List<ObjectNode> getFiles(@NonNull Query query) {
-    Pagination pagination = null;
-  
-    val results = ImmutableList.<ObjectNode> builder();
-  
-    int from = query.getFrom();
-    int size = query.getSize();
-  
-    do {
-      val response = readFiles(query, size, from);
-      val hits = getHits(response);
-      pagination = getPagination(response);
-      log.info("{}", pagination);
-  
-      for (val hit : hits) {
-        results.add((ObjectNode) hit);
-      }
-  
-      from += size;
-    } while (pagination.getPage() < pagination.getPages());
-  
-    val files = results.build();
-    checkState(pagination.getTotal() == files.size(),
-        "Pagination size (%s) not equal to files size (%s). There is a either a logic error or new files have been added while iterating",
-        pagination.getCount(), files.size());
-  
-    return files;
-  }
-
-  public List<ObjectNode> getFilesPage(@NonNull Query query) {
+  public Result getFiles(@NonNull Query query) {
     val response = readFiles(query, query.getSize(), query.getFrom());
+
+    val pagination = getPagination(response);
     val hits = getHits(response);
 
     val results = ImmutableList.<ObjectNode> builder();
@@ -123,7 +91,7 @@ public class GDCClient {
       results.add((ObjectNode) hit);
     }
 
-    return results.build();
+    return new Result(pagination, results.build());
   }
 
   private JsonNode readFiles(Query query, int size, int from) {
@@ -201,7 +169,7 @@ public class GDCClient {
   }
 
   @Value
-  @Builder
+  @Builder(toBuilder = true)
   public static class Query {
 
     Integer from;
@@ -219,10 +187,22 @@ public class GDCClient {
       return firstNonNull(size, DEFAULT_PAGE_SIZE);
     }
 
+    public static QueryBuilder query() {
+      return builder();
+    }
+
+  }
+
+  @Value
+  public static class Result {
+
+    Pagination pagination;
+    List<ObjectNode> hits;
+
   }
 
   @Data
-  private static class Pagination {
+  public static class Pagination {
 
     int count;
     String sort;

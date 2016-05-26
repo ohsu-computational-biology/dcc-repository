@@ -17,13 +17,20 @@
  */
 package org.icgc.dcc.repository.gdc.reader;
 
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.repository.gdc.util.GDCClient.Query.query;
 import static org.icgc.dcc.repository.gdc.util.GDCProjects.getProjectsIds;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.icgc.dcc.repository.gdc.util.GDCClient;
+import org.icgc.dcc.repository.gdc.util.GDCClient.Pagination;
 import org.icgc.dcc.repository.gdc.util.GDCClient.Query;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -31,12 +38,15 @@ import com.google.common.collect.ImmutableList;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Reads filtered GDC file records with the appropriate set of fields for downstream processing.
  * 
  * @see https://wiki.oicr.on.ca/pages/viewpage.action?pageId=66946440
  */
+@Slf4j
 @RequiredArgsConstructor
 public class GDCFileReader {
 
@@ -83,7 +93,7 @@ public class GDCFileReader {
           "analysis.analysis_id",
           "analysis.updated_datetime");
 
-  private static ObjectNode FILTER =
+  private static ObjectNode PROJECT_FILTER =
       object()
           .with("op", "in")
           .with("content",
@@ -98,12 +108,70 @@ public class GDCFileReader {
   @NonNull
   private final GDCClient client;
 
-  public List<ObjectNode> readFiles() {
-    return client.getFiles(Query.builder()
-        .size(PAGE_SIZE)
-        .fields(FIELD_NAMES)
-        .filters(FILTER)
-        .build());
+  public Stream<ObjectNode> readFiles() {
+    val pages = new PageIterator(client,
+        query()
+            .size(PAGE_SIZE)
+            .fields(FIELD_NAMES)
+            .filters(PROJECT_FILTER)
+            .build());
+
+    return stream(pages).flatMap(List::stream);
+  }
+
+  private static <T> Stream<T> stream(Iterator<T> iterator) {
+    return StreamSupport.stream(spliteratorUnknownSize(iterator, ORDERED), false);
+  }
+
+  private static class PageIterator implements Iterator<List<ObjectNode>> {
+
+    /**
+     * Dependencies.
+     */
+    private final GDCClient client;
+
+    /**
+     * Configuration.
+     */
+    private final Query query;
+
+    /**
+     * State.
+     */
+    private int from;
+    private Pagination pagination;
+
+    public PageIterator(@NonNull GDCClient client, @NonNull Query query) {
+      this.client = client;
+      this.query = query;
+      this.from = query.getFrom();
+    }
+
+    @Override
+    public boolean hasNext() {
+      return hasNotStarted() || hasMorePages();
+    }
+
+    private boolean hasNotStarted() {
+      return pagination == null;
+    }
+
+    private boolean hasMorePages() {
+      return pagination.getPage() < pagination.getPages();
+    }
+
+    @Override
+    public List<ObjectNode> next() {
+      val page = client.getFiles(query.toBuilder().from(from).build());
+
+      // Advance
+      pagination = page.getPagination();
+      from += query.getSize();
+
+      log.info("{}", pagination);
+      return page.getHits();
+    }
+
   }
 
 }

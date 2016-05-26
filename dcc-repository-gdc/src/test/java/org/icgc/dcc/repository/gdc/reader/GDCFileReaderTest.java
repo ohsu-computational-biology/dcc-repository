@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.gdc.reader;
 
+import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCases;
 
@@ -36,7 +37,7 @@ public class GDCFileReaderTest {
   @Test
   public void testReadFiles() {
     val reader = createReader();
-    val files = reader.readFiles();
+    val files = reader.readFiles().collect(toList());
 
     val projectCodes = Sets.<String> newTreeSet();
     for (val file : files) {

@@ -21,7 +21,6 @@ import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.repository.core.model.RepositoryServers.getGDCServer;
 import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
@@ -33,7 +32,6 @@ import org.icgc.dcc.repository.gdc.util.GDCClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,16 +46,15 @@ public class GDCImporter extends GenericRepositorySourceFileImporter {
   }
 
   @Override
-  @SneakyThrows
   protected Iterable<RepositoryFile> readFiles() {
     val client = new GDCClient();
     val files = readFiles(client);
-    val results = processFiles(files.stream());
+    val results = processFiles(files);
 
     return results.collect(toList());
   }
 
-  private List<ObjectNode> readFiles(GDCClient client) {
+  private Stream<ObjectNode> readFiles(GDCClient client) {
     return new GDCFileReader(client).readFiles();
   }
 

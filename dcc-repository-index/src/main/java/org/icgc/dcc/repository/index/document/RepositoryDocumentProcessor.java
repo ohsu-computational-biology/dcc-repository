@@ -23,7 +23,7 @@ import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.icgc.dcc.repository.core.model.Repositories;
-import org.icgc.dcc.repository.core.model.Repositories.Repository;
+import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryAccess;
 import org.icgc.dcc.repository.index.model.DocumentType;
 

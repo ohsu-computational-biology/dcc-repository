@@ -31,9 +31,9 @@ public class PCAWGDonorArchiveReader {
    * @see http://jsonlines.org/
    */
   public static final URL PREVIOUS_DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
-      getUrl(PCAWG_ARCHIVE_BASE_URL + "/data_releases/oct2015/release_oct2015.v1.jsonl"); // DCC-4137
-  public static final URL DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
       getUrl(PCAWG_ARCHIVE_BASE_URL + "/data_releases/mar2016/release_mar2016.v1.jsonl");
+  public static final URL DEFAULT_PCAWG_DONOR_ARCHIVE_URL =
+      getUrl(PCAWG_ARCHIVE_BASE_URL + "/data_releases/latest/release_may2016.v1.jsonl");
 
   /**
    * Constants.

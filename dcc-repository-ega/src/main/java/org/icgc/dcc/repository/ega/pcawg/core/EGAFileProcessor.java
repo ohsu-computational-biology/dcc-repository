@@ -35,7 +35,7 @@ import java.util.Optional;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
-import org.icgc.dcc.repository.core.model.Repositories.Repository;
+import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.AnalysisMethod;
 import org.icgc.dcc.repository.core.model.RepositoryFile.AnalysisType;

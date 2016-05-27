@@ -18,16 +18,19 @@
 package org.icgc.dcc.repository.gdc.util;
 
 import static com.google.common.base.Objects.firstNonNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.ACCEPT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
 import static org.icgc.dcc.common.core.util.Joiners.COMMA;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -36,6 +39,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
 
 import lombok.Builder;
 import lombok.Data;
@@ -156,8 +160,24 @@ public class GDCClient {
   }
 
   @SneakyThrows
-  private static JsonNode readResponse(URLConnection connection) {
-    return DEFAULT.readTree(connection.getInputStream());
+  private static JsonNode readResponse(HttpURLConnection connection) {
+    try {
+      connection.connect();
+      val actualResponseCode = connection.getResponseCode();
+      val actualContentType = connection.getContentType();
+
+      val expectedResponseCode = 200;
+      val expectedContentType = "application/json";
+
+      checkState(actualResponseCode == expectedResponseCode && expectedContentType.equals(actualContentType),
+          "Expected %s reponse code with content type '%s' from %s but got %s reponse code with content type '%s' instead. Response body: %s",
+          expectedResponseCode, expectedContentType, connection.getURL(), actualResponseCode, actualContentType,
+          lazyToString(() -> Resources.toString(connection.getURL(), UTF_8)));
+
+      return DEFAULT.readTree(connection.getInputStream());
+    } catch (IOException e) {
+      throw new RuntimeException("Error trying to read response from " + connection.getURL() + ": ", e);
+    }
   }
 
   private static JsonNode getHits(JsonNode response) {
@@ -211,6 +231,19 @@ public class GDCClient {
     int total;
     int pages;
     int size;
+
+  }
+
+  private static Object lazyToString(Callable<String> lazy) {
+    return new Object() {
+
+      @Override
+      @SneakyThrows
+      public String toString() {
+        return lazy.call();
+      }
+
+    };
 
   }
 

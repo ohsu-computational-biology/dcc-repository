@@ -22,15 +22,18 @@ import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.core.model.Repositories.RepositoryCodes.AWS_VIRGINIA;
-import static org.icgc.dcc.repository.core.model.Repositories.RepositoryCodes.COLLABORATORY;
-import static org.icgc.dcc.repository.core.model.Repositories.RepositoryCodes.EGA;
+import static org.icgc.dcc.repository.core.model.Repositories.getAWSRepository;
+import static org.icgc.dcc.repository.core.model.Repositories.getCollabRepository;
+import static org.icgc.dcc.repository.core.model.Repositories.getEGARepository;
 
 import java.util.Set;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.model.Repositories;
+import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.core.model.RepositorySource;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -65,40 +68,44 @@ public class RepositoryFileFilter {
    *
    * @see https://jira.oicr.on.ca/browse/DCC-4605
    */
-  boolean isPublished(RepositoryFile file) {
-    val repoCodes = getRepoCodes(file);
+  private boolean isPublished(RepositoryFile file) {
+    val repositories = resolveRepositories(file);
 
     // PCAWG published
-    val pcawg = containsPCAWG(repoCodes);
-    val ega = repoCodes.contains(EGA);
-    if (pcawg || ega) {
+    if (inPCAWG(repositories) || inEGA(repositories)) {
       return true;
     }
 
     // Not released via PCAWG yet so ignore
-    val aws = repoCodes.contains(AWS_VIRGINIA);
-    val collab = repoCodes.contains(COLLABORATORY);
-    if (aws || collab) {
+    if (inAWS(repositories) || inCollab(repositories)) {
       return false;
     }
 
-    // All others are ok
+    // All others are considered published
     return true;
   }
 
-  private boolean containsPCAWG(Set<String> repoCodes) {
-    for (val repoCode : repoCodes) {
-      // TODO: Use RepositorySource instead
-      if (repoCode.toLowerCase().startsWith("pcawg")) {
-        return true;
-      }
-    }
-
-    return false;
+  private static boolean inPCAWG(Set<Repository> repositories) {
+    return repositories.stream().anyMatch(r -> r.getSource() == RepositorySource.PCAWG);
   }
 
-  private static Set<String> getRepoCodes(RepositoryFile file) {
-    return file.getFileCopies().stream().map(FileCopy::getRepoCode).collect(toImmutableSet());
+  private static boolean inEGA(Set<Repository> repositories) {
+    return repositories.contains(getEGARepository());
+  }
+
+  private static boolean inAWS(Set<Repository> repositories) {
+    return repositories.contains(getAWSRepository());
+  }
+
+  private static boolean inCollab(Set<Repository> repositories) {
+    return repositories.contains(getCollabRepository());
+  }
+
+  private static Set<Repository> resolveRepositories(RepositoryFile file) {
+    return file.getFileCopies().stream()
+        .map(FileCopy::getRepoCode)
+        .map(Repositories::getRepository)
+        .collect(toImmutableSet());
   }
 
 }

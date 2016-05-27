@@ -55,7 +55,7 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
-import org.icgc.dcc.repository.core.model.Repositories;
+import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
@@ -139,6 +139,9 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
               val donorFile = createDonorFile(projectCode, submittedDonorId, analysis, workflow, workflowFile);
 
+              // TODO: workflowType.equals("minibam") / Analysis / PCAWGFileInfoResolver#resolveDataCategorization
+              // updates so that the next conditional passes.
+
               // JJ: Ignore files like these for now:
               // 712ba532-fb1a-43fa-a356-b446b509ceb7.embl-delly_1-0-0-preFilter-hpc.150708.sv.vcf.gz
               if (donorFile.getDataCategorization().getDataType() == null) {
@@ -175,7 +178,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val fileFormat = resolveFileFormat(analysis, fileName);
     val objectId = resolveObjectId(gnosId, fileName);
 
-    val pcawgRepositories = resolvePCAWGRepositories(workflow);
+    val pcawgRepositorys = resolvePCAWGRepositories(workflow);
 
     val baiFile = resolveBaiFile(workflow, fileName);
     val tbiFile = resolveTbiFile(workflow, fileName);
@@ -206,7 +209,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     donorFile
         .setReferenceGenome(ReferenceGenome.PCAWG);
 
-    for (val pcawgRepository : pcawgRepositories) {
+    for (val pcawgRepository : pcawgRepositorys) {
       val fileCopy = donorFile.addFileCopy()
           .setFileName(fileName)
           .setFileFormat(fileFormat)
@@ -292,7 +295,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return stream(getFiles(workflow)).filter(filter);
   }
 
-  private static List<Repositories.Repository> resolvePCAWGRepositories(JsonNode workflow) {
+  private static List<Repository> resolvePCAWGRepositories(JsonNode workflow) {
     return stream(getGnosRepo(workflow))
         .map(genosRepo -> getPCAWGRepository(genosRepo.asText()))
         .collect(toImmutableList());
@@ -312,8 +315,9 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
   }
 
   private static long resolveLastModified(JsonNode workflow) {
-    val text = getGnosLastModified(workflow);
-    val dateTime = ISO_OFFSET_DATE_TIME.parse(text, Instant::from);
+    val lastModified = getGnosLastModified(workflow);
+    checkState(lastModified != null, "Date is null for workflow: %s", workflow);
+    val dateTime = ISO_OFFSET_DATE_TIME.parse(lastModified, Instant::from);
 
     return dateTime.getEpochSecond();
   }

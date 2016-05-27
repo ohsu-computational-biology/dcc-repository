@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
-import org.icgc.dcc.repository.core.model.Repositories.Repository;
+import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -47,7 +47,7 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
   }
 
   public Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
-    return objectSummaries.stream().map(this::createFile).collect(toList());
+    return objectSummaries.stream().map(this::createFile).filter(file -> file != null).collect(toList());
   }
 
   private RepositoryFile createFile(S3ObjectSummary objectSummary) {
@@ -81,7 +81,7 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
       return "9320a69f-296d-5967-a816-3f53d986f59a";
     }
 
-    return key;
+    return null;
   }
 
 }

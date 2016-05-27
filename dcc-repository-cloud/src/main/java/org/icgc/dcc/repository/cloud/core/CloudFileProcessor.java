@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
-import org.icgc.dcc.repository.core.model.Repositories.Repository;
+import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;

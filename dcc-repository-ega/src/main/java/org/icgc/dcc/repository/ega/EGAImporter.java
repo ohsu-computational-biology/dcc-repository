@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.ega;
 
 import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getEGAServer;
+import static org.icgc.dcc.repository.core.model.Repositories.getEGARepository;
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
 
 import java.util.stream.Stream;
@@ -60,7 +60,7 @@ public class EGAImporter extends GenericRepositorySourceFileImporter {
   }
 
   private Stream<RepositoryFile> processFiles(Stream<EGAMetadata> metadata) {
-    return new EGAFileProcessor(context, getEGAServer()).process(metadata);
+    return new EGAFileProcessor(context, getEGARepository()).process(metadata);
   }
 
   private EGAClient createEGAClient() {

@@ -59,10 +59,10 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryFile.ReferenceGenome;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -90,16 +90,16 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
    * Metadata.
    */
   @NonNull
-  private final RepositoryServer gdcServer;
+  private final Repository gdcRepository;
 
   /**
    * State.
    */
   private int fileCount = 0;
 
-  public GDCFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer gdcServer) {
+  public GDCFileProcessor(RepositoryFileContext context, @NonNull Repository gdcRepository) {
     super(context);
-    this.gdcServer = gdcServer;
+    this.gdcRepository = gdcRepository;
   }
 
   public Stream<RepositoryFile> process(Stream<ObjectNode> files) {
@@ -146,14 +146,14 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
         .setFileName(getFileName(file))
         .setFileMd5sum(getMd5sum(file))
         .setLastModified(resolveLastModified(file))
-        .setRepoType(gdcServer.getType().getId())
-        .setRepoOrg(gdcServer.getSource().getId())
-        .setRepoName(gdcServer.getName())
-        .setRepoCode(gdcServer.getCode())
-        .setRepoCountry(gdcServer.getCountry())
-        .setRepoBaseUrl(gdcServer.getBaseUrl())
-        .setRepoMetadataPath(gdcServer.getType().getMetadataPath())
-        .setRepoDataPath(gdcServer.getType().getDataPath());
+        .setRepoType(gdcRepository.getType().getId())
+        .setRepoOrg(gdcRepository.getSource().getId())
+        .setRepoName(gdcRepository.getName())
+        .setRepoCode(gdcRepository.getCode())
+        .setRepoCountry(gdcRepository.getCountry())
+        .setRepoBaseUrl(gdcRepository.getBaseUrl())
+        .setRepoMetadataPath(gdcRepository.getType().getMetadataPath())
+        .setRepoDataPath(gdcRepository.getType().getDataPath());
 
     for (val indexFile : getIndexFiles(file)) {
       // TODO: Arbitrary selection of one from many

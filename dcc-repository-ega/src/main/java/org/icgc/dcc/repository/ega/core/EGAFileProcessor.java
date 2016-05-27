@@ -43,10 +43,10 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.ega.model.EGAMetadata;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -64,16 +64,16 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
    * Metadata.
    */
   @NonNull
-  private final RepositoryServer egaServer;
+  private final Repository egaRepository;
 
   /**
    * State.
    */
   private int fileCount = 0;
 
-  public EGAFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer egaServer) {
+  public EGAFileProcessor(RepositoryFileContext context, @NonNull Repository egaRepository) {
     super(context);
-    this.egaServer = egaServer;
+    this.egaRepository = egaRepository;
   }
 
   public Stream<RepositoryFile> process(Stream<EGAMetadata> metadata) {
@@ -97,14 +97,14 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
         .setRepoDataSetId(getMappingDataSetId(file))
         .setFileSize(getMappingFileSize(file))
         .setFileName(null) // Set from run/analysis later on
-        .setRepoType(egaServer.getType().getId())
-        .setRepoOrg(egaServer.getSource().getId())
-        .setRepoName(egaServer.getName())
-        .setRepoCode(egaServer.getCode())
-        .setRepoCountry(egaServer.getCountry())
-        .setRepoBaseUrl(egaServer.getBaseUrl())
-        .setRepoMetadataPath(egaServer.getType().getMetadataPath())
-        .setRepoDataPath(egaServer.getType().getDataPath());
+        .setRepoType(egaRepository.getType().getId())
+        .setRepoOrg(egaRepository.getSource().getId())
+        .setRepoName(egaRepository.getName())
+        .setRepoCode(egaRepository.getCode())
+        .setRepoCountry(egaRepository.getCountry())
+        .setRepoBaseUrl(egaRepository.getBaseUrl())
+        .setRepoMetadataPath(egaRepository.getType().getMetadataPath())
+        .setRepoDataPath(egaRepository.getType().getDataPath());
 
     updateFileCopy(fileCopy, getMappingFileName(file), metadata);
 

@@ -35,6 +35,7 @@ import java.util.Optional;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.AnalysisMethod;
 import org.icgc.dcc.repository.core.model.RepositoryFile.AnalysisType;
@@ -46,7 +47,6 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.ReferenceGenome;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Software;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAAnalysisFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAGnosFile;
 import org.icgc.dcc.repository.ega.pcawg.model.EGAPublishedFile;
@@ -71,11 +71,11 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   /**
    * Metadata.
    */
-  private final RepositoryServer egaServer;
+  private final Repository egaRepository;
 
-  public EGAFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer egaServer) {
+  public EGAFileProcessor(RepositoryFileContext context, @NonNull Repository egaRepository) {
     super(context);
-    this.egaServer = egaServer;
+    this.egaRepository = egaRepository;
   }
 
   public Iterable<RepositoryFile> processSubmissions(@NonNull Iterable<EGASubmission> submissions) {
@@ -157,14 +157,14 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
           .setRepoDataBundleId(publishedFile.get().getAnalysisId())
           .setRepoDataSetIds(singletonList(publishedFile.get().getDatasetId()))
           .setRepoFileId(publishedFile.get().getFileId())
-          .setRepoType(egaServer.getType().getId())
-          .setRepoOrg(egaServer.getSource().getId())
-          .setRepoName(egaServer.getName())
-          .setRepoCode(egaServer.getCode())
-          .setRepoCountry(egaServer.getCountry())
-          .setRepoBaseUrl(egaServer.getBaseUrl())
-          .setRepoMetadataPath(egaServer.getType().getMetadataPath())
-          .setRepoDataPath(egaServer.getType().getDataPath());
+          .setRepoType(egaRepository.getType().getId())
+          .setRepoOrg(egaRepository.getSource().getId())
+          .setRepoName(egaRepository.getName())
+          .setRepoCode(egaRepository.getCode())
+          .setRepoCountry(egaRepository.getCountry())
+          .setRepoBaseUrl(egaRepository.getBaseUrl())
+          .setRepoMetadataPath(egaRepository.getType().getMetadataPath())
+          .setRepoDataPath(egaRepository.getType().getDataPath());
 
       if (baiFile.isPresent()) {
         val baiFileName = resolveFileName(baiFile.get());

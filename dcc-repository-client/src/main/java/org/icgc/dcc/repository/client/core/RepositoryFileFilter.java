@@ -22,9 +22,9 @@ import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.AWS_VIRGINIA;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.COLLABORATORY;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryCodes.EGA;
+import static org.icgc.dcc.repository.core.model.Repositories.RepositoryCodes.AWS_VIRGINIA;
+import static org.icgc.dcc.repository.core.model.Repositories.RepositoryCodes.COLLABORATORY;
+import static org.icgc.dcc.repository.core.model.Repositories.RepositoryCodes.EGA;
 
 import java.util.Set;
 

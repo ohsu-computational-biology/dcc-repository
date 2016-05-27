@@ -24,8 +24,8 @@ import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.core.model.Repositories.getPCAWGRepository;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getPCAWGServer;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveAnalysisMethod;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveDataCategorization;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveFileFormat;
@@ -55,13 +55,13 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryFile.ReferenceGenome;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
-import org.icgc.dcc.repository.core.model.RepositoryServers;
 import org.icgc.dcc.repository.pcawg.model.Analysis;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -175,7 +175,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val fileFormat = resolveFileFormat(analysis, fileName);
     val objectId = resolveObjectId(gnosId, fileName);
 
-    val pcawgServers = resolvePCAWGServers(workflow);
+    val pcawgRepositories = resolvePCAWGRepositories(workflow);
 
     val baiFile = resolveBaiFile(workflow, fileName);
     val tbiFile = resolveTbiFile(workflow, fileName);
@@ -206,7 +206,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     donorFile
         .setReferenceGenome(ReferenceGenome.PCAWG);
 
-    for (val pcawgServer : pcawgServers) {
+    for (val pcawgRepository : pcawgRepositories) {
       val fileCopy = donorFile.addFileCopy()
           .setFileName(fileName)
           .setFileFormat(fileFormat)
@@ -215,14 +215,14 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
           .setLastModified(resolveLastModified(workflow))
           .setRepoDataBundleId(gnosId)
           .setRepoFileId(null) // GNOS does not have individual file ids
-          .setRepoType(pcawgServer.getType().getId())
-          .setRepoOrg(pcawgServer.getSource().getId())
-          .setRepoName(pcawgServer.getName())
-          .setRepoCode(pcawgServer.getCode())
-          .setRepoCountry(pcawgServer.getCountry())
-          .setRepoBaseUrl(pcawgServer.getBaseUrl())
-          .setRepoDataPath(pcawgServer.getType().getDataPath())
-          .setRepoMetadataPath(pcawgServer.getType().getMetadataPath());
+          .setRepoType(pcawgRepository.getType().getId())
+          .setRepoOrg(pcawgRepository.getSource().getId())
+          .setRepoName(pcawgRepository.getName())
+          .setRepoCode(pcawgRepository.getCode())
+          .setRepoCountry(pcawgRepository.getCountry())
+          .setRepoBaseUrl(pcawgRepository.getBaseUrl())
+          .setRepoDataPath(pcawgRepository.getType().getDataPath())
+          .setRepoMetadataPath(pcawgRepository.getType().getMetadataPath());
 
       if (baiFile.isPresent()) {
         val baiFileName = getFileName(baiFile.get());
@@ -292,9 +292,9 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     return stream(getFiles(workflow)).filter(filter);
   }
 
-  private static List<RepositoryServers.RepositoryServer> resolvePCAWGServers(JsonNode workflow) {
+  private static List<Repositories.Repository> resolvePCAWGRepositories(JsonNode workflow) {
     return stream(getGnosRepo(workflow))
-        .map(genosRepo -> getPCAWGServer(genosRepo.asText()))
+        .map(genosRepo -> getPCAWGRepository(genosRepo.asText()))
         .collect(toImmutableList());
   }
 

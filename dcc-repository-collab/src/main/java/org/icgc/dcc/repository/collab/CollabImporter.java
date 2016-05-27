@@ -27,7 +27,7 @@ import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
 import org.icgc.dcc.repository.cloud.transfer.CloudTransferJobReader;
 import org.icgc.dcc.repository.collab.s3.AWSClientFactory;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.RepositoryServers;
+import org.icgc.dcc.repository.core.model.Repositories;
 
 import lombok.NonNull;
 import lombok.val;
@@ -63,8 +63,8 @@ public class CollabImporter extends CloudImporter {
 
   @Override
   protected CloudFileProcessor createFileProcessor() {
-    val collabServer = RepositoryServers.getCollabServer();
-    return new CloudFileProcessor(context, collabServer);
+    val collabRepository = Repositories.getCollabRepository();
+    return new CloudFileProcessor(context, collabRepository);
   }
 
 }

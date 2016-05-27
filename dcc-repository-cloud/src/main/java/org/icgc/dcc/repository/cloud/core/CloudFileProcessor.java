@@ -37,10 +37,10 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -58,11 +58,11 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
   /**
    * Metadata.
    */
-  private final RepositoryServer server;
+  private final Repository repository;
 
-  public CloudFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer server) {
+  public CloudFileProcessor(RepositoryFileContext context, @NonNull Repository repository) {
     super(context);
-    this.server = server;
+    this.repository = repository;
   }
 
   public Iterable<RepositoryFile> processCompletedJobs(@NonNull List<ObjectNode> completedJobs,
@@ -131,18 +131,18 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
         .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
         .setRepoDataBundleId(gnosId)
         .setRepoFileId(objectId)
-        .setRepoType(server.getType().getId())
-        .setRepoOrg(server.getSource().getId())
-        .setRepoName(server.getName())
-        .setRepoCode(server.getCode())
-        .setRepoCountry(server.getCountry())
-        .setRepoBaseUrl(server.getBaseUrl())
-        .setRepoDataPath(server.getType().getDataPath() + "/" + objectId);
+        .setRepoType(repository.getType().getId())
+        .setRepoOrg(repository.getSource().getId())
+        .setRepoName(repository.getName())
+        .setRepoCode(repository.getCode())
+        .setRepoCountry(repository.getCountry())
+        .setRepoBaseUrl(repository.getBaseUrl())
+        .setRepoDataPath(repository.getType().getDataPath() + "/" + objectId);
 
     if (xmlFile.isPresent()) {
       val xmlId = getObjectId(xmlFile.get());
       fileCopy
-          .setRepoMetadataPath(server.getType().getMetadataPath() + "/" + xmlId);
+          .setRepoMetadataPath(repository.getType().getMetadataPath() + "/" + xmlId);
     }
 
     if (baiFile.isPresent()) {

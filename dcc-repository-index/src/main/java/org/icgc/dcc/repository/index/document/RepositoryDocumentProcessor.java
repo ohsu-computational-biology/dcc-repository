@@ -17,11 +17,14 @@
  */
 package org.icgc.dcc.repository.index.document;
 
+import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.core.model.RepositoryServers;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
+import org.icgc.dcc.repository.core.model.Repositories;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
+import org.icgc.dcc.repository.core.model.RepositoryAccess;
 import org.icgc.dcc.repository.index.model.DocumentType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,9 +41,9 @@ public class RepositoryDocumentProcessor extends DocumentProcessor {
   @Override
   public int process() {
     int count = 0;
-    for (val server : RepositoryServers.getServers()) {
-      val id = server.getCode();
-      val document = createDocument(server);
+    for (val repository : Repositories.getRepositories()) {
+      val id = repository.getCode();
+      val document = createDocument(repository);
       addDocument(id, document);
       count++;
     }
@@ -48,17 +51,21 @@ public class RepositoryDocumentProcessor extends DocumentProcessor {
     return count;
   }
 
-  private ObjectNode createDocument(RepositoryServer server) {
+  private ObjectNode createDocument(Repository repository) {
     return object()
-        .with("id", server.getCode())
-        .with("code", server.getCode())
-        .with("type", server.getType().getId())
-        .with("name", server.getName())
-        .with("source", server.getSource().getId())
-        .with("country", server.getCountry())
-        .with("baseUrl", server.getBaseUrl())
-        .with("dataPath", server.getType().getDataPath())
-        .with("metadataPath", server.getType().getMetadataPath())
+        .with("id", repository.getCode())
+        .with("code", repository.getCode())
+        .with("type", repository.getType().getId())
+        .with("name", repository.getName())
+        .with("source", repository.getSource().getId())
+        .with("storage", repository.getStorage().getId())
+        .with("environment", repository.getEnvironment().getId())
+        .with("access", array().with(repository.getAccess().stream().map(RepositoryAccess::getId).collect(toList())))
+        .with("country", repository.getCountry())
+        .with("timezone", repository.getTimezone())
+        .with("baseUrl", repository.getBaseUrl())
+        .with("dataPath", repository.getType().getDataPath())
+        .with("metadataPath", repository.getType().getMetadataPath())
         .end();
   }
 

@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.gdc;
 
 import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getGDCServer;
+import static org.icgc.dcc.repository.core.model.Repositories.getGDCRepository;
 import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
 
 import java.util.stream.Stream;
@@ -59,7 +59,7 @@ public class GDCImporter extends GenericRepositorySourceFileImporter {
   }
 
   private Stream<RepositoryFile> processFiles(Stream<ObjectNode> files) {
-    return new GDCFileProcessor(context, getGDCServer()).process(files);
+    return new GDCFileProcessor(context, getGDCRepository()).process(files);
   }
 
 }

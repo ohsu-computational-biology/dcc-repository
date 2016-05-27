@@ -37,8 +37,8 @@ import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getResults
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleId;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleType;
 import static org.icgc.dcc.repository.cghub.util.CGHubConverters.convertSampleTypeCode;
+import static org.icgc.dcc.repository.core.model.Repositories.getCGHubRepository;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getCGHubServer;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -47,13 +47,13 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryProject;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -69,7 +69,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
    * Metadata.
    */
   @NonNull
-  private final RepositoryServer cghubServer = getCGHubServer();
+  private final Repository cghubRepository = getCGHubRepository();
 
   public CGHubFileProcessor(RepositoryFileContext context) {
     super(context);
@@ -147,14 +147,14 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
         .setLastModified(resolveLastModified(result))
         .setRepoDataBundleId(analysisId)
         .setRepoFileId(null) // GNOS does not have individual file ids
-        .setRepoType(cghubServer.getType().getId())
-        .setRepoOrg(cghubServer.getSource().getId())
-        .setRepoName(cghubServer.getName())
-        .setRepoCode(cghubServer.getCode())
-        .setRepoCountry(cghubServer.getCountry())
-        .setRepoBaseUrl(cghubServer.getBaseUrl())
-        .setRepoMetadataPath(cghubServer.getType().getMetadataPath())
-        .setRepoDataPath(cghubServer.getType().getDataPath());
+        .setRepoType(cghubRepository.getType().getId())
+        .setRepoOrg(cghubRepository.getSource().getId())
+        .setRepoName(cghubRepository.getName())
+        .setRepoCode(cghubRepository.getCode())
+        .setRepoCountry(cghubRepository.getCountry())
+        .setRepoBaseUrl(cghubRepository.getBaseUrl())
+        .setRepoMetadataPath(cghubRepository.getType().getMetadataPath())
+        .setRepoDataPath(cghubRepository.getType().getDataPath());
 
     if (baiFile.isPresent()) {
       val baiFileName = getFileName(baiFile.get());

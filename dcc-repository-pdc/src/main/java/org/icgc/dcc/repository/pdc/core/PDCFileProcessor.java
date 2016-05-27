@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -39,11 +39,11 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
    * Metadata.
    */
   @NonNull
-  private final RepositoryServer server;
+  private final Repository pdcRepository;
 
-  public PDCFileProcessor(RepositoryFileContext context, @NonNull RepositoryServer pdcServer) {
+  public PDCFileProcessor(RepositoryFileContext context, @NonNull Repository pdcRepository) {
     super(context);
-    this.server = pdcServer;
+    this.pdcRepository = pdcRepository;
   }
 
   public Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
@@ -61,13 +61,13 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
         .setFileSize(objectSummary.getSize())
         .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
         .setRepoFileId(objectId)
-        .setRepoType(server.getType().getId())
-        .setRepoOrg(server.getSource().getId())
-        .setRepoName(server.getName())
-        .setRepoCode(server.getCode())
-        .setRepoCountry(server.getCountry())
-        .setRepoBaseUrl(server.getBaseUrl())
-        .setRepoDataPath(objectSummary.getBucketName() + server.getType().getDataPath() + objectId);
+        .setRepoType(pdcRepository.getType().getId())
+        .setRepoOrg(pdcRepository.getSource().getId())
+        .setRepoName(pdcRepository.getName())
+        .setRepoCode(pdcRepository.getCode())
+        .setRepoCountry(pdcRepository.getCountry())
+        .setRepoBaseUrl(pdcRepository.getBaseUrl())
+        .setRepoDataPath(objectSummary.getBucketName() + pdcRepository.getType().getDataPath() + objectId);
 
     return objectFile;
   }

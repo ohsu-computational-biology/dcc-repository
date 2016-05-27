@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.ega.pcawg;
 
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getEGAServer;
+import static org.icgc.dcc.repository.core.model.Repositories.getEGARepository;
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
 
 import java.io.File;
@@ -71,7 +71,7 @@ public class EGAPCAWGImporter extends GenericRepositorySourceFileImporter {
   }
 
   private Iterable<RepositoryFile> processSubmissionFiles(Iterable<EGASubmission> submission) {
-    val processor = new EGAFileProcessor(context, getEGAServer());
+    val processor = new EGAFileProcessor(context, getEGARepository());
     return processor.processSubmissions(submission);
   }
 

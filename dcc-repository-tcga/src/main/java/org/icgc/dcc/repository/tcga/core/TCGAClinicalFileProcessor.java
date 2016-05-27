@@ -21,20 +21,20 @@ import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.core.model.Repositories.getTCGARepository;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getTCGAServer;
 
 import java.util.regex.Pattern;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.model.Repositories.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.DataType;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileAccess;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Program;
-import org.icgc.dcc.repository.core.model.RepositoryServers.RepositoryServer;
 import org.icgc.dcc.repository.tcga.model.TCGAArchiveClinicalFile;
 import org.icgc.dcc.repository.tcga.reader.TCGAArchiveListReader;
 
@@ -56,7 +56,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
    * Metadata.
    */
   @NonNull
-  private final RepositoryServer tcgaServer = getTCGAServer();
+  private final Repository tcgaRepository = getTCGARepository();
 
   public TCGAClinicalFileProcessor(RepositoryFileContext context) {
     super(context);
@@ -135,7 +135,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
     val fileName = archiveClinicalFile.getFileName();
     val entityPath = resolveEntityPath(archiveClinicalFile);
     val dataPath = resolveDataPath(archiveClinicalFile);
-    val objectId = resolveObjectId(tcgaServer.getType().getDataPath(), entityPath);
+    val objectId = resolveObjectId(tcgaRepository.getType().getDataPath(), entityPath);
 
     //
     // Create
@@ -160,14 +160,14 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
         .setIndexFile(null) // N/A
         .setRepoDataBundleId(null) // N/A
         .setRepoFileId(null) // N/A
-        .setRepoType(tcgaServer.getType().getId())
-        .setRepoOrg(tcgaServer.getSource().getId())
-        .setRepoName(tcgaServer.getName())
-        .setRepoCode(tcgaServer.getCode())
-        .setRepoCountry(tcgaServer.getCountry())
-        .setRepoBaseUrl(tcgaServer.getBaseUrl())
+        .setRepoType(tcgaRepository.getType().getId())
+        .setRepoOrg(tcgaRepository.getSource().getId())
+        .setRepoName(tcgaRepository.getName())
+        .setRepoCode(tcgaRepository.getCode())
+        .setRepoCountry(tcgaRepository.getCountry())
+        .setRepoBaseUrl(tcgaRepository.getBaseUrl())
         .setRepoDataPath(dataPath)
-        .setRepoMetadataPath(tcgaServer.getType().getMetadataPath());
+        .setRepoMetadataPath(tcgaRepository.getType().getMetadataPath());
 
     clinicalFile.addDonor()
         .setPrimarySite(context.getPrimarySite(projectCode))
@@ -210,7 +210,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
   }
 
   private String resolveEntityPath(TCGAArchiveClinicalFile archiveClinicalFile) {
-    return resolvePath(archiveClinicalFile).replace(tcgaServer.getType().getDataPath(), "");
+    return resolvePath(archiveClinicalFile).replace(tcgaRepository.getType().getDataPath(), "");
   }
 
   private String resolveDataPath(TCGAArchiveClinicalFile archiveClinicalFile) {
@@ -219,7 +219,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
 
   private String resolvePath(TCGAArchiveClinicalFile archiveClinicalFile) {
     val url = archiveClinicalFile.getUrl();
-    return url.replace(tcgaServer.getBaseUrl(), "/");
+    return url.replace(tcgaRepository.getBaseUrl(), "/");
   }
 
 }

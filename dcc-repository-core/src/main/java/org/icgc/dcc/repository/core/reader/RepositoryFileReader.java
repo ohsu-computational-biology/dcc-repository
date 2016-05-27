@@ -17,8 +17,8 @@
  */
 package org.icgc.dcc.repository.core.reader;
 
-import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryCollection;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
 import org.jongo.MongoCollection;
 

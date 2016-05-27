@@ -18,7 +18,7 @@
 package org.icgc.dcc.repository.pdc;
 
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
-import static org.icgc.dcc.repository.core.model.RepositoryServers.getPDCServer;
+import static org.icgc.dcc.repository.core.model.Repositories.getPDCRepository;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PDC;
 
 import java.util.List;
@@ -63,7 +63,7 @@ public class PDCImporter extends GenericRepositorySourceFileImporter {
   }
 
   private Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
-    val fileProcessor = new PDCFileProcessor(context, getPDCServer());
+    val fileProcessor = new PDCFileProcessor(context, getPDCRepository());
     return fileProcessor.processFiles(objectSummaries);
   }
 

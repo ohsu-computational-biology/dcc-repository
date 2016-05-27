@@ -15,56 +15,26 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.aws;
+package org.icgc.dcc.repository.core.model;
 
-import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
+import static lombok.AccessLevel.PRIVATE;
 
-import java.io.File;
+import org.icgc.dcc.common.core.model.Identifiable;
 
-import org.icgc.dcc.repository.aws.s3.AWSClientFactory;
-import org.icgc.dcc.repository.cloud.CloudImporter;
-import org.icgc.dcc.repository.cloud.core.CloudFileProcessor;
-import org.icgc.dcc.repository.cloud.s3.CloudS3BucketReader;
-import org.icgc.dcc.repository.cloud.transfer.CloudTransferJobReader;
-import org.icgc.dcc.repository.core.RepositoryFileContext;
-import org.icgc.dcc.repository.core.model.Repositories;
-
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
-@Slf4j
-public class AWSImporter extends CloudImporter {
+@Getter
+@RequiredArgsConstructor(access = PRIVATE)
+public enum RepositoryAccess implements Identifiable {
 
-  /**
-   * Constants.
-   */
-  private static final String BUCKET_NAME = "oicr.icgc";
-  private static final String BUCKET_KEY_PREFIX = "data";
+  OPEN("open"),
+  DACO("daco"),
+  DB_GAP("dbgap"),
+  ERA_COMMONS("eracommons");
 
-  private static final String GIT_REPO_URL = "https://github.com/ICGC-TCGA-PanCancer/s3-transfer-operations.git";
-  private static final String GIT_REPO_DIR_GLOB = "s3-transfer-jobs-*";
-  private static final File GIT_REPO_DIR = new File("/tmp/dcc-repository-aws");
-
-  public AWSImporter(@NonNull RepositoryFileContext context) {
-    super(AWS, context, log);
-  }
-
-  @Override
-  protected CloudTransferJobReader createJobReader() {
-    return new CloudTransferJobReader(GIT_REPO_URL, GIT_REPO_DIR, GIT_REPO_DIR_GLOB);
-  }
-
-  @Override
-  protected CloudS3BucketReader createBucketReader() {
-    val s3 = AWSClientFactory.createS3Client();
-    return new CloudS3BucketReader(BUCKET_NAME, BUCKET_KEY_PREFIX, s3);
-  }
-
-  @Override
-  protected CloudFileProcessor createFileProcessor() {
-    val awsRepository = Repositories.getAWSRepository();
-    return new CloudFileProcessor(context, awsRepository);
-  }
+  @NonNull
+  private final String id;
 
 }

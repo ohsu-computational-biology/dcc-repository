@@ -106,6 +106,10 @@ public class RepositoryFile {
         .setDownloadUrl("ftp://ftp.sanger.ac.uk/pub/project/PanCancer/genome.fa.gz")
         .setGenomeBuild("GRCh37")
         .setReferenceName("hs37d5");
+    public static final ReferenceGenome GDC = new ReferenceGenome()
+        .setDownloadUrl(null) // TODO: Determine
+        .setGenomeBuild("GRCh38.p0")
+        .setReferenceName("GRCh38.d1.vd1");
 
     String genomeBuild;
     String referenceName;
@@ -217,6 +221,7 @@ public class RepositoryFile {
   @UtilityClass
   public class AnalysisType {
 
+    public final String MINI_BAM = "Mini-BAM"; // TODO: Get formal name from JJ
     public final String REFERENCE_ALIGNMENT = "Reference alignment"; // Using 'Variant calling' for ssm, cnsm, stsm etc
     public final String VARIANT_CALLING = "Variant calling";
 

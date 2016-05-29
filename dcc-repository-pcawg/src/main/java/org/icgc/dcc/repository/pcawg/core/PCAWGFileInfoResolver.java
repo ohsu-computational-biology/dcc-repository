@@ -39,7 +39,11 @@ public class PCAWGFileInfoResolver {
 
   public static AnalysisMethod resolveAnalysisMethod(@NonNull Analysis analysis) {
     val analysisMethod = new AnalysisMethod();
-    if (analysis.isRNAAlignment()) {
+    if (analysis.isMiniBAM()) {
+      analysisMethod
+          .setAnalysisType(AnalysisType.MINI_BAM)
+          .setSoftware(null); // TODO: Speak with JJ
+    } else if (analysis.isRNAAlignment()) {
       analysisMethod
           .setAnalysisType(AnalysisType.REFERENCE_ALIGNMENT)
           .setSoftware(resolveRNAAlignmentSoftware(analysis));
@@ -59,7 +63,11 @@ public class PCAWGFileInfoResolver {
   public static DataCategorization resolveDataCategorization(@NonNull Analysis analysis, @NonNull String fileName) {
     val category = new DataCategorization();
 
-    if (analysis.isRNAAlignment()) {
+    if (analysis.isMiniBAM()) {
+      category
+          .setDataType(DataType.ALIGNED_READS)
+          .setExperimentalStrategy(null); // TODO: Talk to JJ
+    } else if (analysis.isRNAAlignment()) {
       category
           .setDataType(DataType.ALIGNED_READS)
           .setExperimentalStrategy(ExperimentalStrategy.RNA_SEQ);

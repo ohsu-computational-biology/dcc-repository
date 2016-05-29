@@ -80,13 +80,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GDCFileProcessor extends RepositoryFileProcessor {
 
   /**
-   * Constants.
-   */
-  private static final ReferenceGenome GDC_REFERENCE_GENOME = new ReferenceGenome()
-      .setGenomeBuild("GRCh38.p0")
-      .setReferenceName("GRCh38.d1.vd1");
-
-  /**
    * Metadata.
    */
   @NonNull
@@ -135,7 +128,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     gdcFile.getDataBundle()
         .setDataBundleId(dataBundleId);
 
-    gdcFile.setReferenceGenome(GDC_REFERENCE_GENOME);
+    gdcFile.setReferenceGenome(ReferenceGenome.GDC);
 
     val fileCopy = gdcFile.addFileCopy()
         .setRepoDataBundleId(dataBundleId)

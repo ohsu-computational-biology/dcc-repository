@@ -29,6 +29,7 @@ import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCo
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveAnalysisMethod;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveDataCategorization;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveFileFormat;
+import static org.icgc.dcc.repository.pcawg.model.Analysis.analysis;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_LIBRARY_STRATEGIES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_SPECIMEN_CLASSES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.getBamFileMd5sum;
@@ -63,6 +64,7 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.OtherIdentifiers;
 import org.icgc.dcc.repository.core.model.RepositoryFile.ReferenceGenome;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import org.icgc.dcc.repository.pcawg.model.Analysis;
+import org.icgc.dcc.repository.pcawg.model.Workflow;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -93,69 +95,30 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> createDonorFiles(Iterable<ObjectNode> donors) {
-    return stream(donors).flatMap(stream(this::processDonor)).collect(toImmutableList());
+    return stream(donors).map(this::processDonor).flatMap(List::stream).collect(toImmutableList());
   }
 
-  private Iterable<RepositoryFile> processDonor(@NonNull ObjectNode donor) {
-    val projectCode = getDccProjectCode(donor);
-    val submittedDonorId = getSubmitterDonorId(donor);
+  private List<RepositoryFile> processDonor(@NonNull ObjectNode donor) {
     val donorFiles = ImmutableList.<RepositoryFile> builder();
-
-    // Each strategy
     for (val libraryStrategy : PCAWG_LIBRARY_STRATEGIES) {
       for (val specimenClass : PCAWG_SPECIMEN_CLASSES) {
-        val specimens = donor.path(libraryStrategy).path(specimenClass);
-
-        // Each specimen
-        for (val specimen : specimens.isArray() ? specimens : singleton(specimens)) {
-
-          // Each workflow
-          val iterator = specimen.fields();
-          while (iterator.hasNext()) {
-            val entry = iterator.next();
-            val workflowType = entry.getKey();
-            val workflow = entry.getValue();
-
-            val analysis = Analysis.builder()
-                .libraryStrategy(libraryStrategy)
-                .specimenClass(specimenClass)
-                .workflowType(workflowType).build();
-
-            // Each file
-            for (val workflowFile : resolveIncludedFiles(workflow)) {
-              // See
-              // https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#UniformmetadataJSONdocumentforICGCDataRepositories-Datatypeassignmentforvariantcallresultfiles
-              val fileName = getFileName(workflowFile);
-              if (fileName.contains(".germline.") && workflowType.equals("sanger_variant_calling")) {
-                continue;
-              }
-              if (libraryStrategy.equals("wgs") && specimenClass.equals("tumor_specimens")
-                  && workflowType.equals("broad_tar_variant_calling")) {
-                continue;
-              }
-              if (hasFileExtension(workflowFile, ".tar.gz")) {
-                continue;
-              }
-
-              val donorFile = createDonorFile(projectCode, submittedDonorId, analysis, workflow, workflowFile);
-
-              // TODO: workflowType.equals("minibam") / Analysis / PCAWGFileInfoResolver#resolveDataCategorization
-              // updates so that the next conditional passes.
-
-              // JJ: Ignore files like these for now:
-              // 712ba532-fb1a-43fa-a356-b446b509ceb7.embl-delly_1-0-0-preFilter-hpc.150708.sv.vcf.gz
-              if (donorFile.getDataCategorization().getDataType() == null) {
-                continue;
-              }
-
-              donorFiles.add(donorFile);
+        for (val specimen : resolveSpecimens(donor, libraryStrategy, specimenClass)) {
+          for (val workflow : resolveWorkflows(libraryStrategy, specimenClass, specimen))
+            for (val workflowFile : resolveWorkflowFiles(workflow)) {
+              donorFiles.add(
+                  createDonorFile(
+                      getDccProjectCode(donor),
+                      getSubmitterDonorId(donor),
+                      workflow.getAnalysis(),
+                      workflow.getWorkflow(),
+                      workflowFile));
             }
-          }
         }
       }
     }
 
     return donorFiles.build();
+
   }
 
   private RepositoryFile createDonorFile(String projectCode, String submittedDonorId, Analysis analysis,
@@ -178,7 +141,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val fileFormat = resolveFileFormat(analysis, fileName);
     val objectId = resolveObjectId(gnosId, fileName);
 
-    val pcawgRepositorys = resolvePCAWGRepositories(workflow);
+    val pcawgRepositories = resolvePCAWGRepositories(workflow);
 
     val baiFile = resolveBaiFile(workflow, fileName);
     val tbiFile = resolveTbiFile(workflow, fileName);
@@ -209,7 +172,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     donorFile
         .setReferenceGenome(ReferenceGenome.PCAWG);
 
-    for (val pcawgRepository : pcawgRepositorys) {
+    for (val pcawgRepository : pcawgRepositories) {
       val fileCopy = donorFile.addFileCopy()
           .setFileName(fileName)
           .setFileFormat(fileFormat)
@@ -276,8 +239,31 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
   // Utilities
   //
 
-  private static Iterable<JsonNode> resolveIncludedFiles(JsonNode workflow) {
-    return resolveFiles(workflow, file -> isBamFile(file) || isVcfFile(file) || isXmlFile(file))
+  private static Iterable<JsonNode> resolveSpecimens(ObjectNode donor, String libraryStrategy, String specimenClass) {
+    val specimens = donor.path(libraryStrategy).path(specimenClass);
+    return specimens.isArray() ? specimens : singleton(specimens);
+  }
+
+  private static List<Workflow> resolveWorkflows(String libraryStrategy, String specimenClass, JsonNode specimen) {
+    val workflows = ImmutableList.<Workflow> builder();
+    for (val workflowType : resolveWorkflowTypes(specimen)) {
+      val analysis = analysis()
+          .libraryStrategy(libraryStrategy)
+          .specimenClass(specimenClass)
+          .workflowType(workflowType).build();
+
+      workflows.add(new Workflow(analysis, specimen.get(workflowType)));
+    }
+
+    return workflows.build();
+  }
+
+  private static Iterable<String> resolveWorkflowTypes(JsonNode specimen) {
+    return () -> specimen.fieldNames();
+  }
+
+  private static List<JsonNode> resolveWorkflowFiles(Workflow workflow) {
+    return resolveFiles(workflow.getWorkflow(), workflowFile -> !isExcluded(workflow.getAnalysis(), workflowFile))
         .collect(toImmutableList());
   }
 
@@ -320,6 +306,40 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val dateTime = ISO_OFFSET_DATE_TIME.parse(lastModified, Instant::from);
 
     return dateTime.getEpochSecond();
+  }
+
+  /**
+   * @see https://wiki.oicr.on.ca/display/DCCSOFT/Uniform+metadata+JSON+document+for+ICGC+Data+Repositories#
+   * UniformmetadataJSONdocumentforICGCDataRepositories-Datatypeassignmentforvariantcallresultfiles
+   */
+  private static boolean isExcluded(Analysis analysis, JsonNode workflowFile) {
+    val excluded = true;
+    val included = false;
+    val fileName = getFileName(workflowFile);
+
+    if (!isBamFile(workflowFile) && !isVcfFile(workflowFile) && !isXmlFile(workflowFile)) {
+      return excluded;
+    }
+    if (fileName.contains(".germline.") &&
+        analysis.getWorkflowType().equals("sanger_variant_calling")) {
+      return excluded;
+    }
+    if (analysis.getLibraryStrategy().equals("wgs") &&
+        analysis.getSpecimenClass().equals("tumor_specimens") &&
+        analysis.getWorkflowType().equals("broad_tar_variant_calling")) {
+      return excluded;
+    }
+    if (analysis.getWorkflowType().equals("minibam")) {
+      // JJ: "There is no rush for that, I heard miniBAMs may need to be regenerated."
+      return excluded;
+    }
+    if (resolveDataCategorization(analysis, fileName) == null) {
+      // JJ: Ignore files like these for now (e.g. *.embl-delly_1-0-0-preFilter-hpc.*):
+      // 712ba532-fb1a-43fa-a356-b446b509ceb7.embl-delly_1-0-0-preFilter-hpc.150708.sv.vcf.gz
+      return excluded;
+    }
+
+    return included;
   }
 
   private static boolean isBamFile(JsonNode file) {

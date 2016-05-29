@@ -17,39 +17,14 @@
  */
 package org.icgc.dcc.repository.pcawg.model;
 
-import lombok.Builder;
-import lombok.NonNull;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import lombok.Value;
 
 @Value
-@Builder
-public class Analysis {
+public class Workflow {
 
-  @NonNull
-  String libraryStrategy;
-  @NonNull
-  String workflowType;
-  @NonNull
-  String specimenClass;
-
-  public boolean isMiniBAM() {
-    return "minibam".equals(workflowType);
-  }
-
-  public boolean isRNAAlignment() {
-    return "rna_seq".equals(libraryStrategy) && ("star".equals(workflowType) || "tophat".equals(workflowType));
-  }
-
-  public boolean isBWAAlignment() {
-    return "wgs".equals(libraryStrategy) && "bwa_alignment".equals(workflowType);
-  }
-
-  public boolean isVariantCalling() {
-    return "wgs".equals(libraryStrategy) && workflowType.endsWith("_variant_calling");
-  }
-
-  public static AnalysisBuilder analysis() {
-    return builder();
-  }
+  Analysis analysis;
+  JsonNode workflow;
 
 }

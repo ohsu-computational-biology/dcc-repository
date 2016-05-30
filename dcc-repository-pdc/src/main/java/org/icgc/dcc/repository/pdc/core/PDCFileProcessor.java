@@ -47,7 +47,7 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
   }
 
   public Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
-    return objectSummaries.stream().map(this::createFile).filter(file -> file != null).collect(toList());
+    return objectSummaries.stream().filter(this::isIncluded).map(this::createFile).collect(toList());
   }
 
   private RepositoryFile createFile(S3ObjectSummary objectSummary) {
@@ -72,16 +72,24 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
     return objectFile;
   }
 
-  private static String resolveObjectId(S3ObjectSummary objectSummary) {
-    val key = objectSummary.getKey();
-
-    // TODO: Remove. Only for development
-    if (key.equals("testfile")) {
-      log.warn("*** TEMP: mapping!!!!");
-      return "9320a69f-296d-5967-a816-3f53d986f59a";
+  private boolean isIncluded(S3ObjectSummary objectSummary) {
+    val objectId = resolveObjectId(objectSummary);
+    val entity = findEntity(objectId);
+    if (!entity.isPresent()) {
+      log.warn("Could not find entity for object id {}", objectId);
+      return false;
     }
 
-    return null;
+    val fileName = entity.get().getFileName();
+    if (fileName.endsWith(".tbi") || fileName.endsWith(".bai") || fileName.endsWith(".idx")) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private static String resolveObjectId(S3ObjectSummary objectSummary) {
+    return objectSummary.getKey();
   }
 
 }

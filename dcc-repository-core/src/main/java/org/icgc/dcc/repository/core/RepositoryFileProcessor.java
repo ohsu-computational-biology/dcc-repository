@@ -25,6 +25,7 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getTCGAProjects;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -34,6 +35,8 @@ import org.icgc.dcc.common.core.util.UUID5;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Donor;
 import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
+import org.icgc.dcc.repository.core.util.MetadataClient;
+import org.icgc.dcc.repository.core.util.MetadataClient.Entity;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +56,7 @@ public abstract class RepositoryFileProcessor {
    */
   @NonNull
   protected final RepositoryFileContext context;
+  private final MetadataClient metadataClient = new MetadataClient();
 
   protected void assignStudy(Iterable<RepositoryFile> files) {
     eachFileDonor(files, donor -> {
@@ -101,6 +105,10 @@ public abstract class RepositoryFileProcessor {
         .setTcgaParticipantBarcode(barcodes.get(donor.getSubmittedDonorId()))
         .setTcgaSampleBarcode(barcodes.get(donor.getSubmittedSpecimenId()))
         .setTcgaAliquotBarcode(barcodes.get(donor.getSubmittedSampleId())));
+  }
+
+  protected Optional<Entity> findEntity(@NonNull String objectId) {
+    return metadataClient.findEntity(objectId);
   }
 
   protected static Set<String> resolveTCGAUUIDs(Iterable<RepositoryFile> donorFiles) {

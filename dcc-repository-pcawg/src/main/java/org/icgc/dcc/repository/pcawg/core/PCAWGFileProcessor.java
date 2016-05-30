@@ -333,7 +333,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
       // JJ: "There is no rush for that, I heard miniBAMs may need to be regenerated."
       return excluded;
     }
-    if (resolveDataCategorization(analysis, fileName) == null) {
+    if (resolveDataCategorization(analysis, fileName).getDataType() == null) {
       // JJ: Ignore files like these for now (e.g. *.embl-delly_1-0-0-preFilter-hpc.*):
       // 712ba532-fb1a-43fa-a356-b446b509ceb7.embl-delly_1-0-0-preFilter-hpc.150708.sv.vcf.gz
       return excluded;

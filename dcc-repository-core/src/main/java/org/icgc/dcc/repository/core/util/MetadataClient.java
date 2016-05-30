@@ -15,25 +15,77 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.pcawg;
+package org.icgc.dcc.repository.core.util;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import java.io.FileNotFoundException;
+import java.net.URL;
+import java.util.Optional;
 
-import java.io.IOException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
-import lombok.val;
+/**
+ * Responsible for interacting with metadata service.
+ */
+@RequiredArgsConstructor
+public class MetadataClient {
 
-@Ignore("For development only")
-public class PCAWGImporterTest {
+  /**
+   * Constants.
+   */
+  private static final String DEFAULT_SERVER_URL = "https://meta.icgc.org";
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  @Test
-  public void testExecute() throws IOException {
-    val context = newLocalRepositoryFileContext();
-    val pcawgImporter = new PCAWGImporter(context);
-    pcawgImporter.execute();
+  /**
+   * Configuration.
+   */
+  @NonNull
+  @Getter
+  private final String serverUrl;
+
+  public MetadataClient() {
+    this(DEFAULT_SERVER_URL);
+  }
+
+  @SneakyThrows
+  public Optional<Entity> findEntity(@NonNull String objectId) {
+    Entity entity = null;
+    try {
+      entity = MAPPER.readValue(resolveUrl("/" + objectId), Entity.class);
+    } catch (FileNotFoundException e) {
+      // No-op
+    }
+
+    return Optional.ofNullable(entity);
+  }
+
+  @SneakyThrows
+  private URL resolveUrl(String path) {
+    return new URL(serverUrl + "/entities" + path);
+  }
+
+  @Data
+  @EqualsAndHashCode(of = "id")
+  public static class Entity {
+
+    /**
+     * Uniqueness.
+     */
+    String id;
+
+    /**
+     * Metadata.
+     */
+    String fileName;
+    String gnosId;
+    long createdTime;
+
   }
 
 }

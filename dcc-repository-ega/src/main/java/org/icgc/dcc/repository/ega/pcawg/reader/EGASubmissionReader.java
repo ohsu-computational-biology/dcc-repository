@@ -21,6 +21,7 @@ import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.google.common.collect.Ordering.natural;
 import static java.util.stream.Collectors.toList;
+import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.repository.ega.pcawg.model.EGASubmission.submission;
 
@@ -47,7 +48,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class EGASubmissionReader {
 
@@ -75,12 +78,29 @@ public class EGASubmissionReader {
 
   private List<EGASubmission> createSubmissions() {
     // Read sources
+    log.info("Reading published files...");
     val publishedFiles = readPublishedFiles();
+    log.info("Read {} published files.", formatCount(publishedFiles));
+
+    log.info("Reading study files...");
     val studyFiles = readStudyFiles();
+    log.info("Read {} study files.", formatCount(studyFiles));
+
+    log.info("Reading sample files...");
     val sampleFiles = readSampleFiles();
+    log.info("Read {} sample files.", formatCount(sampleFiles));
+
+    log.info("Reading gnos files...");
     val gnosFiles = readGnosFiles();
+    log.info("Read {} gnos files.", formatCount(gnosFiles));
+
+    log.info("Reading analysis files...");
     val analysisFiles = readAnalysisFiles();
+    log.info("Read {} analysis files.", formatCount(analysisFiles));
+
+    log.info("Reading receipt files...");
     val receiptFiles = readReceiptFiles();
+    log.info("Read {} receipt files.", formatCount(receiptFiles));
 
     // Index sources for lookup in combine step
     val studyIndex = uniqueIndex(studyFiles, EGAStudyFile::getStudy);

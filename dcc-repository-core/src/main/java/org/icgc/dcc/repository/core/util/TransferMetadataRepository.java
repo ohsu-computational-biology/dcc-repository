@@ -47,11 +47,13 @@ public class TransferMetadataRepository {
       log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
       val result = Git.open(repoDir).pull().call();
       checkState(result.isSuccessful(), "Could not successfully pull repository: %s", result);
+      log.info("Finished pulling.");
     } else {
       checkState(repoDir.mkdirs(), "Could not create '%s'", repoDir);
 
       log.info("Cloning '{}' to '{}'...", repoUrl, repoDir);
       Git.cloneRepository().setURI(repoUrl).setDirectory(repoDir).call();
+      log.info("Finished cloning.");
     }
   }
 

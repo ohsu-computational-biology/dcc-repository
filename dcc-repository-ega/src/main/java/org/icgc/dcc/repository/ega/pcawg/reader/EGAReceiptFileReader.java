@@ -49,7 +49,8 @@ public class EGAReceiptFileReader extends EGAFileReader<EGAReceiptFile> {
       + "\\."
       + "submission-"
       + "(\\d+)" // [timestamp]
-      + "_[^.]+" // [id]
+      + "_"
+      + "([^.]+)" // [id]
       + "\\.xml");
 
   public EGAReceiptFileReader(File repoDir) {
@@ -66,6 +67,7 @@ public class EGAReceiptFileReader extends EGAFileReader<EGAReceiptFile> {
         .workflow(matcher.group(4))
         .analysisId(matcher.group(5))
         .timestamp(Long.parseLong(matcher.group(6)))
+        .id(matcher.group(7))
         .build();
   }
 

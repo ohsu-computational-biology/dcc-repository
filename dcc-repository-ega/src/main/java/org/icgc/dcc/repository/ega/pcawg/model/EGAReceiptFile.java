@@ -30,6 +30,7 @@ public class EGAReceiptFile {
   String workflow;
   String analysisId;
   long timestamp;
+  String id;
 
   public static EGAReceiptFileBuilder receiptFile() {
     return builder();

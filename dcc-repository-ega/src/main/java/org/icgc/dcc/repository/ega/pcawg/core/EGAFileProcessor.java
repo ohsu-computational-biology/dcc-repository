@@ -334,8 +334,9 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
         .orElse(null);
   }
 
-  private static long resolveLastModified(EGASubmission submission) {
-    return submission.getReceiptFile().getTimestamp();
+  private static Long resolveLastModified(EGASubmission submission) {
+    val receiptFile = submission.getReceiptFile();
+    return receiptFile.getTimestamp();
   }
 
   private static Optional<JsonNode> resolveBaiFile(ArrayNode files, JsonNode file) {

@@ -17,17 +17,15 @@
  */
 package org.icgc.dcc.repository.gdc.reader;
 
-import static java.util.Spliterator.ORDERED;
-import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.array;
 import static org.icgc.dcc.common.core.json.JsonNodeBuilders.object;
+import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.gdc.util.GDCClient.Query.query;
 import static org.icgc.dcc.repository.gdc.util.GDCProjects.getProjectsIds;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.icgc.dcc.repository.gdc.util.GDCClient;
 import org.icgc.dcc.repository.gdc.util.GDCClient.Pagination;
@@ -117,10 +115,6 @@ public class GDCFileReader {
             .build());
 
     return stream(pages).flatMap(List::stream);
-  }
-
-  private static <T> Stream<T> stream(Iterator<T> iterator) {
-    return StreamSupport.stream(spliteratorUnknownSize(iterator, ORDERED), false);
   }
 
   private static class PageIterator implements Iterator<List<ObjectNode>> {

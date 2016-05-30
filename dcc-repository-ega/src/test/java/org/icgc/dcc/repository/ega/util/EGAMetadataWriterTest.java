@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.repository.ega.util;
 
+import static org.icgc.dcc.common.core.io.Files2.getHomeDir;
+
 import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,10 +38,6 @@ public class EGAMetadataWriterTest {
 
     val writer = new EGAMetadataWriter();
     writer.write(file);
-  }
-
-  private static File getHomeDir() {
-    return new File(System.getProperty("user.home"));
   }
 
 }

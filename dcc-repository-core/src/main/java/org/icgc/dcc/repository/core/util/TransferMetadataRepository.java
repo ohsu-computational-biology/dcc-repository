@@ -46,6 +46,7 @@ public class TransferMetadataRepository {
     if (repoDir.exists()) {
       log.info("Pulling '{}' in '{}'...", repoUrl, repoDir);
       val result = Git.open(repoDir).pull().call();
+
       checkState(result.isSuccessful(), "Could not successfully pull repository: %s", result);
       log.info("Finished pulling.");
     } else {

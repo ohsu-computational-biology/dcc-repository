@@ -121,6 +121,10 @@ public abstract class RepositoryFileProcessor {
     return metadataService.getIndexEntity(entity);
   }
 
+  protected Optional<Entity> findXmlEntity(@NonNull Entity entity) {
+    return metadataService.getXmlEntity(entity);
+  }
+
   protected Optional<ObjectNode> findCodeList(@NonNull String name) {
     for (val codeList : codeListsResolver.get()) {
       val currentName = codeList.get("name").textValue();

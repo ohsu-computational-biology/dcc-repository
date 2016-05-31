@@ -122,7 +122,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     val gdcFile = new RepositoryFile()
         .setId(context.ensureFileId(objectId))
         .setStudy(null) // N/A
-        .setObjectId(null); // N/A
+        .setObjectId(objectId);
 
     gdcFile.setAccess(getAccess(file));
 
@@ -164,7 +164,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
       val indexObjectId = resolveObjectId(indexFileId);
       fileCopy.getIndexFile()
           .setId(context.ensureFileId(indexObjectId))
-          .setObjectId(null) // N/A
+          .setObjectId(indexObjectId)
           .setRepoFileId(indexFileId)
           .setFileName(getIndexFileName(indexFile))
           .setFileFormat(getIndexDataFormat(indexFile))

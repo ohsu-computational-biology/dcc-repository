@@ -48,6 +48,14 @@ public class MetadataService {
         .findFirst();
   }
 
+  public Optional<Entity> getXmlEntity(Entity entity) {
+    val entities = metadataClient.findEntitiesByGnosId(entity.getGnosId());
+    return entities
+        .stream()
+        .filter(e -> iXmlFile(e, entity.getGnosId()))
+        .findFirst();
+  }
+
   private static boolean isIndexFile(Entity e, String fileName) {
     return isBaiFile(e, fileName) || isTbiFile(e, fileName);
   }
@@ -58,6 +66,10 @@ public class MetadataService {
 
   private static boolean isBaiFile(Entity e, String fileName) {
     return isMatch(e, fileName + ".bai");
+  }
+
+  private static boolean iXmlFile(Entity e, String gnosId) {
+    return isMatch(e, gnosId + ".xml");
   }
 
   private static boolean isMatch(Entity e, String indexFileName) {

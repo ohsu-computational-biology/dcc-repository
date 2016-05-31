@@ -20,9 +20,11 @@ package org.icgc.dcc.repository.pdc.core;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
+import org.icgc.dcc.repository.core.meta.Entity;
 import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
@@ -59,6 +61,7 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
     val entity = findEntity(objectId).get(); // Always present by context;
 
     val indexEntity = findIndexEntity(entity);
+    val xmlEntity = findXmlEntity(entity);
 
     val objectFile = new RepositoryFile()
         .setId(context.ensureFileId(objectId))
@@ -78,21 +81,55 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
         .setRepoBaseUrl(pdcRepository.getBaseUrl())
         .setRepoDataPath(objectSummary.getBucketName() + pdcRepository.getType().getDataPath() + objectId);
 
-    if (indexEntity.isPresent()) {
-      val indexSummary =
-          objectSummaries.stream().filter(s -> s.getKey().equals(indexEntity.get().getId())).findFirst().get();
+    if (xmlEntity.isPresent()) {
+      val xmlSummary = resolveObjectSummary(objectSummaries, xmlEntity.get());
+      if (xmlSummary.isPresent()) {
+        val metadataPath =
+            xmlSummary.get().getBucketName() + pdcRepository.getType().getMetadataPath() + xmlSummary.get().getKey();
+        fileCopy
+            .setRepoMetadataPath(metadataPath);
+      }
+    }
 
-      fileCopy.getIndexFile()
-          .setObjectId(indexEntity.get().getId())
-          .setFileName(indexEntity.get().getFileName())
-          .setFileSize(indexSummary.getSize())
-          .setFileFormat(resolveFileFormat(indexEntity.get().getFileName()));
+    if (indexEntity.isPresent()) {
+      val indexSummary = resolveObjectSummary(objectSummaries, indexEntity.get());
+      if (indexSummary.isPresent()) {
+        fileCopy.getIndexFile()
+            .setObjectId(indexEntity.get().getId())
+            .setFileName(indexEntity.get().getFileName())
+            .setFileSize(indexSummary.get().getSize())
+            .setFileFormat(resolveFileFormat(indexEntity.get().getFileName()));
+      }
     }
 
     return objectFile;
   }
 
-  private String resolveFileFormat(String fileName) {
+  private Optional<S3ObjectSummary> resolveObjectSummary(List<S3ObjectSummary> objectSummaries, Entity entity) {
+    return objectSummaries.stream().filter(s -> s.getKey().equals(entity.getId())).findFirst();
+  }
+
+  private boolean isIncluded(S3ObjectSummary objectSummary) {
+    val objectId = resolveObjectId(objectSummary);
+    val entity = findEntity(objectId);
+    if (!entity.isPresent()) {
+      log.warn("Could not find entity for object id {}", objectId);
+      return false;
+    }
+
+    val fileName = entity.get().getFileName();
+    if (!isBamFile(fileName) && !isVcfFile(fileName)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private static String resolveObjectId(S3ObjectSummary objectSummary) {
+    return objectSummary.getKey();
+  }
+
+  private static String resolveFileFormat(String fileName) {
     if (fileName.endsWith(".bam")) {
       return FileFormat.BAM;
     }
@@ -105,31 +142,23 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
     if (fileName.endsWith(".idx")) {
       return FileFormat.IDX;
     }
-    if (fileName.endsWith(".vcf")) {
+    if (fileName.endsWith(".vcf.gz")) {
       return FileFormat.VCF;
     }
 
     return null;
   }
 
-  private boolean isIncluded(S3ObjectSummary objectSummary) {
-    val objectId = resolveObjectId(objectSummary);
-    val entity = findEntity(objectId);
-    if (!entity.isPresent()) {
-      log.warn("Could not find entity for object id {}", objectId);
-      return false;
-    }
-
-    val fileName = entity.get().getFileName();
-    if (fileName.endsWith(".tbi") || fileName.endsWith(".bai") || fileName.endsWith(".idx")) {
-      return false;
-    }
-
-    return true;
+  private static boolean isBamFile(String fileName) {
+    return hasFileExtension(fileName, ".bam");
   }
 
-  private static String resolveObjectId(S3ObjectSummary objectSummary) {
-    return objectSummary.getKey();
+  private static boolean isVcfFile(String fileName) {
+    return hasFileExtension(fileName, ".vcf.gz");
+  }
+
+  private static boolean hasFileExtension(String fileName, String fileType) {
+    return fileName.toLowerCase().endsWith(fileType.toLowerCase());
   }
 
 }

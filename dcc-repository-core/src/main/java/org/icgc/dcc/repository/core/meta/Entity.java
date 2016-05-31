@@ -15,23 +15,25 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.pdc;
+package org.icgc.dcc.repository.core.meta;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import org.junit.Ignore;
-import org.junit.Test;
+@Data
+@EqualsAndHashCode(of = "id")
+public class Entity {
 
-import lombok.val;
+  /**
+   * Uniqueness.
+   */
+  String id;
 
-@Ignore("For development only")
-public class PDCImporterTest {
-
-  @Test
-  public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val pdcImporter = new PDCImporter(context);
-    pdcImporter.execute();
-  }
+  /**
+   * Metadata.
+   */
+  String fileName;
+  String gnosId;
+  long createdTime;
 
 }

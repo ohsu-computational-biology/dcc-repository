@@ -25,6 +25,7 @@ import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -47,18 +48,26 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
   }
 
   public Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
-    return objectSummaries.stream().filter(this::isIncluded).map(this::createFile).collect(toList());
+    return objectSummaries.stream()
+        .filter(this::isIncluded)
+        .map(file -> createFile(file, objectSummaries))
+        .collect(toList());
   }
 
-  private RepositoryFile createFile(S3ObjectSummary objectSummary) {
+  private RepositoryFile createFile(S3ObjectSummary objectSummary, List<S3ObjectSummary> objectSummaries) {
     val objectId = resolveObjectId(objectSummary);
+    val entity = findEntity(objectId).get(); // Always present by context;
+
+    val indexEntity = findIndexEntity(entity);
 
     val objectFile = new RepositoryFile()
         .setId(context.ensureFileId(objectId))
         .setObjectId(objectId);
 
-    objectFile.addFileCopy()
+    val fileCopy = objectFile.addFileCopy()
+        .setFileName(entity.getFileName())
         .setFileSize(objectSummary.getSize())
+        .setFileFormat(resolveFileFormat(entity.getFileName()))
         .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
         .setRepoFileId(objectId)
         .setRepoType(pdcRepository.getType().getId())
@@ -69,7 +78,38 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
         .setRepoBaseUrl(pdcRepository.getBaseUrl())
         .setRepoDataPath(objectSummary.getBucketName() + pdcRepository.getType().getDataPath() + objectId);
 
+    if (indexEntity.isPresent()) {
+      val indexSummary =
+          objectSummaries.stream().filter(s -> s.getKey().equals(indexEntity.get().getId())).findFirst().get();
+
+      fileCopy.getIndexFile()
+          .setObjectId(indexEntity.get().getId())
+          .setFileName(indexEntity.get().getFileName())
+          .setFileSize(indexSummary.getSize())
+          .setFileFormat(resolveFileFormat(indexEntity.get().getFileName()));
+    }
+
     return objectFile;
+  }
+
+  private String resolveFileFormat(String fileName) {
+    if (fileName.endsWith(".bam")) {
+      return FileFormat.BAM;
+    }
+    if (fileName.endsWith(".bai")) {
+      return FileFormat.BAI;
+    }
+    if (fileName.endsWith(".tbi")) {
+      return FileFormat.TBI;
+    }
+    if (fileName.endsWith(".idx")) {
+      return FileFormat.IDX;
+    }
+    if (fileName.endsWith(".vcf")) {
+      return FileFormat.VCF;
+    }
+
+    return null;
   }
 
   private boolean isIncluded(S3ObjectSummary objectSummary) {

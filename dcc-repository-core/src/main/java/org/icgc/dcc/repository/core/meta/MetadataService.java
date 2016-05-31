@@ -15,77 +15,53 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.util;
+package org.icgc.dcc.repository.core.meta;
 
-import java.io.FileNotFoundException;
-import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.val;
 
-/**
- * Responsible for interacting with metadata service.
- */
 @RequiredArgsConstructor
-public class MetadataClient {
+public class MetadataService {
 
-  /**
-   * Constants.
-   */
-  private static final String DEFAULT_SERVER_URL = "https://meta.icgc.org";
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private final MetadataClient metadataClient;
 
-  /**
-   * Configuration.
-   */
-  @NonNull
-  @Getter
-  private final String serverUrl;
-
-  public MetadataClient() {
-    this(DEFAULT_SERVER_URL);
+  public List<Entity> getEntities() {
+    return metadataClient.findEntities();
   }
 
-  @SneakyThrows
-  public Optional<Entity> findEntity(@NonNull String objectId) {
-    Entity entity = null;
+  public Optional<Entity> getEntity(String objectId) {
     try {
-      entity = MAPPER.readValue(resolveUrl("/" + objectId), Entity.class);
-    } catch (FileNotFoundException e) {
-      // No-op
+      return Optional.of(metadataClient.findEntity(objectId));
+    } catch (EntityNotFoundException e) {
+      return Optional.empty();
     }
-
-    return Optional.ofNullable(entity);
   }
 
-  @SneakyThrows
-  private URL resolveUrl(String path) {
-    return new URL(serverUrl + "/entities" + path);
+  public Optional<Entity> getIndexEntity(Entity entity) {
+    val entities = metadataClient.findEntitiesByGnosId(entity.getGnosId());
+    return entities
+        .stream()
+        .filter(e -> isIndexFile(e, entity.getFileName()))
+        .findFirst();
   }
 
-  @Data
-  @EqualsAndHashCode(of = "id")
-  public static class Entity {
+  private static boolean isIndexFile(Entity e, String fileName) {
+    return isBaiFile(e, fileName) || isTbiFile(e, fileName);
+  }
 
-    /**
-     * Uniqueness.
-     */
-    String id;
+  private static boolean isTbiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".tbi");
+  }
 
-    /**
-     * Metadata.
-     */
-    String fileName;
-    String gnosId;
-    long createdTime;
+  private static boolean isBaiFile(Entity e, String fileName) {
+    return isMatch(e, fileName + ".bai");
+  }
 
+  private static boolean isMatch(Entity e, String indexFileName) {
+    return e.getFileName().compareToIgnoreCase(indexFileName) == 0;
   }
 
 }

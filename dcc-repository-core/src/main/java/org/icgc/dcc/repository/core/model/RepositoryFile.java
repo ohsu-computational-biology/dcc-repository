@@ -247,6 +247,7 @@ public class RepositoryFile {
     public final String BAM = "BAM";
     public final String BAI = "BAI";
     public final String TBI = "TBI";
+    public final String IDX = "IDX";
     public final String XML = "XML";
     public final String VCF = "VCF";
     public final String FASTQ = "FASTQ";

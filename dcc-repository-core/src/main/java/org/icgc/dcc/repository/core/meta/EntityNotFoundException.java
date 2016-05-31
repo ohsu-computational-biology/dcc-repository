@@ -15,23 +15,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.pdc;
+package org.icgc.dcc.repository.core.meta;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+public class EntityNotFoundException extends RuntimeException {
 
-import org.junit.Ignore;
-import org.junit.Test;
+  public EntityNotFoundException() {
+    super();
+  }
 
-import lombok.val;
+  public EntityNotFoundException(String message, Throwable cause, boolean enableSuppression,
+      boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
 
-@Ignore("For development only")
-public class PDCImporterTest {
+  public EntityNotFoundException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-  @Test
-  public void testExecute() {
-    val context = newLocalRepositoryFileContext();
-    val pdcImporter = new PDCImporter(context);
-    pdcImporter.execute();
+  public EntityNotFoundException(String message) {
+    super(message);
+  }
+
+  public EntityNotFoundException(Throwable cause) {
+    super(cause);
   }
 
 }

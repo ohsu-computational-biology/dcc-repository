@@ -72,7 +72,7 @@ public class EGASubmissionReader {
   }
 
   private void updateMetadata() throws GitAPIException, IOException {
-    val repository = new TransferMetadataRepository(repoUrl, repoDir);
+    val repository = new TransferMetadataRepository(repoUrl, repoDir, true);
     repository.update();
   }
 

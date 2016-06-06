@@ -123,7 +123,28 @@
                   "type":"string"
                }
             }
-         }         
+         },
+         "data_bundle_id":{
+            "type":"multi_field",
+            "fields":{
+               "raw":{
+                  "index":"not_analyzed",
+                  "store":"yes",
+                  "type":"string"
+               },
+               "analyzed":{
+                  "index":"analyzed",
+                  "index_analyzer":"id_index",
+                  "search_analyzer":"id_search",
+                  "type":"string"
+               },
+               "search":{
+                  "index":"analyzed",
+                  "analyzer":"id_search",
+                  "type":"string"
+               }
+            }
+         }   
       }
    }
 }

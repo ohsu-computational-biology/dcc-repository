@@ -114,7 +114,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
 
     egaFile.addDonor()
         .setProjectCode(getFirst(metadata.getProjectCodes(), null))
-        .setSubmittedSampleId(resolveSubmittedSampleId(metadata, fileCopy.getRepoFileId()));
+        .setSubmittedSampleId(singletonList(resolveSubmittedSampleId(metadata, fileCopy.getRepoFileId())));
 
     if (++fileCount % 1000 == 0) {
       log.info("Processed {} files", formatCount(fileCount));

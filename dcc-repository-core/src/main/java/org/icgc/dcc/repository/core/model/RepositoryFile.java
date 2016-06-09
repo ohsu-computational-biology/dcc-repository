@@ -172,15 +172,15 @@ public class RepositoryFile {
     String primarySite;
 
     String donorId;
-    String specimenId;
-    String specimenType;
-    String sampleId;
+    List<String> specimenId;
+    List<String> specimenType;
+    List<String> sampleId;
 
     String matchedControlSampleId;
 
     String submittedDonorId;
-    String submittedSpecimenId;
-    String submittedSampleId;
+    List<String> submittedSpecimenId;
+    List<String> submittedSampleId;
 
     OtherIdentifiers otherIdentifiers = new OtherIdentifiers();
 
@@ -195,8 +195,8 @@ public class RepositoryFile {
   public static class OtherIdentifiers {
 
     String tcgaParticipantBarcode;
-    String tcgaSampleBarcode;
-    String tcgaAliquotBarcode;
+    List<String> tcgaSampleBarcode;
+    List<String> tcgaAliquotBarcode;
 
   }
 

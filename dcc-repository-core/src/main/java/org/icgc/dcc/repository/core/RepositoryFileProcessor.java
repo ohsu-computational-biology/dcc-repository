@@ -18,6 +18,8 @@
 package org.icgc.dcc.repository.core;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.common.core.tcga.TCGAIdentifiers.isUUID;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
@@ -44,6 +46,7 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import lombok.NonNull;
@@ -94,9 +97,11 @@ public abstract class RepositoryFileProcessor {
             .setDonorId(
                 submittedDonorId == null ? null : context.ensureDonorId(submittedDonorId, projectCode))
             .setSpecimenId(
-                submittedSpecimenId == null ? null : context.ensureSpecimenId(submittedSpecimenId, projectCode))
+                normalizeIds(submittedSpecimenId).stream()
+                    .map(s -> context.ensureSpecimenId(s, projectCode)).collect(toList()))
             .setSampleId(
-                submittedSampleId == null ? null : context.ensureSampleId(submittedSampleId, projectCode));
+                normalizeIds(submittedSampleId).stream()
+                    .map(s -> context.ensureSampleId(s, projectCode)).collect(toList()));
       }
     }
   }
@@ -109,8 +114,8 @@ public abstract class RepositoryFileProcessor {
     val barcodes = context.getTCGABarcodes(uuids);
     eachFileDonor(donorFiles, donor -> donor.getOtherIdentifiers()
         .setTcgaParticipantBarcode(barcodes.get(donor.getSubmittedDonorId()))
-        .setTcgaSampleBarcode(barcodes.get(donor.getSubmittedSpecimenId()))
-        .setTcgaAliquotBarcode(barcodes.get(donor.getSubmittedSampleId())));
+        .setTcgaSampleBarcode(donor.getSubmittedSpecimenId().stream().map(barcodes::get).collect(toList()))
+        .setTcgaAliquotBarcode(donor.getSubmittedSampleId().stream().map(barcodes::get).collect(toList())));
   }
 
   protected Optional<Entity> findEntity(@NonNull String objectId) {
@@ -153,11 +158,15 @@ public abstract class RepositoryFileProcessor {
         if (isUUID(donorId)) {
           uuids.add(donorId);
         }
-        if (isUUID(specimenId)) {
-          uuids.add(specimenId);
+        for (val value : specimenId) {
+          if (isUUID(value)) {
+            uuids.add(value);
+          }
         }
-        if (isUUID(sampleId)) {
-          uuids.add(sampleId);
+        for (val value : sampleId) {
+          if (isUUID(value)) {
+            uuids.add(value);
+          }
         }
       }
     }
@@ -195,6 +204,19 @@ public abstract class RepositoryFileProcessor {
 
   protected static Set<String> resolveTCGAProjectCodes() {
     return stream(getTCGAProjects()).map(project -> project.getProjectCode()).collect(toImmutableSet());
+  }
+
+  private static List<String> normalizeIds(List<String> ids) {
+    if (ids == null) {
+      return emptyList();
+    }
+  
+    if (ids.contains(null)) {
+      ids = Lists.newArrayList(ids);
+      ids.remove(null);
+    }
+  
+    return ids;
   }
 
 }

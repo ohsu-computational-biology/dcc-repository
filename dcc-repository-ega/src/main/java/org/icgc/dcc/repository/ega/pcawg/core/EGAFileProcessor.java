@@ -176,7 +176,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
             .setObjectId(baiObjectId)
             .setRepoFileId(baiPublishedFile.get().getFileId())
             .setFileName(baiFileName)
-            .setFileFormat(FileFormat.BAI)
+            .setFileFormat(FileFormat.BAI) // TODO: Verify that this cannot be TBI
             .setFileSize(resolveFileSize(baiFileName, gnosFile))
             .setFileMd5sum(getChecksum(baiFile.get()));
       }
@@ -187,12 +187,12 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
           .setProgram(project.get().getProgram())
           .setStudy(Study.PCAWG)
           .setDonorId(resolveDonorId(sampleAttributes))
-          .setSpecimenId(resolveSpecimenId(sampleAttributes))
-          .setSpecimenType(resolveSpecimenType(sampleAttributes))
-          .setSampleId(resolveSampleId(sampleAttributes))
+          .setSpecimenId(singletonList(resolveSpecimenId(sampleAttributes)))
+          .setSpecimenType(singletonList(resolveSpecimenType(sampleAttributes)))
+          .setSampleId(singletonList(resolveSampleId(sampleAttributes)))
           .setSubmittedDonorId(resolveSubmitterDonorId(sampleAttributes))
-          .setSubmittedSpecimenId(resolveSubmitterSpecimenId(sampleAttributes))
-          .setSubmittedSampleId(resolveSubmitterSampleId(sampleAttributes))
+          .setSubmittedSpecimenId(singletonList(resolveSubmitterSpecimenId(sampleAttributes)))
+          .setSubmittedSampleId(singletonList(resolveSubmitterSampleId(sampleAttributes)))
           .setMatchedControlSampleId(null) // TODO: Address when non-alignment types are present
           .setOtherIdentifiers(null); // N/A for non-TCGA
 

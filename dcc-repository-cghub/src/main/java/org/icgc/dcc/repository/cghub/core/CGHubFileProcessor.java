@@ -17,6 +17,7 @@
  */
 package org.icgc.dcc.repository.cghub.core;
 
+import static java.util.Collections.singletonList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getAliquotId;
@@ -175,16 +176,16 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
         .setProgram(project.getProgram())
         .setStudy(null) // Set downstream
         .setDonorId(context.getDonorId(legacyDonorId, projectCode))
-        .setSpecimenId(context.getSpecimenId(legacySpecimenId, projectCode))
-        .setSpecimenType(resolveSpecimenType(result))
-        .setSampleId(context.getSampleId(legacySampleId, projectCode))
+        .setSpecimenId(singletonList(context.getSpecimenId(legacySpecimenId, projectCode)))
+        .setSpecimenType(singletonList(resolveSpecimenType(result)))
+        .setSampleId(singletonList(context.getSampleId(legacySampleId, projectCode)))
         .setSubmittedDonorId(getParticipantId(result))
-        .setSubmittedSpecimenId(getSampleId(result))
-        .setSubmittedSampleId(getAliquotId(result))
+        .setSubmittedSpecimenId(singletonList(getSampleId(result)))
+        .setSubmittedSampleId(singletonList(getAliquotId(result)))
         .setOtherIdentifiers(new OtherIdentifiers()
             .setTcgaParticipantBarcode(legacyDonorId)
-            .setTcgaSampleBarcode(legacySpecimenId)
-            .setTcgaAliquotBarcode(legacySampleId));
+            .setTcgaSampleBarcode(singletonList(legacySpecimenId))
+            .setTcgaAliquotBarcode(singletonList(legacySampleId)));
 
     return analysisFile;
   }

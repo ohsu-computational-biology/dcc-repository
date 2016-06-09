@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.primitives.Longs.max;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.Repositories.getPCAWGRepository;
@@ -222,11 +223,11 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
         .setStudy(Study.PCAWG)
         .setDonorId(null) // Set downstream
         .setSpecimenId(null) // Set downstream
-        .setSpecimenType(specimenType)
+        .setSpecimenType(singletonList(specimenType))
         .setSampleId(null) // Set downstream
         .setSubmittedDonorId(submittedDonorId)
-        .setSubmittedSpecimenId(submitterSpecimenId)
-        .setSubmittedSampleId(submitterSampleId)
+        .setSubmittedSpecimenId(singletonList(submitterSpecimenId))
+        .setSubmittedSampleId(singletonList(submitterSampleId))
         .setOtherIdentifiers(new OtherIdentifiers()
             .setTcgaParticipantBarcode(null) // Set downstream
             .setTcgaSampleBarcode(null) // Set downstream

@@ -109,11 +109,16 @@ public class RepositoryFileContext {
 
   @NonNull
   public String ensureDonorId(String submittedDonorId, String submittedProjectId) {
-    if (readOnly) {
-      return getDonorId(submittedDonorId, submittedProjectId);
-    }
+    try {
+      if (readOnly) {
+        return getDonorId(submittedDonorId, submittedProjectId);
+      }
 
-    return idClient.createDonorId(submittedDonorId, submittedProjectId);
+      return idClient.createDonorId(submittedDonorId, submittedProjectId);
+    } catch (Exception e) {
+      throw new RuntimeException("Error ensuring donor id for submittedDonorId=" + submittedDonorId
+          + ", submittedProjectId=" + submittedProjectId, e);
+    }
   }
 
   @NonNull
@@ -123,11 +128,17 @@ public class RepositoryFileContext {
 
   @NonNull
   public String ensureSpecimenId(String submittedSpecimenId, String submittedProjectId) {
-    if (readOnly) {
-      return getSpecimenId(submittedSpecimenId, submittedProjectId);
-    }
+    try {
+      if (readOnly) {
+        return getSpecimenId(submittedSpecimenId, submittedProjectId);
+      }
 
-    return idClient.createSpecimenId(submittedSpecimenId, submittedProjectId);
+      return idClient.createSpecimenId(submittedSpecimenId, submittedProjectId);
+
+    } catch (Exception e) {
+      throw new RuntimeException("Error ensuring specimen id for submittedSpecimenId=" + submittedSpecimenId
+          + ", submittedProjectId=" + submittedProjectId, e);
+    }
   }
 
   @NonNull
@@ -137,20 +148,29 @@ public class RepositoryFileContext {
 
   @NonNull
   public String ensureSampleId(String submittedSampleId, String submittedProjectId) {
-    if (readOnly) {
-      return getSampleId(submittedSampleId, submittedProjectId);
-    }
+    try {
+      if (readOnly) {
+        return getSampleId(submittedSampleId, submittedProjectId);
+      }
 
-    return idClient.createSampleId(submittedSampleId, submittedProjectId);
+      return idClient.createSampleId(submittedSampleId, submittedProjectId);
+    } catch (Exception e) {
+      throw new RuntimeException("Error ensuring sample id for submittedSampleId=" + submittedSampleId
+          + ", submittedProjectId=" + submittedProjectId, e);
+    }
   }
 
   @NonNull
   public String ensureFileId(String objectId) {
-    if (readOnly) {
-      return getFileId(objectId);
-    }
+    try {
+      if (readOnly) {
+        return getFileId(objectId);
+      }
 
-    return idClient.createFileId(objectId);
+      return idClient.createFileId(objectId);
+    } catch (Exception e) {
+      throw new RuntimeException("Error ensuring file id for objectId=" + objectId, e);
+    }
   }
 
   @NonNull

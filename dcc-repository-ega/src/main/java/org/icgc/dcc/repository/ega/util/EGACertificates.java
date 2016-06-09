@@ -71,7 +71,10 @@ public final class EGACertificates {
     // Output
     val keyStore = createKeyStore();
     keyStore.setCertificateEntry(hostUrl.getHost(), certificate);
-    keyStore.store(new BufferedOutputStream(new FileOutputStream(getKeyStoreFile())), getKeyStorePassword());
+
+    @Cleanup
+    val output = new BufferedOutputStream(new FileOutputStream(getKeyStoreFile()));
+    keyStore.store(output, getKeyStorePassword());
   }
 
   @SneakyThrows
@@ -129,7 +132,7 @@ public final class EGACertificates {
     if (keystoreFile.exists()) {
       checkState(keystoreFile.delete());
     }
-    keystoreFile.createNewFile();
+    checkState(keystoreFile.createNewFile());
 
     val keystore = newKeyStore();
     keystore.load(null, getKeyStorePassword());

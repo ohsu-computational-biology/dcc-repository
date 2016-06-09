@@ -1,6 +1,6 @@
 # ICGC DCC - Repository
 
-Importer for the ICGC "Data Repository" feature which imports file metadata from various external data sources.
+Importer for the ICGC "Data Repository" service which imports file metadata from various external data sources for [Portal](../dcc-portal) publication.
 
 ## Build
 
@@ -29,12 +29,12 @@ This is the main entry point of the application.
 
 These modules collect various data sources.
 - [AWS](dcc-repository-aws/README.md)
-- [Collab](dcc-repository-collab/README.md)
 - [CGHub](dcc-repository-cghub/README.md)
+- [Collab](dcc-repository-collab/README.md)
 - [EGA](dcc-repository-ega/README.md)
 - [GDC](dcc-repository-gdc/README.md)
-- [PDC](dcc-repository-pdc/README.md)
 - [PCAWG](dcc-repository-pcawg/README.md)
+- [PDC](dcc-repository-pdc/README.md)
 - [TCGA](dcc-repository-tcga/README.md)
 
 AWS and Collab share common code through:

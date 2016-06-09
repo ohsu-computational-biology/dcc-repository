@@ -20,7 +20,6 @@ package org.icgc.dcc.repository.core.util;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.eclipse.jgit.api.Git;
@@ -85,11 +84,14 @@ public class TransferMetadataRepository {
   }
 
   private static void delete(File file) throws IOException {
-    if (file.isDirectory()) {
-      for (val f : file.listFiles())
-        delete(f);
+    File[] children = file.listFiles();
+    val directory = children != null;
+    if (directory) {
+      for (val child : children)
+        delete(child);
     }
-    if (!file.delete()) throw new FileNotFoundException("Failed to delete file: " + file);
+
+    checkState(file.delete(), "Failed to delete file: %s", file);
   }
 
 }

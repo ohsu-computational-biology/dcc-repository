@@ -408,28 +408,28 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     return getAliquotSubmitterId(caze);
   }
 
-  private static List<String> resolveTcgaAliquotBarcode(JsonNode caze) {
-    val tcgaAliquotBarcode = Lists.<String> newArrayList();
-    for (val sample : getCaseSamples(caze)) {
-      tcgaAliquotBarcode.add(getSampleSubmitterId(sample));
-    }
-
-    return tcgaAliquotBarcode;
-  }
-
   private static List<String> resolveTcgaSampleBarcode(JsonNode caze) {
     val tcgaSampleBarcode = Lists.<String> newArrayList();
+    for (val sample : getCaseSamples(caze)) {
+      tcgaSampleBarcode.add(getSampleSubmitterId(sample));
+    }
+
+    return tcgaSampleBarcode;
+  }
+
+  private static List<String> resolveTcgaAliquotBarcode(JsonNode caze) {
+    val tcgaAliquotBarcode = Lists.<String> newArrayList();
     for (val sample : getCaseSamples(caze)) {
       for (val portion : getSamplePortions(sample)) {
         for (val analyte : getPortionAnalytes(portion)) {
           for (val aliquot : getAnalyteAliquots(analyte)) {
-            tcgaSampleBarcode.add(getAliquotSubmitterId(aliquot));
+            tcgaAliquotBarcode.add(getAliquotSubmitterId(aliquot));
           }
         }
       }
     }
 
-    return tcgaSampleBarcode;
+    return tcgaAliquotBarcode;
   }
 
 }

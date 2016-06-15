@@ -91,6 +91,7 @@ public abstract class RepositoryFileProcessor {
             tcga ? donor.getOtherIdentifiers().getTcgaSampleBarcode() : donor.getSubmittedSpecimenId();
         val submittedSampleId =
             tcga ? donor.getOtherIdentifiers().getTcgaAliquotBarcode() : donor.getSubmittedSampleId();
+        val submittedMatchedSampleId = donor.getMatchedControlSampleId();
 
         // Get IDs or create if they don't exist. This is different than the other repos.
         donor
@@ -101,7 +102,10 @@ public abstract class RepositoryFileProcessor {
                     .map(s -> context.ensureSpecimenId(s, projectCode)).collect(toList()))
             .setSampleId(
                 normalizeIds(submittedSampleId).stream()
-                    .map(s -> context.ensureSampleId(s, projectCode)).collect(toList()));
+                    .map(s -> context.ensureSampleId(s, projectCode)).collect(toList()))
+            .setMatchedControlSampleId(
+                submittedMatchedSampleId == null ? null : context.ensureSampleId(submittedMatchedSampleId,
+                    projectCode));
       }
     }
   }
@@ -210,12 +214,12 @@ public abstract class RepositoryFileProcessor {
     if (ids == null) {
       return emptyList();
     }
-  
+
     if (ids.contains(null)) {
       ids = Lists.newArrayList(ids);
       ids.remove(null);
     }
-  
+
     return ids;
   }
 

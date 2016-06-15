@@ -187,16 +187,16 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
           .setStudy(null) // N/A
           .setDonorId(null) // Set downstream
           .setSpecimenId(null) // Set downstream
-          .setSpecimenType(resolveSpecimenType(caze))
-          .setMatchedControlSampleId(resolveMatchedControlSampleId(caze))
+          .setSpecimenType(resolveSpecimenType(caze, dataType))
+          .setMatchedControlSampleId(resolveMatchedControlSampleId(caze, dataType))
           .setSampleId(null) // Set downstream
           .setSubmittedDonorId(resolveSubmittedDonorId(caze))
-          .setSubmittedSpecimenId(resolveSubmitterSpecimenId(caze))
-          .setSubmittedSampleId(resolveSubmitterSampleId(caze))
+          .setSubmittedSpecimenId(resolveSubmitterSpecimenId(caze, dataType))
+          .setSubmittedSampleId(resolveSubmitterSampleId(caze, dataType))
           .setOtherIdentifiers(new OtherIdentifiers()
               .setTcgaParticipantBarcode(resolveTcgaParticipantBarcode(caze))
-              .setTcgaSampleBarcode(resolveTcgaSampleBarcode(caze))
-              .setTcgaAliquotBarcode(resolveTcgaAliquotBarcode(caze)));
+              .setTcgaSampleBarcode(resolveTcgaSampleBarcode(caze, dataType))
+              .setTcgaAliquotBarcode(resolveTcgaAliquotBarcode(caze, dataType)));
 
     }
 
@@ -351,35 +351,45 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     return getCaseId(caze);
   }
 
-  private static List<String> resolveSubmitterSpecimenId(JsonNode caze) {
+  private static List<String> resolveSubmitterSpecimenId(JsonNode caze, String dataType) {
     val submitterSpecimenId = Lists.<String> newArrayList();
     for (val sample : getCaseSamples(caze)) {
-      submitterSpecimenId.add(getCaseSampleId(sample));
+      val sampleType = getCaseSampleType(sample);
+
+      if (isPrimaryBiospecimen(dataType, sampleType)) {
+        submitterSpecimenId.add(getCaseSampleId(sample));
+      }
     }
 
     return submitterSpecimenId;
   }
 
-  private static List<String> resolveSpecimenType(JsonNode caze) {
+  private static List<String> resolveSpecimenType(JsonNode caze, String dataType) {
     val specimenType = Lists.<String> newArrayList();
     for (val sample : getCaseSamples(caze)) {
-      specimenType.add(getCaseSampleType(sample));
+      val sampleType = getCaseSampleType(sample);
+
+      if (isPrimaryBiospecimen(dataType, sampleType)) {
+        specimenType.add(sampleType);
+      }
     }
 
     return specimenType;
   }
 
-  private static String resolveMatchedControlSampleId(JsonNode caze) {
+  private static String resolveMatchedControlSampleId(JsonNode caze, String dataType) {
     for (val sample : getCaseSamples(caze)) {
       val sampleType = getCaseSampleType(sample);
-      val matched = sampleType.toLowerCase().contains("normal");
-      if (matched) {
+
+      if (isPrimaryBiospecimen(dataType, sampleType) == false) {
         for (val portion : getSamplePortions(sample)) {
           for (val analyte : getPortionAnalytes(portion)) {
             for (val aliquot : getAnalyteAliquots(analyte)) {
               // JJ: at the inner most level, the aliquot should be just one so return first one should be safe. this is
               // because, one VCF can only associate with one tumour aliquot (or one normal aliquot)
-              return getAliquotId(aliquot);
+
+              // This is a barcode so that we can convert it to an ICGC id "Downstream"
+              return getAliquotSubmitterId(aliquot);
             }
           }
         }
@@ -389,13 +399,17 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     return null;
   }
 
-  private static List<String> resolveSubmitterSampleId(JsonNode caze) {
+  private static List<String> resolveSubmitterSampleId(JsonNode caze, String dataType) {
     val submitterSampleId = Lists.<String> newArrayList();
     for (val sample : getCaseSamples(caze)) {
-      for (val portion : getSamplePortions(sample)) {
-        for (val analyte : getPortionAnalytes(portion)) {
-          for (val aliquot : getAnalyteAliquots(analyte)) {
-            submitterSampleId.add(getAliquotId(aliquot));
+      val sampleType = getCaseSampleType(sample);
+
+      if (isPrimaryBiospecimen(dataType, sampleType)) {
+        for (val portion : getSamplePortions(sample)) {
+          for (val analyte : getPortionAnalytes(portion)) {
+            for (val aliquot : getAnalyteAliquots(analyte)) {
+              submitterSampleId.add(getAliquotId(aliquot));
+            }
           }
         }
       }
@@ -408,28 +422,50 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     return getAliquotSubmitterId(caze);
   }
 
-  private static List<String> resolveTcgaSampleBarcode(JsonNode caze) {
+  private static List<String> resolveTcgaSampleBarcode(JsonNode caze, String dataType) {
     val tcgaSampleBarcode = Lists.<String> newArrayList();
     for (val sample : getCaseSamples(caze)) {
-      tcgaSampleBarcode.add(getSampleSubmitterId(sample));
+      val sampleType = getCaseSampleType(sample);
+
+      if (isPrimaryBiospecimen(dataType, sampleType)) {
+        tcgaSampleBarcode.add(getSampleSubmitterId(sample));
+      }
     }
 
     return tcgaSampleBarcode;
   }
 
-  private static List<String> resolveTcgaAliquotBarcode(JsonNode caze) {
+  private static List<String> resolveTcgaAliquotBarcode(JsonNode caze, String dataType) {
     val tcgaAliquotBarcode = Lists.<String> newArrayList();
     for (val sample : getCaseSamples(caze)) {
-      for (val portion : getSamplePortions(sample)) {
-        for (val analyte : getPortionAnalytes(portion)) {
-          for (val aliquot : getAnalyteAliquots(analyte)) {
-            tcgaAliquotBarcode.add(getAliquotSubmitterId(aliquot));
+      val sampleType = getCaseSampleType(sample);
+
+      if (isPrimaryBiospecimen(dataType, sampleType)) {
+        for (val portion : getSamplePortions(sample)) {
+          for (val analyte : getPortionAnalytes(portion)) {
+            for (val aliquot : getAnalyteAliquots(analyte)) {
+              tcgaAliquotBarcode.add(getAliquotSubmitterId(aliquot));
+            }
           }
         }
       }
     }
 
     return tcgaAliquotBarcode;
+  }
+
+  private static boolean isPrimaryBiospecimen(String dataType, String sampleType) {
+    val matched = dataType.toLowerCase().endsWith("variation") || dataType.toLowerCase().endsWith("mutation");
+    if (!matched) {
+      return true;
+    }
+
+    val control = sampleType.toLowerCase().contains("normal");
+    if (!control) {
+      return true;
+    }
+
+    return false;
   }
 
 }

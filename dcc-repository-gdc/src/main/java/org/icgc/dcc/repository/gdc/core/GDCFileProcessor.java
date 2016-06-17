@@ -201,6 +201,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     }
 
     // "Downstream"
+    assignStudy(singleton(gdcFile));
     assignIds(singleton(gdcFile));
 
     if (++fileCount % 1000 == 0) {

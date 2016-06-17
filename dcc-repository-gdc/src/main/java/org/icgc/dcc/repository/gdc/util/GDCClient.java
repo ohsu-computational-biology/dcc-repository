@@ -70,15 +70,15 @@ public class GDCClient {
 
   private static final String APPLICATION_JSON = "application/json";
 
-  public GDCClient() {
-    this(DEFAULT_API_URL);
-  }
-
   /**
    * Configuration.
    */
   @NonNull
   private final String url;
+
+  public GDCClient() {
+    this(DEFAULT_API_URL);
+  }
 
   public JsonNode getFilesMapping() {
     return getMapping("/files");

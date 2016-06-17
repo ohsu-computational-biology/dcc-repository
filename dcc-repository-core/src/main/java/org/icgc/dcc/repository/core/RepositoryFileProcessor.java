@@ -160,16 +160,16 @@ public abstract class RepositoryFileProcessor {
         }
 
         if (isUUID(donorId)) {
-          uuids.add(donorId);
+          uuids.add(donorId.toLowerCase());
         }
         for (val value : specimenId) {
           if (isUUID(value)) {
-            uuids.add(value);
+            uuids.add(value.toLowerCase());
           }
         }
         for (val value : sampleId) {
           if (isUUID(value)) {
-            uuids.add(value);
+            uuids.add(value.toLowerCase());
           }
         }
       }

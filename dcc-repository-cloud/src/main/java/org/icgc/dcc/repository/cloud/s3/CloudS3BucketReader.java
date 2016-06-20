@@ -17,6 +17,8 @@
  */
 package org.icgc.dcc.repository.cloud.s3;
 
+import static org.icgc.dcc.repository.cloud.util.S3Objects.isObject;
+
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -59,7 +61,9 @@ public class CloudS3BucketReader {
     // For all bucket partitions
     for (val bucketName : getBucketNames()) {
       readBucket(bucketName, prefix, (objectSummary) -> {
-        objectSummaries.add(objectSummary);
+        if (isObject(objectSummary)) {
+          objectSummaries.add(objectSummary);
+        }
       });
     }
 

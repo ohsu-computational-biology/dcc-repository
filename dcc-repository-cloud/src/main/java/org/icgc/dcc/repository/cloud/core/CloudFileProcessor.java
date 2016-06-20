@@ -27,8 +27,8 @@ import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getFileSi
 import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getFiles;
 import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getGnosId;
 import static org.icgc.dcc.repository.cloud.transfer.CloudTransferJobs.getObjectId;
+import static org.icgc.dcc.repository.cloud.util.S3Objects.getObjectId;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -200,11 +200,7 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
   }
 
   private static Map<String, S3ObjectSummary> indexObjectSummaries(Iterable<S3ObjectSummary> objectSummaries) {
-    return Maps.uniqueIndex(objectSummaries, objectSummary -> getS3ObjectId(objectSummary));
-  }
-
-  private static String getS3ObjectId(S3ObjectSummary objectSummary) {
-    return new File(objectSummary.getKey()).getName();
+    return Maps.uniqueIndex(objectSummaries, objectSummary -> getObjectId(objectSummary));
   }
 
 }

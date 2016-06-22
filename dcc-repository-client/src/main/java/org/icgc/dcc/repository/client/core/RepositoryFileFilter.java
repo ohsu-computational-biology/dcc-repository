@@ -67,6 +67,7 @@ public class RepositoryFileFilter {
    * Used to see if a file was PCAWG published in GNOS before allowing it be published in AWS or Collab.
    *
    * @see https://jira.oicr.on.ca/browse/DCC-4605
+   * @see https://jira.oicr.on.ca/browse/DCC-4843
    */
   private boolean isPublished(RepositoryFile file) {
     val repositories = resolveRepositories(file);

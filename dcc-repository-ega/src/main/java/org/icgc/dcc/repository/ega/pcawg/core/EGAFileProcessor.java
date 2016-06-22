@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Collections.singletonList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
-import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
+import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectByProjectCode;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getChecksum;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getFileName;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getFiles;
@@ -100,7 +100,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
 
     val files = getFiles(analysisFile);
     val sampleAttributes = resolveSampleAttributes(submission);
-    val project = getProjectCodeProject(projectCode);
+    val project = getProjectByProjectCode(projectCode);
 
     checkState(project.isPresent(), "Could not resolve project with code '%s'", projectCode);
 
@@ -181,6 +181,13 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
             .setFileMd5sum(getChecksum(baiFile.get()));
       }
 
+      val submitterDonorId = resolveSubmitterDonorId(sampleAttributes);
+
+      // Only include files that are on donors found in DCC
+      if (!context.isDCCSubmittedDonorId(projectCode, submitterDonorId)) {
+        continue;
+      }
+
       egaFile.addDonor()
           .setPrimarySite(context.getPrimarySite(projectCode))
           .setProjectCode(projectCode)
@@ -190,7 +197,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
           .setSpecimenId(singletonList(resolveSpecimenId(sampleAttributes)))
           .setSpecimenType(singletonList(resolveSpecimenType(sampleAttributes)))
           .setSampleId(singletonList(resolveSampleId(sampleAttributes)))
-          .setSubmittedDonorId(resolveSubmitterDonorId(sampleAttributes))
+          .setSubmittedDonorId(submitterDonorId)
           .setSubmittedSpecimenId(singletonList(resolveSubmitterSpecimenId(sampleAttributes)))
           .setSubmittedSampleId(singletonList(resolveSubmitterSampleId(sampleAttributes)))
           .setMatchedControlSampleId(null) // TODO: Address when non-alignment types are present

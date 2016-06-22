@@ -22,6 +22,7 @@ import org.icgc.dcc.common.core.report.BufferedReport;
 import org.icgc.dcc.repository.client.core.RepositoryImporter;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileContextBuilder;
+import org.icgc.dcc.repository.core.util.DCCDonorIdResolver;
 import org.icgc.dcc.repository.pcawg.core.PCAWGDonorIdResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,6 +67,7 @@ public class ClientConfig {
     // Reference
     context
         .pcawgIdResolver(new PCAWGDonorIdResolver())
+        .dccIdResolver(new DCCDonorIdResolver())
         .geneMongoUri(properties.getImports().getMongoUri());
 
     // Outputs

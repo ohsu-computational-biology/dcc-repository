@@ -46,6 +46,7 @@ public final class RepositoryFileContexts {
         .sources(sources)
         .indexAlias("dev-icgc-repository")
         .pcawgIdResolver(newEmptyIdResovler())
+        .dccIdResolver(new DCCDonorIdResolver())
         .build();
   }
 

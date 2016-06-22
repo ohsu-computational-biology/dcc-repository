@@ -22,7 +22,7 @@ import static org.icgc.dcc.repository.core.model.RepositorySource.TCGA;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
-import org.icgc.dcc.repository.tcga.core.TCGAClinicalFileProcessor;
+import org.icgc.dcc.repository.tcga.core.TCGAFileProcessor;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class TCGAImporter extends GenericRepositorySourceFileImporter {
 
   @Override
   protected Iterable<RepositoryFile> readFiles() {
-    val processor = new TCGAClinicalFileProcessor(context);
+    val processor = new TCGAFileProcessor(context);
 
     log.info("Processining clinical files...");
     val files = processor.processClinicalFiles();

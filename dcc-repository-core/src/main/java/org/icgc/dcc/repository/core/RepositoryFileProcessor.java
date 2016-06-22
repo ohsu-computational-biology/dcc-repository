@@ -24,6 +24,7 @@ import static org.icgc.dcc.common.core.tcga.TCGAIdentifiers.isUUID;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
+import static org.icgc.dcc.repository.core.model.RepositoryProjects.getTARGETProjects;
 import static org.icgc.dcc.repository.core.model.RepositoryProjects.getTCGAProjects;
 
 import java.util.List;
@@ -46,6 +47,7 @@ import org.icgc.dcc.repository.core.model.RepositoryFile.Study;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -57,6 +59,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class RepositoryFileProcessor {
+
+  private static final Set<String> TRANSLATABLE_PROJECT_CODES = resolveTranslatableProjectCodes();;
 
   /**
    * Dependencies.
@@ -77,20 +81,18 @@ public abstract class RepositoryFileProcessor {
   }
 
   protected void assignIds(Iterable<RepositoryFile> donorFiles) {
-    val tcgaProjectCodes = resolveTCGAProjectCodes();
-
     for (val donorFile : donorFiles) {
       for (val donor : donorFile.getDonors()) {
         val projectCode = donor.getProjectCode();
 
         // Special case for TCGA who submits barcodes to DCC but UUIDs to PCAWG
-        val tcga = tcgaProjectCodes.contains(donor.getProjectCode());
+        val translate = TRANSLATABLE_PROJECT_CODES.contains(donor.getProjectCode());
         val submittedDonorId =
-            tcga ? donor.getOtherIdentifiers().getTcgaParticipantBarcode() : donor.getSubmittedDonorId();
+            translate ? donor.getOtherIdentifiers().getTcgaParticipantBarcode() : donor.getSubmittedDonorId();
         val submittedSpecimenId =
-            tcga ? donor.getOtherIdentifiers().getTcgaSampleBarcode() : donor.getSubmittedSpecimenId();
+            translate ? donor.getOtherIdentifiers().getTcgaSampleBarcode() : donor.getSubmittedSpecimenId();
         val submittedSampleId =
-            tcga ? donor.getOtherIdentifiers().getTcgaAliquotBarcode() : donor.getSubmittedSampleId();
+            translate ? donor.getOtherIdentifiers().getTcgaAliquotBarcode() : donor.getSubmittedSampleId();
         val submittedMatchedSampleId = donor.getMatchedControlSampleId();
 
         // Get IDs or create if they don't exist. This is different than the other repos.
@@ -110,11 +112,11 @@ public abstract class RepositoryFileProcessor {
     }
   }
 
-  protected void translateTCGAUUIDs(Iterable<RepositoryFile> donorFiles) {
-    log.info("Collecting TCGA barcodes...");
-    val uuids = resolveTCGAUUIDs(donorFiles);
+  protected void translateUUIDs(Iterable<RepositoryFile> donorFiles) {
+    log.info("Collecting TCGA/TARGET barcodes...");
+    val uuids = resolveTranslatableUUIDs(donorFiles);
 
-    log.info("Translating {} TCGA barcodes to TCGA UUIDs...", formatCount(uuids));
+    log.info("Translating {} TCGA/TARGET barcodes to TCGA/TARGET UUIDs...", formatCount(uuids));
     val barcodes = context.getTCGABarcodes(uuids);
     eachFileDonor(donorFiles, donor -> donor.getOtherIdentifiers()
         .setTcgaParticipantBarcode(barcodes.get(donor.getSubmittedDonorId()))
@@ -145,8 +147,7 @@ public abstract class RepositoryFileProcessor {
     return Optional.empty();
   }
 
-  protected static Set<String> resolveTCGAUUIDs(Iterable<RepositoryFile> donorFiles) {
-    val tcgaProjectCodes = resolveTCGAProjectCodes();
+  protected static Set<String> resolveTranslatableUUIDs(Iterable<RepositoryFile> donorFiles) {
     val uuids = Sets.<String> newHashSet();
     for (val donorFile : donorFiles) {
       for (val donor : donorFile.getDonors()) {
@@ -154,8 +155,8 @@ public abstract class RepositoryFileProcessor {
         val specimenId = donor.getSubmittedSpecimenId();
         val sampleId = donor.getSubmittedSampleId();
 
-        val tcga = tcgaProjectCodes.contains(donor.getProjectCode());
-        if (!tcga) {
+        val translate = TRANSLATABLE_PROJECT_CODES.contains(donor.getProjectCode());
+        if (!translate) {
           continue;
         }
 
@@ -206,8 +207,11 @@ public abstract class RepositoryFileProcessor {
     return UUID5.fromUTF8(UUID5.getNamespace(), Joiner.on('/').join(parts)).toString();
   }
 
-  protected static Set<String> resolveTCGAProjectCodes() {
-    return stream(getTCGAProjects()).map(project -> project.getProjectCode()).collect(toImmutableSet());
+  private static Set<String> resolveTranslatableProjectCodes() {
+    val tcga = stream(getTCGAProjects()).map(project -> project.getProjectCode()).collect(toImmutableSet());
+    val target = stream(getTARGETProjects()).map(project -> project.getProjectCode()).collect(toImmutableSet());
+
+    return ImmutableSet.<String> builder().addAll(tcga).addAll(target).build();
   }
 
   private static List<String> normalizeIds(List<String> ids) {

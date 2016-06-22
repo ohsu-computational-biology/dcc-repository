@@ -20,7 +20,7 @@ package org.icgc.dcc.repository.gdc.core;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static java.util.Collections.singleton;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
-import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
+import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectByProjectCode;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAccess;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAliquotId;
 import static org.icgc.dcc.repository.gdc.util.GDCFiles.getAliquotSubmitterId;
@@ -178,7 +178,13 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
     for (val caze : getCases(file)) {
       val projectCode = resolveProjectCode(caze);
-      val project = getProjectCodeProject(projectCode).orNull();
+      val project = getProjectByProjectCode(projectCode).orNull();
+      val submittedDonorId = resolveSubmittedDonorId(caze);
+
+      // Only include donors that are found in DCC
+      if (!context.isDCCSubmittedDonorId(projectCode, submittedDonorId)) {
+        continue;
+      }
 
       gdcFile.addDonor()
           .setPrimarySite(resolvePrimarySite(caze, projectCode))
@@ -190,7 +196,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
           .setSpecimenType(resolveSpecimenType(caze, dataType))
           .setMatchedControlSampleId(resolveMatchedControlSampleId(caze, dataType))
           .setSampleId(null) // Set downstream
-          .setSubmittedDonorId(resolveSubmittedDonorId(caze))
+          .setSubmittedDonorId(submittedDonorId)
           .setSubmittedSpecimenId(resolveSubmitterSpecimenId(caze, dataType))
           .setSubmittedSampleId(resolveSubmitterSampleId(caze, dataType))
           .setOtherIdentifiers(new OtherIdentifiers()
@@ -198,6 +204,11 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
               .setTcgaSampleBarcode(resolveTcgaSampleBarcode(caze, dataType))
               .setTcgaAliquotBarcode(resolveTcgaAliquotBarcode(caze, dataType)));
 
+    }
+
+    // Only include files that are on donors found in DCC
+    if (gdcFile.getDonors().isEmpty()) {
+      return null;
     }
 
     // "Downstream"
@@ -217,7 +228,7 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     }
 
     // JJ: Experimental strategy must be matched to one of ICGC's 'sequencing_strategy' that is not Non-NGS
-    if (file.getDataCategorization().getExperimentalStrategy().equals(EXCLUDED_EXPERIMENTAL_STRATEGY)) {
+    if (EXCLUDED_EXPERIMENTAL_STRATEGY.equals(file.getDataCategorization().getExperimentalStrategy())) {
       return false;
     }
 
@@ -250,6 +261,10 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
 
   private static String resolveExperimentalStrategy(ObjectNode file, Set<String> values) {
     val experimentalStrategy = getExperimentalStrategy(file);
+    if (experimentalStrategy == null) {
+      return null;
+    }
+
     for (val value : values) {
       if (experimentalStrategy.equalsIgnoreCase(value)) {
         return value;
@@ -324,9 +339,25 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
         return unexpected;
       }
 
-    case "Transcriptome Profiling":
     case "Clinical":
+      switch (dataType) {
+      case "Clinical Supplement":
+        return "Clinical Data";
+      case "Pathology Report":
+        return "Pathology Report";
+      default:
+        return unexpected;
+      }
     case "Biospecimen":
+      switch (dataType) {
+      case "Biospecimen Supplement":
+        return "Biospecimen Data";
+      case "Slide Image":
+        return "Slide Image";
+      default:
+        return unexpected;
+      }
+    case "Transcriptome Profiling":
     case "DNA Methylation":
     case "Protein Expression":
       return ignored;

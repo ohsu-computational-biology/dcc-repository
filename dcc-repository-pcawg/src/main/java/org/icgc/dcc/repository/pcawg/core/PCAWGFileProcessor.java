@@ -26,7 +26,7 @@ import static java.util.Collections.singletonList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.Repositories.getPCAWGRepository;
-import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectCodeProject;
+import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectByProjectCode;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveAnalysisMethod;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveDataCategorization;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveFileFormat;
@@ -87,7 +87,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     val donorFiles = createDonorFiles(donors);
 
     log.info("Translating TCGC UUIDs...");
-    translateTCGAUUIDs(donorFiles);
+    translateUUIDs(donorFiles);
 
     log.info("Assigning ICGC IDs...");
     assignIds(donorFiles);
@@ -129,7 +129,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     // Prepare
     //
 
-    val project = getProjectCodeProject(projectCode).orNull();
+    val project = getProjectByProjectCode(projectCode).orNull();
     checkState(project != null, "No project found for project code '%s'", projectCode);
 
     val gnosId = getGnosId(workflow);

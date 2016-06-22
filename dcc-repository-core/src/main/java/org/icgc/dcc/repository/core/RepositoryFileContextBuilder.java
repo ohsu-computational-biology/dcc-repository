@@ -90,6 +90,9 @@ public final class RepositoryFileContextBuilder {
   private RepositoryIdResolver pcawgIdResolver;
   @Setter
   @Accessors(chain = true, fluent = true)
+  private RepositoryIdResolver dccIdResolver;
+  @Setter
+  @Accessors(chain = true, fluent = true)
   private BufferedReport report = new BufferedReport();
   @Setter
   @Accessors(chain = true, fluent = true)
@@ -106,7 +109,7 @@ public final class RepositoryFileContextBuilder {
     val tcgaClient = createTCGAClient();
 
     return new RepositoryFileContext(repoMongoUri, esUri, indexAlias, skipImport, sources, readOnly,
-        primarySites, idClient, tcgaClient, pcawgIdResolver, report);
+        primarySites, idClient, tcgaClient, pcawgIdResolver, dccIdResolver, report);
   }
 
   private Map<String, String> createPrimarySites() {

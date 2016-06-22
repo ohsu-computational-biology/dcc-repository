@@ -15,26 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.gdc;
+package org.icgc.dcc.repository.core.util;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
+import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 
-import org.junit.Test;
+import java.util.Set;
+import java.util.stream.Stream;
 
-import lombok.val;
+import org.icgc.dcc.repository.core.RepositoryIdResolver;
+import org.icgc.dcc.repository.core.release.ReleaseClient;
+import org.icgc.dcc.repository.core.release.ReleaseClient.Donor;
 
-//@Ignore("For development only")
-public class GDCImporterTest {
+public class DCCDonorIdResolver implements RepositoryIdResolver {
 
-  @Test
-  public void testExecute() {
-    val gdcImporter = createImporter();
-    gdcImporter.execute();
+  @Override
+  public Set<String> resolveIds() {
+    return resolveDonors().map(this::formatId).collect(toImmutableSet());
   }
 
-  private GDCImporter createImporter() {
-    val context = newLocalRepositoryFileContext();
-    return new GDCImporter(context);
+  private String formatId(Donor donor) {
+    return donor.getProjectCode() + ":" + donor.getSubmittedDonorId();
+  }
+
+  private Stream<Donor> resolveDonors() {
+    return new ReleaseClient().getDonors().stream();
   }
 
 }

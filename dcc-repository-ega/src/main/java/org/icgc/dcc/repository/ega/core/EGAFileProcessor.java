@@ -112,6 +112,8 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
       return null;
     }
 
+    // TODO: Filter if not in DCC
+
     egaFile.addDonor()
         .setProjectCode(getFirst(metadata.getProjectCodes(), null))
         .setSubmittedSampleId(singletonList(resolveSubmittedSampleId(metadata, fileCopy.getRepoFileId())));

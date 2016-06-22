@@ -133,11 +133,11 @@ public final class RepositoryProjects {
     return PROJECTS;
   }
 
-  public static Optional<RepositoryProject> getProjectCodeProject(String projectCode) {
+  public static Optional<RepositoryProject> getProjectByProjectCode(String projectCode) {
     return tryFind(getProjects(), project -> projectCode.equals(project.getProjectCode()));
   }
 
-  public static Optional<RepositoryProject> getDiseaseCodeProject(String diseaseCode) {
+  public static Optional<RepositoryProject> getProjectByDiseaseCode(String diseaseCode) {
     return tryFind(getProjects(), project -> diseaseCode.equals(project.getDiseaseCode()));
   }
 

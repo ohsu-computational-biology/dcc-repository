@@ -19,6 +19,7 @@ package org.icgc.dcc.repository.client.core;
 
 import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
 import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
+import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
 import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
@@ -26,12 +27,11 @@ import java.io.IOException;
 
 import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.repository.core.model.RepositorySource;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-@Ignore("For development only")
+//@Ignore("For development only")
 public class RepositoryImporterTest {
 
   @Test
@@ -43,6 +43,12 @@ public class RepositoryImporterTest {
   @Test
   public void testExecuteSomeFast() throws IOException {
     val importer = createImporter(AWS, COLLAB, PCAWG);
+    importer.execute();
+  }
+
+  @Test
+  public void testExecuteGDCFiltering() throws IOException {
+    val importer = createImporter(GDC);
     importer.execute();
   }
 

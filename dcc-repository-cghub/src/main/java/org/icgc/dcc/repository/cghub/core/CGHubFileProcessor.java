@@ -39,7 +39,7 @@ import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleI
 import static org.icgc.dcc.repository.cghub.util.CGHubAnalysisDetails.getSampleType;
 import static org.icgc.dcc.repository.cghub.util.CGHubConverters.convertSampleTypeCode;
 import static org.icgc.dcc.repository.core.model.Repositories.getCGHubRepository;
-import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
+import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectByDiseaseCode;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -95,6 +95,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
 
     return resolveIncludedFiles(result)
         .map(file -> createAnalysisFile(result, file, baiFile))
+        .filter(file -> file != null)
         .collect(toImmutableList());
   }
 
@@ -110,6 +111,11 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
     val legacySampleId = getLegacySampleId(result);
     val legacySpecimenId = getLegacySpecimenId(legacySampleId);
     val legacyDonorId = getLegacyDonorId(legacySampleId);
+
+    // Only include files that are on donors found in DCC
+    if (!context.isDCCSubmittedDonorId(projectCode, legacyDonorId)) {
+      return null;
+    }
 
     val analysisId = getAnalysisId(result);
     val refAssembly = getRefassemShortName(result);
@@ -209,7 +215,7 @@ public class CGHubFileProcessor extends RepositoryFileProcessor {
   private static RepositoryProject resolveProject(JsonNode result) {
     val diseaseCode = getDiseaseAbbr(result);
 
-    return getDiseaseCodeProject(diseaseCode).orNull();
+    return getProjectByDiseaseCode(diseaseCode).orNull();
   }
 
   private static long resolveLastModified(JsonNode result) {

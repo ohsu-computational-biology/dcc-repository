@@ -35,6 +35,7 @@ import com.mongodb.MongoClientURI;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 @RequiredArgsConstructor(access = PACKAGE)
 public class RepositoryFileContext {
@@ -74,6 +75,7 @@ public class RepositoryFileContext {
   private final TCGAClient tcgaClient;
   @NonNull
   private final RepositoryIdResolver pcawgIdResolver;
+  private final RepositoryIdResolver dccIdResolver;
   @Getter
   @NonNull
   private final BufferedReport report;
@@ -83,6 +85,12 @@ public class RepositoryFileContext {
    */
   @Getter(lazy = true, value = PRIVATE)
   private final Set<String> pcawgSubmittedDonorIds = pcawgIdResolver.resolveIds();
+  @Getter(lazy = true, value = PRIVATE)
+  private final Set<String> dccSubmittedDonorIds = dccIdResolver.resolveIds();
+
+  public boolean isSourceActive(@NonNull RepositorySource source) {
+    return sources.contains(source);
+  }
 
   public void reportError(String error, Object... args) {
     report.addError(error, args);
@@ -92,23 +100,41 @@ public class RepositoryFileContext {
     report.addWarning(warning, args);
   }
 
-  @NonNull
-  public String getPrimarySite(String projectCode) {
+  public String getPrimarySite(@NonNull String projectCode) {
     return primarySites.get(projectCode);
   }
 
-  @NonNull
-  public boolean isPCAWGSubmittedDonorId(String projectCode, String submittedDonorId) {
+  public Map<String, String> getTCGAUUIDs(@NonNull Set<String> tcgaBarcodes) {
+    return tcgaClient.getUUIDs(tcgaBarcodes);
+  }
+
+  public Map<String, String> getTCGABarcodes(@NonNull Set<String> tcgaUuids) {
+    return tcgaClient.getBarcodes(tcgaUuids);
+  }
+
+  public boolean isDCCSubmittedDonorId(@NonNull String projectCode, @NonNull String submittedDonorId) {
+    if (getDccSubmittedDonorIds().contains(qualifyDonorId(projectCode, submittedDonorId))) {
+      return true;
+    }
+
+    // Special case for TCGA and TARGET projects that submit legacy barcodes to DCC but UUIDs everywhere else
+    val translatedSubmittedDonorId = tcgaClient.getBarcode(submittedDonorId);
+    if (getDccSubmittedDonorIds().contains(qualifyDonorId(projectCode, translatedSubmittedDonorId))) {
+      return true;
+    }
+
+    return false;
+  }
+
+  public boolean isPCAWGSubmittedDonorId(@NonNull String projectCode, @NonNull String submittedDonorId) {
     return getPcawgSubmittedDonorIds().contains(qualifyDonorId(projectCode, submittedDonorId));
   }
 
-  @NonNull
-  public String getDonorId(String submittedDonorId, String submittedProjectId) {
+  public String getDonorId(@NonNull String submittedDonorId, @NonNull String submittedProjectId) {
     return idClient.getDonorId(submittedDonorId, submittedProjectId).orElse(null);
   }
 
-  @NonNull
-  public String ensureDonorId(String submittedDonorId, String submittedProjectId) {
+  public String ensureDonorId(@NonNull String submittedDonorId, @NonNull String submittedProjectId) {
     try {
       if (readOnly) {
         return getDonorId(submittedDonorId, submittedProjectId);
@@ -121,13 +147,11 @@ public class RepositoryFileContext {
     }
   }
 
-  @NonNull
-  public String getSpecimenId(String submittedSpecimenId, String submittedProjectId) {
+  public String getSpecimenId(@NonNull String submittedSpecimenId, @NonNull String submittedProjectId) {
     return idClient.getSpecimenId(submittedSpecimenId, submittedProjectId).orElse(null);
   }
 
-  @NonNull
-  public String ensureSpecimenId(String submittedSpecimenId, String submittedProjectId) {
+  public String ensureSpecimenId(@NonNull String submittedSpecimenId, @NonNull String submittedProjectId) {
     try {
       if (readOnly) {
         return getSpecimenId(submittedSpecimenId, submittedProjectId);
@@ -141,13 +165,11 @@ public class RepositoryFileContext {
     }
   }
 
-  @NonNull
-  public String getSampleId(String submittedSampleId, String submittedProjectId) {
+  public String getSampleId(@NonNull String submittedSampleId, @NonNull String submittedProjectId) {
     return idClient.getSampleId(submittedSampleId, submittedProjectId).orElse(null);
   }
 
-  @NonNull
-  public String ensureSampleId(String submittedSampleId, String submittedProjectId) {
+  public String ensureSampleId(@NonNull String submittedSampleId, @NonNull String submittedProjectId) {
     try {
       if (readOnly) {
         return getSampleId(submittedSampleId, submittedProjectId);
@@ -160,8 +182,7 @@ public class RepositoryFileContext {
     }
   }
 
-  @NonNull
-  public String ensureFileId(String objectId) {
+  public String ensureFileId(@NonNull String objectId) {
     try {
       if (readOnly) {
         return getFileId(objectId);
@@ -173,23 +194,8 @@ public class RepositoryFileContext {
     }
   }
 
-  @NonNull
-  public String getFileId(String submittedFileId) {
+  public String getFileId(@NonNull String submittedFileId) {
     return idClient.getFileId(submittedFileId).orElse(null);
-  }
-
-  @NonNull
-  public Map<String, String> getTCGAUUIDs(Set<String> tcgaBarcodes) {
-    return tcgaClient.getUUIDs(tcgaBarcodes);
-  }
-
-  @NonNull
-  public Map<String, String> getTCGABarcodes(Set<String> tcgaUuids) {
-    return tcgaClient.getBarcodes(tcgaUuids);
-  }
-
-  public boolean isSourceActive(@NonNull RepositorySource source) {
-    return sources.contains(source);
   }
 
 }

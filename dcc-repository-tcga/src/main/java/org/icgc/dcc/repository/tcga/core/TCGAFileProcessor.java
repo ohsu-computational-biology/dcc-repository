@@ -22,7 +22,7 @@ import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableList;
 import static org.icgc.dcc.common.core.util.stream.Collectors.toImmutableSet;
 import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import static org.icgc.dcc.repository.core.model.Repositories.getTCGARepository;
-import static org.icgc.dcc.repository.core.model.RepositoryProjects.getDiseaseCodeProject;
+import static org.icgc.dcc.repository.core.model.RepositoryProjects.getProjectByDiseaseCode;
 
 import java.util.regex.Pattern;
 
@@ -45,7 +45,7 @@ import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
+public class TCGAFileProcessor extends RepositoryFileProcessor {
 
   /**
    * Constants.
@@ -58,7 +58,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
   @NonNull
   private final Repository tcgaRepository = getTCGARepository();
 
-  public TCGAClinicalFileProcessor(RepositoryFileContext context) {
+  public TCGAFileProcessor(RepositoryFileContext context) {
     super(context);
   }
 
@@ -96,7 +96,7 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
       }
 
       val diseaseCode = matcher.group(1);
-      val project = getDiseaseCodeProject(diseaseCode);
+      val project = getProjectByDiseaseCode(diseaseCode);
       val unrecognized = !project.isPresent();
       if (unrecognized) {
         continue;
@@ -119,7 +119,9 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
     for (val archiveClinicalFile : archiveClinicalFiles) {
       val clinicalFile = createClinicalFile(projectCode, archiveClinicalFile);
 
-      clinicalFiles.add(clinicalFile);
+      if (clinicalFile != null) {
+        clinicalFiles.add(clinicalFile);
+      }
     }
 
     return clinicalFiles.build();
@@ -132,6 +134,11 @@ public class TCGAClinicalFileProcessor extends RepositoryFileProcessor {
     //
 
     val tcgaParticipantBarcode = archiveClinicalFile.getDonorId();
+    // Only include files that are on donors found in DCC
+    if (!context.isDCCSubmittedDonorId(projectCode, tcgaParticipantBarcode)) {
+      return null;
+    }
+
     val fileName = archiveClinicalFile.getFileName();
     val entityPath = resolveEntityPath(archiveClinicalFile);
     val dataPath = resolveDataPath(archiveClinicalFile);

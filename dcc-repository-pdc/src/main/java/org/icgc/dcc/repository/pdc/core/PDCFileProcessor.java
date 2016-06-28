@@ -81,15 +81,12 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
         .setRepoBaseUrl(pdcRepository.getBaseUrl())
         .setRepoDataPath(objectSummary.getBucketName() + pdcRepository.getType().getDataPath() + objectId);
 
-    // TODO: This has moved to Griffin
     if (xmlEntity.isPresent()) {
-      val xmlSummary = resolveObjectSummary(objectSummaries, xmlEntity.get());
-      if (xmlSummary.isPresent()) {
-        val metadataPath =
-            xmlSummary.get().getBucketName() + pdcRepository.getType().getMetadataPath() + xmlSummary.get().getKey();
-        fileCopy
-            .setRepoMetadataPath(metadataPath);
-      }
+      // Uses same convention but different server
+      val metadataPath =
+          objectSummary.getBucketName() + pdcRepository.getType().getDataPath() + xmlEntity.get().getId();
+      fileCopy
+          .setRepoMetadataPath(metadataPath);
     }
 
     if (indexEntity.isPresent()) {

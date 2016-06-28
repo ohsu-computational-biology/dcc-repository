@@ -20,6 +20,7 @@ package org.icgc.dcc.repository.pdc;
 import static org.icgc.dcc.common.core.util.Formats.formatCount;
 import static org.icgc.dcc.repository.core.model.Repositories.getPDCRepository;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PDC;
+import static org.icgc.dcc.repository.pdc.s3.AWSClientFactory.createProtectedS3Client;
 
 import java.util.List;
 
@@ -27,7 +28,6 @@ import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.pdc.core.PDCFileProcessor;
-import org.icgc.dcc.repository.pdc.s3.AWSClientFactory;
 import org.icgc.dcc.repository.pdc.s3.PDCBucketReader;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -57,8 +57,7 @@ public class PDCImporter extends GenericRepositorySourceFileImporter {
   }
 
   private List<S3ObjectSummary> readObjectSummaries() {
-    val s3 = AWSClientFactory.createS3Client();
-    val bucketReader = new PDCBucketReader(s3);
+    val bucketReader = new PDCBucketReader(createProtectedS3Client());
     return bucketReader.readSummaries();
   }
 

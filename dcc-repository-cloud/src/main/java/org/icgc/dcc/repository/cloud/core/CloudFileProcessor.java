@@ -113,6 +113,8 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
     val fileName = getFileName(file);
     val xmlFile = resolveXmlFile(job, gnosId);
     val baiFile = resolveBaiFile(job, fileName);
+    val tbiFile = resolveTbiFile(job, fileName);
+    val idxFile = resolveIdxFile(job, fileName);
 
     //
     // Create
@@ -157,6 +159,30 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
           .setFileSize(getFileSize(baiFile.get()))
           .setFileMd5sum(getFileMd5sum(baiFile.get()));
     }
+    if (tbiFile.isPresent()) {
+      val tbiFileName = getFileName(tbiFile.get());
+      val tbiObjectId = resolveObjectId(gnosId, tbiFileName);
+      fileCopy.getIndexFile()
+          .setId(context.ensureFileId(tbiObjectId))
+          .setObjectId(tbiObjectId)
+          .setRepoFileId(null) // TODO: Resolve
+          .setFileName(tbiFileName)
+          .setFileFormat(FileFormat.TBI)
+          .setFileSize(getFileSize(tbiFile.get()))
+          .setFileMd5sum(getFileMd5sum(tbiFile.get()));
+    }
+    if (idxFile.isPresent()) {
+      val idxFileName = getFileName(idxFile.get());
+      val idxObjectId = resolveObjectId(gnosId, idxFileName);
+      fileCopy.getIndexFile()
+          .setId(context.ensureFileId(idxObjectId))
+          .setObjectId(idxObjectId)
+          .setRepoFileId(null) // TODO: Resolve
+          .setFileName(idxFileName)
+          .setFileFormat(FileFormat.IDX)
+          .setFileSize(getFileSize(idxFile.get()))
+          .setFileMd5sum(getFileMd5sum(idxFile.get()));
+    }
 
     return objectFile;
   }
@@ -186,13 +212,23 @@ public class CloudFileProcessor extends RepositoryFileProcessor {
   }
 
   private static Optional<JsonNode> resolveBaiFile(ObjectNode job, String fileName) {
-    val baiFileName = fileName + ".bai";
-    return resolveFiles(job, file -> baiFileName.equals(getFileName(file))).findFirst();
+    return resolveFile(job, fileName + ".bai");
+  }
+
+  private static Optional<JsonNode> resolveTbiFile(ObjectNode job, String fileName) {
+    return resolveFile(job, fileName + ".tbi");
+  }
+
+  private static Optional<JsonNode> resolveIdxFile(ObjectNode job, String fileName) {
+    return resolveFile(job, fileName + ".idx");
   }
 
   private static Optional<JsonNode> resolveXmlFile(ObjectNode job, String gnosId) {
-    val xmlFileName = gnosId + ".xml";
-    return resolveFiles(job, file -> xmlFileName.equals(getFileName(file))).findFirst();
+    return resolveFile(job, gnosId + ".xml");
+  }
+
+  private static Optional<JsonNode> resolveFile(ObjectNode job, String fileName) {
+    return resolveFiles(job, file -> fileName.equals(getFileName(file))).findFirst();
   }
 
   private static Stream<JsonNode> resolveFiles(ObjectNode job, Predicate<? super JsonNode> filter) {

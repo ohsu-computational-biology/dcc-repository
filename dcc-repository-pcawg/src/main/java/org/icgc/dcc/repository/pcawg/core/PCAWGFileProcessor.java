@@ -146,10 +146,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
 
     val baiFile = resolveBaiFile(workflow, fileName);
     val tbiFile = resolveTbiFile(workflow, fileName);
-
-    if (baiFile.isPresent() && tbiFile.isPresent()) {
-      log.warn("Both '{}' and '{}' files are present at the same time!", baiFile.get(), tbiFile.get());
-    }
+    val idxFile = resolveIdxFile(workflow, fileName);
 
     //
     // Create
@@ -214,6 +211,17 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
             .setFileSize(getFileSize(tbiFile.get()))
             .setFileMd5sum(resolveMd5sum(tbiFile.get()));
       }
+      if (idxFile.isPresent()) {
+        val idxFileName = getFileName(idxFile.get());
+        val idxObjectId = resolveObjectId(gnosId, idxFileName);
+        fileCopy.getIndexFile()
+            .setId(context.ensureFileId(idxObjectId))
+            .setObjectId(idxObjectId)
+            .setFileName(idxFileName)
+            .setFileFormat(FileFormat.IDX)
+            .setFileSize(getFileSize(idxFile.get()))
+            .setFileMd5sum(resolveMd5sum(idxFile.get()));
+      }
     }
 
     donorFile.addDonor()
@@ -276,6 +284,11 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
   private static Optional<JsonNode> resolveTbiFile(JsonNode workflow, String fileName) {
     val tbiFileName = fileName + ".tbi";
     return resolveFiles(workflow, file -> tbiFileName.equals(resolveFileName(file))).findFirst();
+  }
+
+  private static Optional<JsonNode> resolveIdxFile(JsonNode workflow, String fileName) {
+    val idxFileName = fileName + ".idx";
+    return resolveFiles(workflow, file -> idxFileName.equals(resolveFileName(file))).findFirst();
   }
 
   private static Stream<JsonNode> resolveFiles(JsonNode workflow, Predicate<? super JsonNode> filter) {

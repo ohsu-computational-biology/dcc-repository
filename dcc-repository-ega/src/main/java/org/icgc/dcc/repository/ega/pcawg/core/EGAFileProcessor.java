@@ -28,7 +28,6 @@ import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getFiles;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGAAnalysisFiles.getSampleRef;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGASampleFiles.getSampleAlias;
 import static org.icgc.dcc.repository.ega.pcawg.util.EGASampleFiles.getSampleRefName;
-import static org.icgc.dcc.repository.ega.pcawg.util.EGAStudyFiles.getAccession;
 
 import java.util.List;
 import java.util.Optional;
@@ -120,6 +119,12 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
         continue;
       }
 
+      // Only include files that are on donors found in DCC
+      val submitterDonorId = resolveSubmitterDonorId(sampleAttributes);
+      if (!context.isDCCSubmittedDonorId(projectCode, submitterDonorId)) {
+        continue;
+      }
+
       val fileName = resolveFileName(file);
       val publishedFile = resolvePublishedFile(submission, fileName);
       if (!publishedFile.isPresent()) {
@@ -130,8 +135,9 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
       val baseFileName = resolveBaseFileName(file);
       val objectId = resolveObjectId(analysisId, file);
 
-      // TODO: Add support for *.tbi, *.idx as they come online
       val baiFile = resolveBaiFile(files, file);
+      val tbiFile = resolveTbiFile(files, file);
+      val idxFile = resolveIdxFile(files, file);
 
       val egaFile = new RepositoryFile()
           .setId(context.ensureFileId(objectId))
@@ -176,16 +182,37 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
             .setObjectId(baiObjectId)
             .setRepoFileId(baiPublishedFile.get().getFileId())
             .setFileName(baiFileName)
-            .setFileFormat(FileFormat.BAI) // TODO: Verify that this cannot be TBI
+            .setFileFormat(FileFormat.BAI)
             .setFileSize(resolveFileSize(baiFileName, gnosFile))
             .setFileMd5sum(getChecksum(baiFile.get()));
       }
+      if (tbiFile.isPresent()) {
+        val tbiFileName = resolveFileName(tbiFile.get());
+        val tbiObjectId = resolveObjectId(analysisId, tbiFile.get());
+        val tbiPublishedFile = resolvePublishedFile(submission, tbiFileName);
 
-      val submitterDonorId = resolveSubmitterDonorId(sampleAttributes);
+        fileCopy.getIndexFile()
+            .setId(context.ensureFileId(tbiObjectId))
+            .setObjectId(tbiObjectId)
+            .setRepoFileId(tbiPublishedFile.get().getFileId())
+            .setFileName(tbiFileName)
+            .setFileFormat(FileFormat.TBI)
+            .setFileSize(resolveFileSize(tbiFileName, gnosFile))
+            .setFileMd5sum(getChecksum(tbiFile.get()));
+      }
+      if (idxFile.isPresent()) {
+        val idxFileName = resolveFileName(idxFile.get());
+        val idxObjectId = resolveObjectId(analysisId, idxFile.get());
+        val idxPublishedFile = resolvePublishedFile(submission, idxFileName);
 
-      // Only include files that are on donors found in DCC
-      if (!context.isDCCSubmittedDonorId(projectCode, submitterDonorId)) {
-        continue;
+        fileCopy.getIndexFile()
+            .setId(context.ensureFileId(idxObjectId))
+            .setObjectId(idxObjectId)
+            .setRepoFileId(idxPublishedFile.get().getFileId())
+            .setFileName(idxFileName)
+            .setFileFormat(FileFormat.IDX)
+            .setFileSize(resolveFileSize(idxFileName, gnosFile))
+            .setFileMd5sum(getChecksum(idxFile.get()));
       }
 
       egaFile.addDonor()
@@ -258,7 +285,7 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   }
 
   private static List<String> resolveStudies(EGAStudyFile studyFile) {
-    return studies(studyFile.getStudy(), getAccession(studyFile));
+    return studies(studyFile.getStudy());
   }
 
   private static DataCategorization resolveDataCategorization(@NonNull EGAAnalysisFile analysisFile,
@@ -347,11 +374,20 @@ public class EGAFileProcessor extends RepositoryFileProcessor {
   }
 
   private static Optional<JsonNode> resolveBaiFile(ArrayNode files, JsonNode file) {
-    val baiFileName = resolveFileName(file) + ".bai";
+    return resolveFile(files, file, ".bai");
+  }
 
-    return stream(files)
-        .filter(f -> resolveFileName(f).equals(baiFileName))
-        .findFirst();
+  private static Optional<JsonNode> resolveTbiFile(ArrayNode files, JsonNode file) {
+    return resolveFile(files, file, ".tbi");
+  }
+
+  private static Optional<JsonNode> resolveIdxFile(ArrayNode files, JsonNode file) {
+    return resolveFile(files, file, ".idx");
+  }
+
+  private static Optional<JsonNode> resolveFile(ArrayNode files, JsonNode file, String extension) {
+    val targetFileName = resolveFileName(file) + extension;
+    return stream(files).filter(f -> resolveFileName(f).equals(targetFileName)).findFirst();
   }
 
   private static ObjectNode resolveSampleAttributes(EGASubmission submission) {

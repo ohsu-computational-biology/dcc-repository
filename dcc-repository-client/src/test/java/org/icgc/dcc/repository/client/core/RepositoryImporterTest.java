@@ -27,11 +27,12 @@ import java.io.IOException;
 
 import org.icgc.dcc.common.core.mail.Mailer;
 import org.icgc.dcc.repository.core.model.RepositorySource;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import lombok.val;
 
-//@Ignore("For development only")
+@Ignore("For development only")
 public class RepositoryImporterTest {
 
   @Test

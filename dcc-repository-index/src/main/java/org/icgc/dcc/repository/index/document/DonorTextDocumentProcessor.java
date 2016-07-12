@@ -24,10 +24,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
+import org.icgc.dcc.repository.index.model.Document;
 import org.icgc.dcc.repository.index.model.DocumentType;
+import org.icgc.dcc.repository.index.util.TarArchiveDocumentWriter;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -54,8 +55,9 @@ public class DonorTextDocumentProcessor extends DocumentProcessor {
       "tcga_sample_barcode",
       "tcga_aliquot_barcode");
 
-  public DonorTextDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor bulkProcessor) {
-    super(mongoUri, indexName, DocumentType.DONOR_TEXT, bulkProcessor);
+  public DonorTextDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor bulkProcessor,
+      TarArchiveDocumentWriter archiveWriter) {
+    super(mongoUri, indexName, DocumentType.DONOR_TEXT, bulkProcessor, archiveWriter);
   }
 
   @Override
@@ -65,9 +67,9 @@ public class DonorTextDocumentProcessor extends DocumentProcessor {
 
     val donorIds = summary.donorIds();
     for (val donorId : donorIds) {
-      val fileDonor = createFileDonor(summary, donorId);
+      val document = createFileDonor(summary, donorId);
 
-      addDocument(donorId, fileDonor);
+      addDocument(document);
     }
 
     return donorIds.size();
@@ -103,8 +105,10 @@ public class DonorTextDocumentProcessor extends DocumentProcessor {
     }
   }
 
-  private ObjectNode createFileDonor(FileDonorSummary summary, String donorId) {
-    val fileDonor = createDocument();
+  private Document createFileDonor(FileDonorSummary summary, String donorId) {
+    val document = createDocument(donorId);
+
+    val fileDonor = document.getSource();
     fileDonor.put("id", donorId);
     fileDonor.put("type", "donor");
     fileDonor.put("donor_id", donorId);
@@ -118,7 +122,7 @@ public class DonorTextDocumentProcessor extends DocumentProcessor {
       fileDonor.putPOJO(fieldName, summary.donorFields().get(fieldName).get(donorId));
     }
 
-    return fileDonor;
+    return document;
   }
 
   @Value

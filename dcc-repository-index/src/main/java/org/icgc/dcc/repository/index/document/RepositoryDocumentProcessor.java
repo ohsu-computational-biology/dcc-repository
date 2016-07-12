@@ -25,48 +25,53 @@ import org.elasticsearch.action.bulk.BulkProcessor;
 import org.icgc.dcc.repository.core.model.Repositories;
 import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryAccess;
+import org.icgc.dcc.repository.index.model.Document;
 import org.icgc.dcc.repository.index.model.DocumentType;
+import org.icgc.dcc.repository.index.util.TarArchiveDocumentWriter;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.MongoClientURI;
 
 import lombok.val;
 
 public class RepositoryDocumentProcessor extends DocumentProcessor {
 
-  public RepositoryDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
-    super(mongoUri, indexName, DocumentType.REPOSITORY, processor);
+  public RepositoryDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor,
+      TarArchiveDocumentWriter archiveWriter) {
+    super(mongoUri, indexName, DocumentType.REPOSITORY, processor, archiveWriter);
   }
 
   @Override
   public int process() {
     int count = 0;
     for (val repository : Repositories.getRepositories()) {
-      val id = repository.getCode();
       val document = createDocument(repository);
-      addDocument(id, document);
+
+      addDocument(document);
       count++;
     }
 
     return count;
   }
 
-  private ObjectNode createDocument(Repository repository) {
-    return object()
-        .with("id", repository.getCode())
-        .with("code", repository.getCode())
-        .with("type", repository.getType().getId())
-        .with("name", repository.getName())
-        .with("source", repository.getSource().getId())
-        .with("storage", repository.getStorage().getId())
-        .with("environment", repository.getEnvironment().getId())
-        .with("access", array().with(repository.getAccess().stream().map(RepositoryAccess::getId).collect(toList())))
-        .with("country", repository.getCountry())
-        .with("timezone", repository.getTimezone())
-        .with("baseUrl", repository.getBaseUrl())
-        .with("dataPath", repository.getType().getDataPath())
-        .with("metadataPath", repository.getType().getMetadataPath())
-        .end();
+  private Document createDocument(Repository repository) {
+    return createDocument(
+        repository.getCode(),
+        object()
+            .with("id", repository.getCode())
+            .with("code", repository.getCode())
+            .with("type", repository.getType().getId())
+            .with("name", repository.getName())
+            .with("source", repository.getSource().getId())
+            .with("storage", repository.getStorage().getId())
+            .with("environment", repository.getEnvironment().getId())
+            .with("access",
+                array().with(repository.getAccess().stream().map(RepositoryAccess::getId).collect(toList())))
+            .with("country", repository.getCountry())
+            .with("timezone", repository.getTimezone())
+            .with("baseUrl", repository.getBaseUrl())
+            .with("dataPath", repository.getType().getDataPath())
+            .with("metadataPath", repository.getType().getMetadataPath())
+            .end());
   }
 
 }

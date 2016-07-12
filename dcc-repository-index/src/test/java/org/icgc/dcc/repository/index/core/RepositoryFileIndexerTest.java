@@ -15,30 +15,40 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.index.document;
+package org.icgc.dcc.repository.index.core;
 
-import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.index.model.Document;
-import org.icgc.dcc.repository.index.model.DocumentType;
-import org.icgc.dcc.repository.index.util.TarArchiveDocumentWriter;
+import static org.icgc.dcc.repository.core.RepositoryFileContextBuilder.getLocalMongoClientUri;
 
-import com.mongodb.MongoClientURI;
+import java.net.URI;
 
-public class FileCentricDocumentProcessor extends DocumentProcessor {
+import org.icgc.dcc.common.core.util.URIs;
+import org.junit.Ignore;
+import org.junit.Test;
 
-  public FileCentricDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor,
-      TarArchiveDocumentWriter archiveWriter) {
-    super(mongoUri, indexName, DocumentType.FILE_CENTRIC, processor, archiveWriter);
+import lombok.Cleanup;
+import lombok.val;
+
+@Ignore("For development only")
+public class RepositoryFileIndexerTest {
+
+  @Test
+  public void testIndexFiles() throws Exception {
+    val mongoUri = getLocalMongoClientUri("dcc-repository");
+    val esUri = URIs.getUri("es://localhost:9300");
+    val archiveUri = getHdfsArchiveUri();
+    val indexAlias = "test";
+
+    @Cleanup
+    val indexer = new RepositoryFileIndexer(mongoUri, esUri, archiveUri, indexAlias);
+    indexer.indexFiles();
   }
 
-  @Override
-  public int process() {
-    return eachFile(file -> {
-      String id = getId(file);
-      Document document = createDocument(id, file);
+  static URI getHdfsArchiveUri() {
+    return URIs.getUri("hdfs://hdfs@" + System.getProperty("hostname") + "/tmp/repository.tar.gz");
+  }
 
-      addDocument(document);
-    });
+  static URI getLocalArchiveUri() {
+    return URIs.getUri("file:///tmp/repository.tar.gz");
   }
 
 }

@@ -74,6 +74,7 @@ public class ClientConfig {
     context
         .repoMongoUri(properties.getRepository().getMongoUri())
         .esUri(properties.getRepository().getEsUri())
+        .archiveUri(properties.getRepository().getArchiveUri())
         .indexAlias(properties.getRepository().getIndexAlias());
 
     // Reporting

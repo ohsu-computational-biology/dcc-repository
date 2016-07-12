@@ -25,7 +25,9 @@ import java.util.function.Consumer;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryCollection;
 import org.icgc.dcc.repository.core.util.AbstractJongoComponent;
+import org.icgc.dcc.repository.index.model.Document;
 import org.icgc.dcc.repository.index.model.DocumentType;
+import org.icgc.dcc.repository.index.util.TarArchiveDocumentWriter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -51,10 +53,14 @@ public abstract class DocumentProcessor extends AbstractJongoComponent {
    */
   @NonNull
   private final BulkProcessor bulkProcessor;
+  @NonNull
+  private final TarArchiveDocumentWriter archiveWriter;
 
-  public DocumentProcessor(MongoClientURI mongoUri, String indexName, DocumentType type, BulkProcessor processor) {
+  public DocumentProcessor(MongoClientURI mongoUri, String indexName, DocumentType type, BulkProcessor processor,
+      TarArchiveDocumentWriter archiveWriter) {
     super(mongoUri);
     this.bulkProcessor = processor;
+    this.archiveWriter = archiveWriter;
     this.indexName = indexName;
     this.type = type;
   }
@@ -65,20 +71,27 @@ public abstract class DocumentProcessor extends AbstractJongoComponent {
     return eachDocument(RepositoryCollection.FILE, consumer);
   }
 
-  protected void addDocument(String id, ObjectNode document) {
-    // Need to remove this as to not conflict with Elasticsearch
-    document.remove("_id");
+  protected Document createDocument(@NonNull String id) {
+    return createDocument(id, DEFAULT.createObjectNode());
+  }
 
-    val source = serializeDocument(document);
+  protected Document createDocument(@NonNull String id, @NonNull ObjectNode source) {
+    return new Document(type, id, source);
+  }
+
+  @SneakyThrows
+  protected void addDocument(Document document) {
+    // Need to remove this as to not conflict with Elasticsearch
+    val source = document.getSource();
+    source.remove("_id");
+
     bulkProcessor.add(
         indexRequest(indexName)
             .type(type.getId())
-            .id(id)
-            .source(source));
-  }
+            .id(document.getId())
+            .source(serializeDocument(source)));
 
-  protected static ObjectNode createDocument() {
-    return DEFAULT.createObjectNode();
+    archiveWriter.write(document);
   }
 
   protected static String getId(ObjectNode file) {

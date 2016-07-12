@@ -56,8 +56,9 @@ spring:
 
 # Repository
 repository:
-  esUri: es://localhost:9300
   mongoUri: mongodb://localhost/dcc-repository
+  esUri: es://localhost:9300
+  archiveUri: file:///tmp/repository.tar.gz
   indexAlias: test-icgc-repository
 
 # Imports

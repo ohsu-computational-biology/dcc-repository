@@ -57,6 +57,7 @@ public class ClientProperties {
     @MongoURI
     MongoClientURI mongoUri;
     URI esUri;
+    URI archiveUri;
     String indexAlias;
 
     public Set<RepositoryImporter.Step> getSteps() {

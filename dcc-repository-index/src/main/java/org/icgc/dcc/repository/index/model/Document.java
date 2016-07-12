@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.                             
+ * Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
  *                                                                                                               
  * This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
  * You should have received a copy of the GNU General Public License along with                                  
@@ -15,30 +15,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.index.document;
+package org.icgc.dcc.repository.index.model;
 
-import org.elasticsearch.action.bulk.BulkProcessor;
-import org.icgc.dcc.repository.index.model.Document;
-import org.icgc.dcc.repository.index.model.DocumentType;
-import org.icgc.dcc.repository.index.util.TarArchiveDocumentWriter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import com.mongodb.MongoClientURI;
+import lombok.NonNull;
+import lombok.Value;
 
-public class FileCentricDocumentProcessor extends DocumentProcessor {
+/**
+ * Default implementation for the {@link Document} abstraction.
+ */
+@Value
+public class Document {
 
-  public FileCentricDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor,
-      TarArchiveDocumentWriter archiveWriter) {
-    super(mongoUri, indexName, DocumentType.FILE_CENTRIC, processor, archiveWriter);
-  }
+  /**
+   * The document type.
+   */
+  DocumentType type;
 
-  @Override
-  public int process() {
-    return eachFile(file -> {
-      String id = getId(file);
-      Document document = createDocument(id, file);
+  /**
+   * The document identifier.
+   */
+  String id;
 
-      addDocument(document);
-    });
+  /**
+   * The document source.
+   */
+  ObjectNode source;
+
+  @JsonCreator
+  public Document(
+      @NonNull @JsonProperty("type") DocumentType type,
+      @NonNull @JsonProperty("id") String id,
+      @NonNull @JsonProperty("source") ObjectNode source) {
+    this.type = type;
+    this.id = id;
+    this.source = source;
   }
 
 }

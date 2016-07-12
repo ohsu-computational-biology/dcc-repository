@@ -69,6 +69,9 @@ public final class RepositoryFileContextBuilder {
   private URI esUri = URIs.getUri("es://localhost:9300");
   @Setter
   @Accessors(chain = true, fluent = true)
+  private URI archiveUri = URIs.getUri("file:///");
+  @Setter
+  @Accessors(chain = true, fluent = true)
   private String indexAlias = null;
   @Setter
   @Accessors(chain = true, fluent = true)
@@ -108,7 +111,7 @@ public final class RepositoryFileContextBuilder {
     val idClient = createIdClient();
     val tcgaClient = createTCGAClient();
 
-    return new RepositoryFileContext(repoMongoUri, esUri, indexAlias, skipImport, sources, readOnly,
+    return new RepositoryFileContext(repoMongoUri, esUri, archiveUri, indexAlias, skipImport, sources, readOnly,
         primarySites, idClient, tcgaClient, pcawgIdResolver, dccIdResolver, report);
   }
 

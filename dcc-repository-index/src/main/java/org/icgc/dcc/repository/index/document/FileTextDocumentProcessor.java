@@ -23,7 +23,9 @@ import static org.icgc.dcc.common.core.util.stream.Streams.stream;
 import java.util.List;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
+import org.icgc.dcc.repository.index.model.Document;
 import org.icgc.dcc.repository.index.model.DocumentType;
+import org.icgc.dcc.repository.index.util.TarArchiveDocumentWriter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mongodb.MongoClientURI;
@@ -32,8 +34,9 @@ import lombok.val;
 
 public class FileTextDocumentProcessor extends DocumentProcessor {
 
-  public FileTextDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor) {
-    super(mongoUri, indexName, DocumentType.FILE_TEXT, processor);
+  public FileTextDocumentProcessor(MongoClientURI mongoUri, String indexName, BulkProcessor processor,
+      TarArchiveDocumentWriter archiveWriter) {
+    super(mongoUri, indexName, DocumentType.FILE_TEXT, processor, archiveWriter);
   }
 
   @Override
@@ -43,13 +46,15 @@ public class FileTextDocumentProcessor extends DocumentProcessor {
 
   private void addDocument(ObjectNode file) {
     val id = getId(file);
-    val fileText = createFileText(file, id);
+    val document = createFileText(file, id);
 
-    addDocument(id, fileText);
+    addDocument(document);
   }
 
-  private ObjectNode createFileText(ObjectNode file, String id) {
-    val fileText = createDocument();
+  private Document createFileText(ObjectNode file, String id) {
+    val document = createDocument(id);
+
+    val fileText = document.getSource();
     fileText.put("type", "file");
 
     fileText.put("id", id);
@@ -60,7 +65,7 @@ public class FileTextDocumentProcessor extends DocumentProcessor {
     fileText.putPOJO("project_code", arrayTextValues(file, "donors", "project_code"));
     fileText.put("data_bundle_id", file.path("data_bundle").path("data_bundle_id").textValue());
 
-    return fileText;
+    return document;
   }
 
   private static List<String> arrayTextValues(ObjectNode objectNode, String arrayPath, String fileName) {

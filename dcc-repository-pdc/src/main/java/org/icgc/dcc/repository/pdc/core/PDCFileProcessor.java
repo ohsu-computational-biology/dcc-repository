@@ -24,10 +24,10 @@ import java.util.Optional;
 
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.RepositoryFileProcessor;
-import org.icgc.dcc.repository.core.meta.Entity;
 import org.icgc.dcc.repository.core.model.Repository;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
-import org.icgc.dcc.repository.core.model.RepositoryFile.FileFormat;
+import org.icgc.dcc.repository.core.model.RepositoryFile.FileCopy;
+import org.icgc.dcc.repository.pdc.util.PCAWGFileResolver;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -44,9 +44,15 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
   @NonNull
   private final Repository pdcRepository;
 
+  /**
+   * Dependencies.
+   */
+  private final PCAWGFileResolver resolver = new PCAWGFileResolver();
+
   public PDCFileProcessor(RepositoryFileContext context, @NonNull Repository pdcRepository) {
     super(context);
     this.pdcRepository = pdcRepository;
+    log.warn("No XML files will be indexed!");
   }
 
   public Iterable<RepositoryFile> processFiles(List<S3ObjectSummary> objectSummaries) {
@@ -56,23 +62,45 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
         .collect(toList());
   }
 
+  private FileCopy resolvePCAWGFileCopy(String objectId) {
+    return resolvePCAWGFile(objectId).getFileCopies().get(0);
+  }
+
+  private Optional<S3ObjectSummary> resolveObjectSummary(List<S3ObjectSummary> objectSummaries, String objectId) {
+    return objectSummaries.stream().filter(s -> s.getKey().equals(objectId)).findFirst();
+  }
+
+  private boolean isIncluded(S3ObjectSummary objectSummary) {
+    val objectId = resolveObjectId(objectSummary);
+    val pcawgFile = resolvePCAWGFile(objectId);
+    if (pcawgFile == null) {
+      return false;
+    }
+
+    val fileName = pcawgFile.getFileCopies().get(0).getFileName();
+    if (!isBamFile(fileName) && !isVcfFile(fileName)) {
+      return false;
+    }
+
+    return true;
+  }
+
   private RepositoryFile createFile(S3ObjectSummary objectSummary, List<S3ObjectSummary> objectSummaries) {
     val objectId = resolveObjectId(objectSummary);
-    val entity = findEntity(objectId).get(); // Always present by context;
-
-    val indexEntity = findIndexEntity(entity);
-    val xmlEntity = findXmlEntity(entity);
+    val pcawgFileCopy = resolvePCAWGFileCopy(objectId);
 
     val objectFile = new RepositoryFile()
         .setId(context.ensureFileId(objectId))
         .setObjectId(objectId);
 
     val fileCopy = objectFile.addFileCopy()
-        .setFileName(entity.getFileName())
+        .setFileName(pcawgFileCopy.getFileName())
         .setFileSize(objectSummary.getSize())
-        .setFileFormat(resolveFileFormat(entity.getFileName()))
+        .setFileFormat(pcawgFileCopy.getFileFormat())
+        .setFileMd5sum(pcawgFileCopy.getFileMd5sum())
         .setLastModified(objectSummary.getLastModified().getTime() / 1000L) // Seconds
         .setRepoFileId(objectId)
+        .setRepoDataBundleId(pcawgFileCopy.getRepoDataBundleId())
         .setRepoType(pdcRepository.getType().getId())
         .setRepoOrg(pdcRepository.getSource().getId())
         .setRepoName(pdcRepository.getName())
@@ -81,70 +109,29 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
         .setRepoBaseUrl(pdcRepository.getBaseUrl())
         .setRepoDataPath(objectSummary.getBucketName() + pdcRepository.getType().getDataPath() + objectId);
 
-    if (xmlEntity.isPresent()) {
-      // Uses same convention but different server
-      val metadataPath =
-          objectSummary.getBucketName() + pdcRepository.getType().getDataPath() + xmlEntity.get().getId();
-      fileCopy
-          .setRepoMetadataPath(metadataPath);
-    }
+    //
+    // TODO: Add xml files when available.
+    //
 
-    if (indexEntity.isPresent()) {
-      val indexSummary = resolveObjectSummary(objectSummaries, indexEntity.get());
+    if (pcawgFileCopy.getIndexFile() != null) {
+      val pcawgIndexFile = pcawgFileCopy.getIndexFile();
+      val indexSummary = resolveObjectSummary(objectSummaries, pcawgIndexFile.getObjectId());
       if (indexSummary.isPresent()) {
         fileCopy.getIndexFile()
-            .setObjectId(indexEntity.get().getId())
-            .setFileName(indexEntity.get().getFileName())
+            .setId(context.ensureFileId(pcawgIndexFile.getObjectId()))
+            .setObjectId(pcawgIndexFile.getObjectId())
+            .setFileName(pcawgIndexFile.getFileName())
             .setFileSize(indexSummary.get().getSize())
-            .setFileFormat(resolveFileFormat(indexEntity.get().getFileName()));
+            .setFileMd5sum(pcawgIndexFile.getFileMd5sum())
+            .setFileFormat(pcawgIndexFile.getFileFormat());
       }
     }
 
     return objectFile;
   }
 
-  private Optional<S3ObjectSummary> resolveObjectSummary(List<S3ObjectSummary> objectSummaries, Entity entity) {
-    return objectSummaries.stream().filter(s -> s.getKey().equals(entity.getId())).findFirst();
-  }
-
-  private boolean isIncluded(S3ObjectSummary objectSummary) {
-    val objectId = resolveObjectId(objectSummary);
-    val entity = findEntity(objectId);
-    if (!entity.isPresent()) {
-      log.warn("Could not find entity for object id {}", objectId);
-      return false;
-    }
-
-    val fileName = entity.get().getFileName();
-    if (!isBamFile(fileName) && !isVcfFile(fileName)) {
-      return false;
-    }
-
-    return true;
-  }
-
   private static String resolveObjectId(S3ObjectSummary objectSummary) {
     return objectSummary.getKey();
-  }
-
-  private static String resolveFileFormat(String fileName) {
-    if (fileName.endsWith(".bam")) {
-      return FileFormat.BAM;
-    }
-    if (fileName.endsWith(".bai")) {
-      return FileFormat.BAI;
-    }
-    if (fileName.endsWith(".tbi")) {
-      return FileFormat.TBI;
-    }
-    if (fileName.endsWith(".idx")) {
-      return FileFormat.IDX;
-    }
-    if (fileName.endsWith(".vcf.gz")) {
-      return FileFormat.VCF;
-    }
-
-    return null;
   }
 
   private static boolean isBamFile(String fileName) {
@@ -157,6 +144,10 @@ public class PDCFileProcessor extends RepositoryFileProcessor {
 
   private static boolean hasFileExtension(String fileName, String fileType) {
     return fileName.toLowerCase().endsWith(fileType.toLowerCase());
+  }
+
+  private RepositoryFile resolvePCAWGFile(String objectId) {
+    return resolver.resolve(objectId);
   }
 
 }

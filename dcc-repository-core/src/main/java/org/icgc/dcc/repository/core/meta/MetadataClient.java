@@ -44,7 +44,7 @@ public class MetadataClient {
   /**
    * Constants.
    */
-  private static final String DEFAULT_SERVER_URL = "https://meta.icgc.org";
+  public static final String DEFAULT_SERVER_URL = "https://meta.icgc.org";
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /**

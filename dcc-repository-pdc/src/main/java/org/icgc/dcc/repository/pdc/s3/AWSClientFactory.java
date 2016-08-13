@@ -35,16 +35,19 @@ public class AWSClientFactory {
   /**
    * Constants.
    */
-  private static final String PDC_OPEN_S3_ENDPOINT = "https://griffin-objstore.opensciencedatacloud.org/";
-  private static final String PDC_PROTECTED_S3_ENDPOINT = "https://bionimbus-objstore.opensciencedatacloud.org";
-  private static final String PDC_PROTECTED_AWS_PROFILE = "pdc";
+  public static final String PDC_OPEN_S3_ENDPOINT = "https://griffin-objstore.opensciencedatacloud.org/";
+  public static final String PDC_CS_PROTECTED_S3_ENDPOINT = "https://bionimbus-objstore-cs.opensciencedatacloud.org";
+  public static final String PDC_CS_PROTECTED_AWS_PROFILE = "pdc";
+
+  @Deprecated
+  public static final String PDC_PROTECTED_S3_ENDPOINT = "https://bionimbus-objstore.opensciencedatacloud.org";
 
   public static AmazonS3 createOpenS3Client() {
     return createS3Client(PDC_OPEN_S3_ENDPOINT, new StaticCredentialsProvider(new AnonymousAWSCredentials()));
   }
 
   public static AmazonS3 createProtectedS3Client() {
-    return createS3Client(PDC_PROTECTED_S3_ENDPOINT, new ProfileCredentialsProvider(PDC_PROTECTED_AWS_PROFILE));
+    return createS3Client(PDC_CS_PROTECTED_S3_ENDPOINT, new ProfileCredentialsProvider(PDC_CS_PROTECTED_AWS_PROFILE));
   }
 
   private static AmazonS3 createS3Client(String url, AWSCredentialsProvider credentialsProvider) {

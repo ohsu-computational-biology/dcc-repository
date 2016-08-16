@@ -48,7 +48,7 @@ public final class EGASampleFiles {
     val attributes = DEFAULT.createObjectNode();
     val array = sample.at("/SAMPLE_ATTRIBUTES/SAMPLE_ATTRIBUTE");
     for (val element : array) {
-      attributes.put(element.get("TAG").textValue(), element.get("VALUE").textValue());
+      attributes.put(element.get("TAG").textValue(), element.get("VALUE").asText());
     }
 
     return attributes;

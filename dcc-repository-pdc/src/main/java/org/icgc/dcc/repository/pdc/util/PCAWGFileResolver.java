@@ -19,7 +19,9 @@ package org.icgc.dcc.repository.pdc.util;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.util.URLs.getUrl;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
+import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_ARCHIVE_BASE_URL;
 
 import java.io.IOException;
 
@@ -73,7 +75,10 @@ public class PCAWGFileResolver {
   }
 
   public static Iterable<ObjectNode> readDonors() throws IOException {
-    return new PCAWGDonorArchiveReader().readDonors();
+    // This URL is required as it includes a point in time where all the PDC files exist in GNOS repos to acquire all
+    // metadata
+    val url = getUrl(PCAWG_ARCHIVE_BASE_URL + "/data_releases/latest/release_may2016.v1.1.jsonl");
+    return new PCAWGDonorArchiveReader(url).readDonors();
   }
 
   public static Iterable<RepositoryFile> readFiles(RepositoryFileContext context, Iterable<ObjectNode> donors) {

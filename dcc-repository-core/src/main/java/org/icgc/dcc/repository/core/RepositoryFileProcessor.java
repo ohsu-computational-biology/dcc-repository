@@ -60,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public abstract class RepositoryFileProcessor {
 
-  private static final Set<String> TRANSLATABLE_PROJECT_CODES = resolveTranslatableProjectCodes();;
+  private static final Set<String> TRANSLATABLE_PROJECT_CODES = resolveTranslatableProjectCodes();
 
   /**
    * Dependencies.

@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.icgc.dcc.common.gdc.client.GDCClient;
 import org.icgc.dcc.common.gdc.client.GDCClient.Query;
+import org.icgc.dcc.common.gdc.reader.GDCReader;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
@@ -112,7 +113,7 @@ public class GDCFileReader {
   }
 
   public Stream<ObjectNode> readFiles(Query query) {
-    return new org.icgc.dcc.common.gdc.reader.GDCFileReader(client).readFiles(query);
+    return new GDCReader(client::getFiles).read(query);
   }
 
 }

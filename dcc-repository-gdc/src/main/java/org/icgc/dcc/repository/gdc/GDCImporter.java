@@ -23,12 +23,12 @@ import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
 
 import java.util.stream.Stream;
 
+import org.icgc.dcc.common.gdc.client.GDCClient;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.gdc.core.GDCFileProcessor;
 import org.icgc.dcc.repository.gdc.reader.GDCFileReader;
-import org.icgc.dcc.repository.gdc.util.GDCClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

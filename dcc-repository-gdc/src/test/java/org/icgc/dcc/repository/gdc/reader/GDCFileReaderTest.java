@@ -18,10 +18,10 @@
 package org.icgc.dcc.repository.gdc.reader;
 
 import static java.util.stream.Collectors.toList;
-import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCaseProjectId;
-import static org.icgc.dcc.repository.gdc.util.GDCFiles.getCases;
+import static org.icgc.dcc.common.gdc.core.GDCFiles.getCaseProjectId;
+import static org.icgc.dcc.common.gdc.core.GDCFiles.getCases;
 
-import org.icgc.dcc.repository.gdc.util.GDCClient;
+import org.icgc.dcc.common.gdc.client.GDCClient;
 import org.junit.Ignore;
 import org.junit.Test;
 

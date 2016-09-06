@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import org.icgc.dcc.repository.ega.util.XMLObjectNodeReader;
+import org.icgc.dcc.common.ega.utils.XMLObjectNodeReader;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

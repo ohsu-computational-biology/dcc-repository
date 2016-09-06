@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.icgc.dcc.common.core.report.BufferedReport;
-import org.icgc.dcc.common.core.tcga.TCGAClient;
+import org.icgc.dcc.common.tcga.core.TCGAMappings;
 import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.repository.core.model.RepositorySource;
 
@@ -75,7 +75,7 @@ public class RepositoryFileContext {
   @NonNull
   private final IdClient idClient;
   @NonNull
-  private final TCGAClient tcgaClient;
+  private final TCGAMappings tcgaMappings;
   @NonNull
   private final RepositoryIdResolver pcawgIdResolver;
   private final RepositoryIdResolver dccIdResolver;
@@ -108,11 +108,11 @@ public class RepositoryFileContext {
   }
 
   public Map<String, String> getTCGAUUIDs(@NonNull Set<String> tcgaBarcodes) {
-    return tcgaClient.getUUIDs(tcgaBarcodes);
+    return tcgaMappings.getUUIDs(tcgaBarcodes);
   }
 
   public Map<String, String> getTCGABarcodes(@NonNull Set<String> tcgaUuids) {
-    return tcgaClient.getBarcodes(tcgaUuids);
+    return tcgaMappings.getBarcodes(tcgaUuids);
   }
 
   public boolean isDCCSubmittedDonorId(@NonNull String projectCode, @NonNull String submittedDonorId) {
@@ -121,7 +121,7 @@ public class RepositoryFileContext {
     }
 
     // Special case for TCGA and TARGET projects that submit legacy barcodes to DCC but UUIDs everywhere else
-    val translatedSubmittedDonorId = tcgaClient.getBarcode(submittedDonorId);
+    val translatedSubmittedDonorId = tcgaMappings.getBarcode(submittedDonorId);
     if (getDccSubmittedDonorIds().contains(qualifyDonorId(projectCode, translatedSubmittedDonorId))) {
       return true;
     }

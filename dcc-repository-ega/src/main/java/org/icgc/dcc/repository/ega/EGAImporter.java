@@ -23,13 +23,13 @@ import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
 
 import java.util.stream.Stream;
 
+import org.icgc.dcc.common.ega.client.EGAClient;
+import org.icgc.dcc.common.ega.model.EGAMetadata;
+import org.icgc.dcc.common.ega.reader.EGAMetadataReader;
 import org.icgc.dcc.repository.core.RepositoryFileContext;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
 import org.icgc.dcc.repository.ega.core.EGAFileProcessor;
-import org.icgc.dcc.repository.ega.model.EGAMetadata;
-import org.icgc.dcc.repository.ega.reader.EGAMetadataReader;
-import org.icgc.dcc.repository.ega.util.EGAClient;
 
 import lombok.SneakyThrows;
 import lombok.val;

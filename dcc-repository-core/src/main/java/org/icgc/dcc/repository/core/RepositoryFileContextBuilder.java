@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.icgc.dcc.common.core.report.BufferedReport;
-import org.icgc.dcc.common.core.tcga.TCGAClient;
 import org.icgc.dcc.common.core.util.URIs;
+import org.icgc.dcc.common.tcga.reader.TCGAMappingsReader;
 import org.icgc.dcc.id.client.core.IdClient;
 import org.icgc.dcc.id.client.http.HttpIdClient;
 import org.icgc.dcc.id.client.util.CachingIdClient;
@@ -109,10 +109,10 @@ public final class RepositoryFileContextBuilder {
   public RepositoryFileContext build() {
     val primarySites = createPrimarySites();
     val idClient = createIdClient();
-    val tcgaClient = createTCGAClient();
+    val tcgaMappings = new TCGAMappingsReader().readMappings();
 
     return new RepositoryFileContext(repoMongoUri, esUri, archiveUri, indexAlias, skipImport, sources, readOnly,
-        primarySites, idClient, tcgaClient, pcawgIdResolver, dccIdResolver, report);
+        primarySites, idClient, tcgaMappings, pcawgIdResolver, dccIdResolver, report);
   }
 
   private Map<String, String> createPrimarySites() {
@@ -125,10 +125,6 @@ public final class RepositoryFileContextBuilder {
 
   private IdClient createIdClient() {
     return realIds ? new CachingIdClient(new HttpIdClient(idUrl, "", authToken)) : new HashIdClient();
-  }
-
-  private static TCGAClient createTCGAClient() {
-    return new TCGAClient();
   }
 
   @SneakyThrows

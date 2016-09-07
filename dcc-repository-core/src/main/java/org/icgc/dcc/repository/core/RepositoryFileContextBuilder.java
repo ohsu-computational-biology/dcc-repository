@@ -60,7 +60,7 @@ public final class RepositoryFileContextBuilder {
    */
   @Setter
   @Accessors(chain = true, fluent = true)
-  private MongoClientURI geneMongoUri = getLocalMongoClientUri("dcc-import");
+  private MongoClientURI importMongoUri = getLocalMongoClientUri("dcc-import");
   @Setter
   @Accessors(chain = true, fluent = true)
   private MongoClientURI repoMongoUri = getLocalMongoClientUri("dcc-repository");
@@ -116,11 +116,11 @@ public final class RepositoryFileContextBuilder {
   }
 
   private Map<String, String> createPrimarySites() {
-    if (geneMongoUri == null) {
+    if (importMongoUri == null) {
       return emptyMap();
     }
 
-    return getProjectPrimarySites(geneMongoUri);
+    return getProjectPrimarySites(importMongoUri);
   }
 
   private IdClient createIdClient() {

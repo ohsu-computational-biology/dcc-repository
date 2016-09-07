@@ -95,7 +95,7 @@ public class PCAWGFileResolver {
   private static RepositoryFileContext createFileContext() {
     return RepositoryFileContextBuilder
         .builder()
-        .geneMongoUri(null)
+        .importMongoUri(null)
         .realIds(false)
         .sources(ImmutableSet.of(PCAWG))
         .indexAlias("")

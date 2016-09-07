@@ -68,7 +68,7 @@ public class ClientConfig {
     context
         .pcawgIdResolver(new PCAWGDonorIdResolver())
         .dccIdResolver(new DCCDonorIdResolver())
-        .geneMongoUri(properties.getImports().getMongoUri());
+        .importMongoUri(properties.getImports().getMongoUri());
 
     // Outputs
     context

@@ -10,7 +10,7 @@
   <parent>
     <groupId>org.icgc.dcc</groupId>
     <artifactId>dcc-repository</artifactId>
-    <version>1.0.8-SNAPSHOT</version>
+    <version>1.0.9-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 

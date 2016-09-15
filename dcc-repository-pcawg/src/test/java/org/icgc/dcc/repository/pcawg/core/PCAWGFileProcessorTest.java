@@ -15,44 +15,47 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.pcawg.model;
+package org.icgc.dcc.repository.pcawg.core;
 
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
+import static java.util.Collections.singleton;
+import static org.icgc.dcc.common.core.json.Jackson.DEFAULT;
+import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
-@Value
-@Builder
-public class Analysis {
+import java.io.IOException;
+import java.util.Set;
 
-  @NonNull
-  String libraryStrategy;
-  @NonNull
-  String workflowType;
-  @NonNull
-  String specimenClass;
+import org.junit.Test;
 
-  String variantType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.io.Resources;
 
-  public boolean isMiniBAM() {
-    return "minibam".equals(workflowType);
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class PCAWGFileProcessorTest {
+
+  @Test
+  public void testProcessDonors() throws Exception {
+    val processor = createProcessor();
+    val donors = readDonors();
+    val files = processor.processDonors(donors);
+    for (val file : files) {
+      log.info("{}", file);
+    }
   }
 
-  public boolean isRNAAlignment() {
-    return "rna_seq".equals(libraryStrategy) && ("star".equals(workflowType) || "tophat".equals(workflowType));
+  public Set<ObjectNode> readDonors() throws IOException, JsonProcessingException {
+    val resource = Resources.getResource("fixtures/donor.with-consensus.json");
+    val donor = (ObjectNode) DEFAULT.readTree(resource);
+
+    return singleton(donor);
   }
 
-  public boolean isBWAAlignment() {
-    return "wgs".equals(libraryStrategy) && "bwa_alignment".equals(workflowType);
-  }
-
-  public boolean isVariantCalling() {
-    return "wgs".equals(libraryStrategy)
-        && (workflowType.endsWith("_variant_calling") || workflowType.endsWith("_variant_calls"));
-  }
-
-  public static AnalysisBuilder analysis() {
-    return builder();
+  public PCAWGFileProcessor createProcessor() {
+    val context = newLocalRepositoryFileContext();
+    return new PCAWGFileProcessor(context);
   }
 
 }

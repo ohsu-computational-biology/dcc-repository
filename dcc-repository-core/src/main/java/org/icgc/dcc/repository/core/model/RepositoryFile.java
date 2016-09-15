@@ -238,6 +238,7 @@ public class RepositoryFile {
     public final String DKFZ_EMBL_VARIANT_CALL_PIPELINE = "DKFZ/EMBL variant call pipeline";
     public final String MUSE_VARIANT_CALL_PIPELINE = "MUSE variant call pipeline";
     public final String SANGER_VARIANT_CALL_PIPELINE = "Sanger variant call pipeline";
+    public final String PCAWG_CONSENSUS_VARIANT_CALL_PIPELINE = "PCAWG %s callers";
 
   }
 

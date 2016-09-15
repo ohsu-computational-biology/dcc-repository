@@ -134,6 +134,8 @@ public class PCAWGFileInfoResolver {
 
   private static String resolveVariantCallingSoftware(Analysis analysis) {
     val workflowType = analysis.getWorkflowType();
+    val variantType = analysis.getVariantType();
+
     if (workflowType.equals("broad_variant_calling")) {
       return Software.BROAD_VARIANT_CALL_PIPELINE;
     } else if (workflowType.equals("dkfz_embl_variant_calling")) {
@@ -142,6 +144,8 @@ public class PCAWGFileInfoResolver {
       return Software.MUSE_VARIANT_CALL_PIPELINE;
     } else if (workflowType.equals("sanger_variant_calling")) {
       return Software.SANGER_VARIANT_CALL_PIPELINE;
+    } else if (variantType != null) {
+      return String.format(Software.PCAWG_CONSENSUS_VARIANT_CALL_PIPELINE, variantType);
     } else {
       // Unknown
       val pipeline = workflowType.replace("_variant_calling", "");

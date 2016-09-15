@@ -48,6 +48,11 @@ public class PCAWGArchives {
   public static final List<String> PCAWG_WORKFLOW_TYPES = ImmutableList.of(
       "star", "tophat", "bwa_alignment", "sanger_variant_calling");
 
+  public static final List<String> PCAWG_CONSENSUS_CALL_TYPES = ImmutableList.of(
+      "consensus_somatic_variant_calls", "consensus_germline_variant_calls");
+  public static final List<String> PCAWG_CONSENSUS_VARIANT_TYPES = ImmutableList.of(
+      "indel", "snv_mnv");
+
   public static String getDccProjectCode(@NonNull ObjectNode donor) {
     return donor.get("dcc_project_code").textValue();
   }

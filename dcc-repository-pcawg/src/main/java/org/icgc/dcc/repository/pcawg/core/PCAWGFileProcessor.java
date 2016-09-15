@@ -31,6 +31,8 @@ import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveAn
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveDataCategorization;
 import static org.icgc.dcc.repository.pcawg.core.PCAWGFileInfoResolver.resolveFileFormat;
 import static org.icgc.dcc.repository.pcawg.model.Analysis.analysis;
+import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_CONSENSUS_CALL_TYPES;
+import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_CONSENSUS_VARIANT_TYPES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_LIBRARY_STRATEGIES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.PCAWG_SPECIMEN_CLASSES;
 import static org.icgc.dcc.repository.pcawg.util.PCAWGArchives.getBamFileMd5sum;
@@ -100,6 +102,7 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
   }
 
   private List<RepositoryFile> processDonor(@NonNull ObjectNode donor) {
+    // Process general files
     val donorFiles = ImmutableList.<RepositoryFile> builder();
     for (val libraryStrategy : PCAWG_LIBRARY_STRATEGIES) {
       for (val specimenClass : PCAWG_SPECIMEN_CLASSES) {
@@ -114,6 +117,24 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
                       workflow.getWorkflow(),
                       workflowFile));
             }
+        }
+      }
+    }
+
+    // Process consensus VCFs
+    for (val consensusCallType : PCAWG_CONSENSUS_CALL_TYPES) {
+      for (val variantType : PCAWG_CONSENSUS_VARIANT_TYPES) {
+        for (val specimen : resolveSpecimens(donor, consensusCallType, variantType)) {
+          val workflow = resolveConsenusWorkflow(consensusCallType, variantType, specimen);
+          for (val workflowFile : resolveWorkflowFiles(workflow)) {
+            donorFiles.add(
+                createDonorFile(
+                    getDccProjectCode(donor),
+                    getSubmitterDonorId(donor),
+                    workflow.getAnalysis(),
+                    workflow.getWorkflow(),
+                    workflowFile));
+          }
         }
       }
     }
@@ -251,6 +272,16 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
   private static Iterable<JsonNode> resolveSpecimens(ObjectNode donor, String libraryStrategy, String specimenClass) {
     val specimens = donor.path(libraryStrategy).path(specimenClass);
     return specimens.isArray() ? specimens : singleton(specimens);
+  }
+
+  private static Workflow resolveConsenusWorkflow(String consensusCallType, String variantType, JsonNode specimen) {
+    val analysis = analysis()
+        .libraryStrategy("wgs")
+        .specimenClass("tumor_specimen")
+        .variantType(variantType)
+        .workflowType(consensusCallType).build();
+
+    return new Workflow(analysis, specimen);
   }
 
   private static List<Workflow> resolveWorkflows(String libraryStrategy, String specimenClass, JsonNode specimen) {

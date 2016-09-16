@@ -309,12 +309,13 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     case "Simple Nucleotide Variation":
       switch (dataType) {
       case "Simple Somatic Mutation":
+        return "SSM";
       case "Simple Germline Variation":
-        return dataType;
+        return "SGV";
       case "Aggregated Somatic Mutations":
       case "Raw Simple Somatic Mutation":
       case "Annotated Somatic Mutation":
-        return "Simple Somatic Mutation";
+        return "SSM";
       default:
         return unexpected;
       }
@@ -322,9 +323,9 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     case "Copy Number Variation":
       switch (dataType) {
       case "Copy Number Somatic Variation":
-        return "Copy Number Somatic Mutation";
+        return "CNSM";
       case "Copy Number Germline Variation":
-        return dataType;
+        return "CNGV";
       default:
         return unexpected;
       }
@@ -332,9 +333,9 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     case "Structural Rearrangement":
       switch (dataType) {
       case "Structural Somatic Rearrangement":
-        return "Structural Somatic Mutation";
+        return "StSM";
       case "Structural Germline Rearrangement":
-        return "Structural Germline Variants";
+        return "StGV";
       default:
         return unexpected;
       }

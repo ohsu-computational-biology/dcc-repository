@@ -140,7 +140,6 @@ public class PCAWGFileProcessor extends RepositoryFileProcessor {
     }
 
     return donorFiles.build();
-
   }
 
   private RepositoryFile createDonorFile(String projectCode, String submittedDonorId, Analysis analysis,

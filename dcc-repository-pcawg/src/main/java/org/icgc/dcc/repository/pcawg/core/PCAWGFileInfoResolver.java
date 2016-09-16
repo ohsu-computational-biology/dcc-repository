@@ -144,8 +144,10 @@ public class PCAWGFileInfoResolver {
       return Software.MUSE_VARIANT_CALL_PIPELINE;
     } else if (workflowType.equals("sanger_variant_calling")) {
       return Software.SANGER_VARIANT_CALL_PIPELINE;
-    } else if (variantType != null) {
-      return String.format(Software.PCAWG_CONSENSUS_VARIANT_CALL_PIPELINE, variantType);
+    } else if (variantType != null && variantType.equals("indel")) {
+      return Software.PCAWG_INDEL_CALLERS;
+    } else if (variantType != null && variantType.equals("snv_mnv")) {
+      return Software.PCAWG_SNV_MNV_CALLERS;
     } else {
       // Unknown
       val pipeline = workflowType.replace("_variant_calling", "");

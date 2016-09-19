@@ -309,13 +309,13 @@ public class GDCFileProcessor extends RepositoryFileProcessor {
     case "Simple Nucleotide Variation":
       switch (dataType) {
       case "Simple Somatic Mutation":
+      case "Aggregated Somatic Mutations":
+      case "Annotated Somatic Mutation":
         return "SSM";
       case "Simple Germline Variation":
         return "SGV";
-      case "Aggregated Somatic Mutations":
       case "Raw Simple Somatic Mutation":
-      case "Annotated Somatic Mutation":
-        return "SSM";
+        return ignored;
       default:
         return unexpected;
       }

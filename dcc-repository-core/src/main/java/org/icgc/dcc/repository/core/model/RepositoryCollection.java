@@ -17,17 +17,17 @@
  */
 package org.icgc.dcc.repository.core.model;
 
-import static com.google.common.base.Preconditions.checkState;
-import static lombok.AccessLevel.PRIVATE;
+import org.icgc.dcc.common.core.model.Identifiable;
 
 import java.util.Arrays;
-
-import org.icgc.dcc.common.core.model.Identifiable;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+
+import static com.google.common.base.Preconditions.checkState;
+import static lombok.AccessLevel.PRIVATE;
 
 @RequiredArgsConstructor(access = PRIVATE)
 public enum RepositoryCollection implements Identifiable {
@@ -40,7 +40,8 @@ public enum RepositoryCollection implements Identifiable {
   TCGA_FILE("TCGAFile", RepositorySource.TCGA),
   PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
   AWS_FILE("AWSFile", RepositorySource.AWS),
-  COLLAB_FILE("CollabFile", RepositorySource.COLLAB);
+  COLLAB_FILE("CollabFile", RepositorySource.COLLAB),
+  EXACLOUD_FILE("ExacloudFile", RepositorySource.EXACLOUD);
 
   @Getter
   @NonNull

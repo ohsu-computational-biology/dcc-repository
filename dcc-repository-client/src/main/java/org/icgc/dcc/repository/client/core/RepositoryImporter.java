@@ -39,6 +39,7 @@ import org.icgc.dcc.repository.index.core.RepositoryFileIndexer;
 import org.icgc.dcc.repository.pcawg.PCAWGImporter;
 import org.icgc.dcc.repository.pdc.PDCImporter;
 import org.icgc.dcc.repository.tcga.TCGAImporter;
+import org.icgc.dcc.repository.exacloud.ExacloudImporter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Stopwatch;
@@ -251,7 +252,9 @@ public class RepositoryImporter {
         new AWSImporter(context),
         new CollabImporter(context),
         new TCGAImporter(context),
-        new CGHubImporter(context));
+        new CGHubImporter(context),
+        new ExacloudImporter(context));
+
   }
 
   private static void logStep(int stepNumber, int stepCount, String message) {

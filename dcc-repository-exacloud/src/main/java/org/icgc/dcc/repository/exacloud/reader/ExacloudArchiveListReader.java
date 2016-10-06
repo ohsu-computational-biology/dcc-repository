@@ -17,26 +17,27 @@
  */
 package org.icgc.dcc.repository.exacloud.reader;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
+
+import org.icgc.dcc.repository.exacloud.model.ExacloudArchiveListEntry;
+
+import java.net.URL;
+import java.util.List;
+
+import lombok.SneakyThrows;
+import lombok.val;
+
 import static com.google.common.collect.Iterables.skip;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.icgc.dcc.common.core.util.Splitters.TAB;
 import static org.icgc.dcc.common.core.util.URLs.getUrl;
 
-import java.net.URL;
-import java.util.List;
-
-import org.icgc.dcc.repository.exacloud.model.ExacloudArchiveListEntry;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
-
-import lombok.SneakyThrows;
-import lombok.val;
-
 public class ExacloudArchiveListReader {
 
   private static final URL EXACLOUD_ARCHIVE_LISTING =
-      getUrl("file:///Users/walsbr/dcc-repository/dcc-repository-exacloud/src/test/resources/lls_resource.tsv");
+          getUrl(System.getenv().get("EXACLOUD_ARCHIVE_LISTING"));
+      // getUrl("file:///Users/walsbr/dcc-repository/dcc-repository-exacloud/src/test/resources/lls_resource.tsv");
 
 
 

@@ -17,14 +17,14 @@
  */
 package org.icgc.dcc.repository.exacloud;
 
-import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
-
-import java.io.IOException;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import lombok.val;
+
+import static org.icgc.dcc.repository.core.util.RepositoryFileContexts.newLocalRepositoryFileContext;
 
 @Ignore("For development only")
 public class ExacloudImporterTest {
@@ -33,6 +33,7 @@ public class ExacloudImporterTest {
   public void testExecute() throws IOException {
     val context = newLocalRepositoryFileContext();
     val tcgaImporter = new ExacloudImporter(context);
+    System.out.println(System.getenv().get("EXACLOUD_ARCHIVE_LISTING"));
     tcgaImporter.execute();
   }
 

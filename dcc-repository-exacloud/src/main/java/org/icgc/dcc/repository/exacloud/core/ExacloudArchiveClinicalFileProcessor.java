@@ -82,7 +82,7 @@ public class ExacloudArchiveClinicalFileProcessor {
                                     .setFileName(values.get(5))
                                     .setRepoFileId(values.get(3))
                                     .setFileFormat(values.get(4))
-                                    .setRepoCode("EXACLOUD")
+                                    .setRepoCode("exacloud")
                               )
                       )
                   )

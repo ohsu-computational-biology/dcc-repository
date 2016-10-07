@@ -42,7 +42,7 @@ public class ExacloudImporter extends GenericRepositorySourceFileImporter {
     val processor = new ExacloudFileProcessor(context);
 
     log.info("Processing clinical files...");
-    val files = processor.processClinicalFiles();
+    val files = processor.processRepositoryFiles();
     log.info("Finished processing clinical files");
 
     return files;

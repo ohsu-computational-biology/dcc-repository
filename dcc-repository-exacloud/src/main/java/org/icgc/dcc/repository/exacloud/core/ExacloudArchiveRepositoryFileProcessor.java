@@ -19,6 +19,8 @@ package org.icgc.dcc.repository.exacloud.core;
 
 import com.google.common.io.Resources;
 
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.RepositoryFileProcessor;
 import org.icgc.dcc.repository.core.model.RepositoryFile;
 
 import java.io.IOException;
@@ -30,14 +32,20 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.icgc.dcc.common.core.util.Splitters.TAB;
 import static org.icgc.dcc.common.core.util.URLs.getUrl;
 
 @Slf4j
-public class ExacloudArchiveRepositoryFileProcessor {
+public class ExacloudArchiveRepositoryFileProcessor  extends RepositoryFileProcessor {
 
-  /**
+
+    public ExacloudArchiveRepositoryFileProcessor(RepositoryFileContext context) {
+        super(context);
+    }
+
+    /**
    * Constants.
    */
 
@@ -55,11 +63,11 @@ public class ExacloudArchiveRepositoryFileProcessor {
                       .setId(values.get(3))
                       .setDonors(
                               Arrays.asList(new RepositoryFile.Donor()
-                                  .setDonorId(values.get(1))
-                                  .setSampleId(Arrays.asList(values.get(2)))
+                                  .setDonorId( context.ensureDonorId(values.get(1), "BAML-US")  )
+                                  .setSampleId( singletonList(context.ensureSampleId(values.get(2), "BAML-US")) )
                                   .setProjectCode(projectCode)
                                   .setSubmittedDonorId(values.get(1))
-                                  .setSubmittedSampleId(Arrays.asList(values.get(2)))
+                                  .setSubmittedSampleId(singletonList(values.get(2)))
                               )
                       )
                       .setFileCopies(Arrays.asList(new RepositoryFile.FileCopy()

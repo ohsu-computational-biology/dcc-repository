@@ -81,7 +81,7 @@ public class ExacloudFileProcessor extends RepositoryFileProcessor {
   }
 
   private Iterable<RepositoryFile> processArchive(String projectCode, String archiveUrl) {
-    val processor = new ExacloudArchiveRepositoryFileProcessor();
+    val processor = new ExacloudArchiveRepositoryFileProcessor(context);
     val archiveRepositoryFiles = processor.process(archiveUrl, projectCode);
     log.info("Processing {} archive repository files", formatCount(archiveRepositoryFiles));
 

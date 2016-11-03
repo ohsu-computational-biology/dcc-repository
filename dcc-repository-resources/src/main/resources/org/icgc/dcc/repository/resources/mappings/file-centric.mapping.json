@@ -4,7 +4,6 @@
          "compress":"true"
       },
       "_all":{
-         "enabled":"false"
       },
       "dynamic_templates":[
          {

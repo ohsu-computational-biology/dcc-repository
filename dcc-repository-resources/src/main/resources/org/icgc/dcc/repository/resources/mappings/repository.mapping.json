@@ -1,7 +1,6 @@
 {
   "repository":{
     "_source":{
-      "compress":"true"
     },
     "_all":{
       "enabled":"false"

@@ -15,52 +15,30 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.exacloud.reader;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import com.google.common.collect.ImmutableList;
 
-import java.util.Arrays;
+import org.icgc.dcc.repository.exacloud.model.ExacloudArchiveListEntry;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import java.net.URL;
+
 import lombok.val;
 
-import static com.google.common.base.Preconditions.checkState;
-import static lombok.AccessLevel.PRIVATE;
+import static org.icgc.dcc.common.core.util.URLs.getUrl;
 
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryCollection implements Identifiable {
+public class ExacloudArchiveListReader {
 
-  FILE("File", null),
-  EGA_FILE("EGAFile", RepositorySource.EGA),
-  CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
-  GDC_FILE("GDCFile", RepositorySource.GDC),
-  PDC_FILE("PDCFile", RepositorySource.PDC),
-  TCGA_FILE("TCGAFile", RepositorySource.TCGA),
-  PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
-  AWS_FILE("AWSFile", RepositorySource.AWS),
-  COLLAB_FILE("CollabFile", RepositorySource.COLLAB),
-  EXACLOUD_FILE("ExacloudFile", RepositorySource.EXACLOUD);
+  private static final URL EXACLOUD_ARCHIVE_LISTING =
+          getUrl(System.getenv().get("EXACLOUD_ARCHIVE_LISTING"));
 
-  @Getter
-  @NonNull
-  private final String id;
+  public static Iterable<ExacloudArchiveListEntry> readEntries() {
+    val entries = ImmutableList.<ExacloudArchiveListEntry> builder();
 
-  @Getter
-  private final RepositorySource source;
+    entries.add(new ExacloudArchiveListEntry("BAML", "06-10-2016", EXACLOUD_ARCHIVE_LISTING.toString()));
 
-  public static RepositoryCollection forSource(@NonNull RepositorySource source) {
-    for (val value : values()) {
-      if (source == value.getSource()) {
-        return value;
-      }
-    }
-
-    checkState(false, "Could not find collection for repository source %s. Possible values are: %s",
-        source, Arrays.toString(values()));
-
-    return null;
+    return entries.build();
   }
+
 
 }

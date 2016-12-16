@@ -17,6 +17,16 @@
  */
 package org.icgc.dcc.repository.core.model;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+import java.util.Map;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
 import static com.google.common.collect.Iterables.tryFind;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static lombok.AccessLevel.PRIVATE;
@@ -24,20 +34,11 @@ import static org.icgc.dcc.repository.core.model.RepositorySource.AWS;
 import static org.icgc.dcc.repository.core.model.RepositorySource.CGHUB;
 import static org.icgc.dcc.repository.core.model.RepositorySource.COLLAB;
 import static org.icgc.dcc.repository.core.model.RepositorySource.EGA;
+import static org.icgc.dcc.repository.core.model.RepositorySource.EXACLOUD;
 import static org.icgc.dcc.repository.core.model.RepositorySource.GDC;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PCAWG;
 import static org.icgc.dcc.repository.core.model.RepositorySource.PDC;
 import static org.icgc.dcc.repository.core.model.RepositorySource.TCGA;
-
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class Repositories {
@@ -58,7 +59,9 @@ public final class Repositories {
       repository().source(PCAWG) .environment(RepositoryEnvironment.INTERNET)  .access(RepositoryAccess.ERA_COMMONS).access(RepositoryAccess.DB_GAP).storage(RepositoryStorage.GNOS).type(RepositoryType.GNOS)       .name("PCAWG - Chicago (ICGC)") .code("pcawg-chicago-icgc").country("US").timezone("America/Chicago")    .baseUrl("https://gtrepo-osdc-icgc.annailabs.com/").build(),
       repository().source(PCAWG) .environment(RepositoryEnvironment.INTERNET)  .access(RepositoryAccess.ERA_COMMONS).access(RepositoryAccess.DB_GAP).storage(RepositoryStorage.GNOS).type(RepositoryType.GNOS)       .name("PCAWG - Chicago (TCGA)") .code("pcawg-chicago-tcga").country("US").timezone("America/Chicago")    .baseUrl("https://gtrepo-osdc-tcga.annailabs.com/").build(),
       repository().source(AWS)   .environment(RepositoryEnvironment.AWS)       .access(RepositoryAccess.DACO)                                       .storage(RepositoryStorage.ICGC).type(RepositoryType.S3)         .name("AWS - Virginia")         .code("aws-virginia")      .country("US").timezone("America/New_York")   .baseUrl("https://s3-external-1.amazonaws.com/").build(),
-      repository().source(COLLAB).environment(RepositoryEnvironment.OPEN_STACK).access(RepositoryAccess.DACO)                                       .storage(RepositoryStorage.ICGC).type(RepositoryType.S3)         .name("Collaboratory - Toronto").code("collaboratory")     .country("CA").timezone("America/Toronto")    .baseUrl("https://www.cancercollaboratory.org:9080/").build()
+      repository().source(COLLAB).environment(RepositoryEnvironment.OPEN_STACK).access(RepositoryAccess.DACO)                                       .storage(RepositoryStorage.ICGC).type(RepositoryType.S3)         .name("Collaboratory - Toronto").code("collaboratory")     .country("CA").timezone("America/Toronto")    .baseUrl("https://www.cancercollaboratory.org:9080/").build(),
+      repository().source(EXACLOUD).environment(RepositoryEnvironment.OPEN_STACK).access(RepositoryAccess.DACO)                                       .storage(RepositoryStorage.ICGC).type(RepositoryType.EXACLOUD)         .name("OHSU - Portland").code("exacloud")     .country("US").timezone("America/Los_Angeles")    .baseUrl("https://ohsu.edu").build()
+
       );
   // @formatter:on
 
@@ -86,6 +89,8 @@ public final class Repositories {
   private static final Repository aWSRepository = findRepository(repository -> repository.getSource() == AWS);
   @Getter
   private static final Repository collabRepository = findRepository(repository -> repository.getSource() == COLLAB);
+  @Getter
+  private static final Repository exacloudRepository = findRepository(repository -> repository.getSource() == EXACLOUD);
 
   private static Repository findRepository(Predicate<Repository> predicate) {
     return tryFind(getRepositories(), predicate).orNull();

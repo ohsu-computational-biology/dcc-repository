@@ -62,7 +62,7 @@ public class ClientConfig {
     context
         .idUrl(properties.getId().getServiceUrl())
         .authToken(properties.getId().getAuthToken())
-        .realIds(true);
+        .realIds(!properties.getId().getServiceUrl().isEmpty());
 
     // Reference
     context

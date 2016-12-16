@@ -17,13 +17,13 @@
  */
 package org.icgc.dcc.repository.core.model;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import org.icgc.dcc.common.core.model.Identifiable;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Getter
 @RequiredArgsConstructor(access = PRIVATE)
@@ -34,7 +34,9 @@ public enum RepositoryType implements Identifiable {
   EGA_ARCHIVE("EGA", "/rest/download/v2/metadata/", ""),
   GNOS("GNOS", "/cghub/metadata/analysisFull/", "/cghub/data/analysis/download/"),
   GDC_ARCHIVE("GDC", "/files/", "/auth/api/data"),
-  WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/");
+  WEB_ARCHIVE("Web Archive", null, "/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/"),
+  EXACLOUD("File system Archive", null, "")
+  ;
 
   @NonNull
   private final String id;

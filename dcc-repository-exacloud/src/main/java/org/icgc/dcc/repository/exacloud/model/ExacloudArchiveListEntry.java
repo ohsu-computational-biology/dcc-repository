@@ -15,52 +15,15 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.exacloud.model;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import lombok.Value;
 
-import java.util.Arrays;
+@Value
+public class ExacloudArchiveListEntry {
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-
-import static com.google.common.base.Preconditions.checkState;
-import static lombok.AccessLevel.PRIVATE;
-
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryCollection implements Identifiable {
-
-  FILE("File", null),
-  EGA_FILE("EGAFile", RepositorySource.EGA),
-  CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
-  GDC_FILE("GDCFile", RepositorySource.GDC),
-  PDC_FILE("PDCFile", RepositorySource.PDC),
-  TCGA_FILE("TCGAFile", RepositorySource.TCGA),
-  PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
-  AWS_FILE("AWSFile", RepositorySource.AWS),
-  COLLAB_FILE("CollabFile", RepositorySource.COLLAB),
-  EXACLOUD_FILE("ExacloudFile", RepositorySource.EXACLOUD);
-
-  @Getter
-  @NonNull
-  private final String id;
-
-  @Getter
-  private final RepositorySource source;
-
-  public static RepositoryCollection forSource(@NonNull RepositorySource source) {
-    for (val value : values()) {
-      if (source == value.getSource()) {
-        return value;
-      }
-    }
-
-    checkState(false, "Could not find collection for repository source %s. Possible values are: %s",
-        source, Arrays.toString(values()));
-
-    return null;
-  }
+  String archiveName;
+  String dateAdded;
+  String archiveUrl;
 
 }

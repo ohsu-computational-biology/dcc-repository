@@ -15,52 +15,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN                         
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.icgc.dcc.repository.core.model;
+package org.icgc.dcc.repository.exacloud;
 
-import org.icgc.dcc.common.core.model.Identifiable;
+import static org.icgc.dcc.repository.core.model.RepositorySource.EXACLOUD;
 
-import java.util.Arrays;
+import org.icgc.dcc.repository.core.RepositoryFileContext;
+import org.icgc.dcc.repository.core.model.RepositoryFile;
+import org.icgc.dcc.repository.core.util.GenericRepositorySourceFileImporter;
+import org.icgc.dcc.repository.exacloud.core.ExacloudFileProcessor;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkState;
-import static lombok.AccessLevel.PRIVATE;
+/**
+ * @see http://tcga-data.nci.nih.gov/datareports/resources/latestarchive
+ */
+@Slf4j
+public class ExacloudImporter extends GenericRepositorySourceFileImporter {
 
-@RequiredArgsConstructor(access = PRIVATE)
-public enum RepositoryCollection implements Identifiable {
+  public ExacloudImporter(RepositoryFileContext context) {
+    super(EXACLOUD, context, log);
+  }
 
-  FILE("File", null),
-  EGA_FILE("EGAFile", RepositorySource.EGA),
-  CGHUB_FILE("CGHubFile", RepositorySource.CGHUB),
-  GDC_FILE("GDCFile", RepositorySource.GDC),
-  PDC_FILE("PDCFile", RepositorySource.PDC),
-  TCGA_FILE("TCGAFile", RepositorySource.TCGA),
-  PCAWG_FILE("PCAWGFile", RepositorySource.PCAWG),
-  AWS_FILE("AWSFile", RepositorySource.AWS),
-  COLLAB_FILE("CollabFile", RepositorySource.COLLAB),
-  EXACLOUD_FILE("ExacloudFile", RepositorySource.EXACLOUD);
+  @Override
+  protected Iterable<RepositoryFile> readFiles() {
+    val processor = new ExacloudFileProcessor(context);
 
-  @Getter
-  @NonNull
-  private final String id;
+    log.info("Processing clinical files...");
+    val files = processor.processRepositoryFiles();
+    log.info("Finished processing clinical files");
 
-  @Getter
-  private final RepositorySource source;
-
-  public static RepositoryCollection forSource(@NonNull RepositorySource source) {
-    for (val value : values()) {
-      if (source == value.getSource()) {
-        return value;
-      }
-    }
-
-    checkState(false, "Could not find collection for repository source %s. Possible values are: %s",
-        source, Arrays.toString(values()));
-
-    return null;
+    return files;
   }
 
 }

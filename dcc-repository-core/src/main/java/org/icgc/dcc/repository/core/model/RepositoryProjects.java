@@ -17,19 +17,19 @@
  */
 package org.icgc.dcc.repository.core.model;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
+import lombok.NoArgsConstructor;
+
 import static com.google.common.base.Predicates.notNull;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Iterables.tryFind;
 import static lombok.AccessLevel.PRIVATE;
 import static org.icgc.dcc.repository.core.model.RepositoryProject.project;
-
-import java.util.List;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
 public final class RepositoryProjects {
@@ -125,7 +125,8 @@ public final class RepositoryProjects {
       project().projectCode("THCA-SA").diseaseCode(null)  .program(null)    .country("Saudi Arabia").build(),
       project().projectCode("THCA-US").diseaseCode("THCA").program("TCGA")  .country("United States").build(),
       project().projectCode("UCEC-US").diseaseCode("UCEC").program("TCGA")  .country("United States").build(),
-      project().projectCode("WT-US")  .diseaseCode("WT")  .program("TARGET").country("United States").build()     
+      project().projectCode("WT-US")  .diseaseCode("WT")  .program("TARGET").country("United States").build(),
+      project().projectCode("BAML-US")  .diseaseCode(null)  .program(null).country("United States").build()
       );
   // @formatter:on
 
